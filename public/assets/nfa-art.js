@@ -41,19 +41,23 @@
     var SHIFT_FROM = 12000, SHIFT_TO = 7000;   // movers change lane between these distances
     var EXIT_TICKS = 14;                   // a resolved person stays this long, for the reaction
     var MAX_ACTORS = 28;
-    var KIND = { CROWD: 0, TARGET: 1, TABLE: 2, NATA: 3, CHARGER: 4 };
+    var KIND = { CROWD: 0, TARGET: 1, TABLE: 2, TRAM: 3, NATA: 4, CHARGER: 5, DRINK: 6 };   // up to TRAM they block a lane
+    var BULL_EVERY = 15, BULL_TICKS = 70;  // every 15 in a row, 3.5 s of Bull Run: you run faster and everybody high-fives you
+    var FIVE_POINTS = 50, DRINK_POINTS = 100, TIPSY_TICKS = 100, TIPSY_MAX = 260;
+    var KILLER = { OBSTACLE: 16, TRAM: 17, MISSED: 18 };   // who cost you the last bar (0..15: the role you bumped)
 
     /* The six places. act = the moment people live there (and the Moment trait it earns).
        catches: people to catch to open the door. speed: mm per tick. gap: mm between rows. fmin..fmax: rows before a target.
        crowd: people per row at most. rivals: look-alikes beside a target. close: how alike (0 nothing in common .. 3 one trait apart).
-       photo: ticks the photo stays on after it arrives (0 = always on; the art turns the screen off, a memory test). */
+       photo: ticks the photo stays on after it arrives (0 = always on; the art turns the screen off, a memory test).
+       tramPct: rows that are Tram 28, blocking two lanes. drinkPct: free lanes with a drink: points, and you see double for a while. */
     var LEVELS = [
-      { id: 'metro',   name: 'Metro Baixa-Chiado',  act: 0, catches: 4, speed: 200, gap: 9500, fmin: 1, fmax: 2, crowd: 1, rivals: 1, close: 0, tablePct: 0,  nataPct: 25, moverPct: 0,  photo: 0  },
-      { id: 'brunch',  name: 'Bottomless Brunch',   act: 1, catches: 5, speed: 215, gap: 9000, fmin: 1, fmax: 3, crowd: 2, rivals: 1, close: 1, tablePct: 35, nataPct: 35, moverPct: 0,  photo: 0  },
-      { id: 'stage',   name: 'Main Stage',          act: 2, catches: 5, speed: 230, gap: 8800, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 1, tablePct: 20, nataPct: 20, moverPct: 0,  photo: 0  },
-      { id: 'mint',    name: 'The Mint Room',       act: 3, catches: 5, speed: 245, gap: 8600, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 2, tablePct: 10, nataPct: 15, moverPct: 45, photo: 0  },
-      { id: 'cellar',  name: 'Coffee Cellar',       act: 4, catches: 5, speed: 255, gap: 8600, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 2, tablePct: 25, nataPct: 15, moverPct: 25, photo: 70 },
-      { id: 'rooftop', name: 'Golden Hour Rooftop', act: 5, catches: 5, speed: 270, gap: 8400, fmin: 0, fmax: 2, crowd: 2, rivals: 2, close: 3, tablePct: 0,  nataPct: 10, moverPct: 50, photo: 0  }
+      { id: 'metro',   name: 'Metro Baixa-Chiado',  act: 0, catches: 4, speed: 200, gap: 9500, fmin: 1, fmax: 2, crowd: 1, rivals: 1, close: 0, tablePct: 0,  nataPct: 25, moverPct: 0,  photo: 0,  tramPct: 18, drinkPct: 0  },
+      { id: 'brunch',  name: 'Bottomless Brunch',   act: 1, catches: 5, speed: 215, gap: 9000, fmin: 1, fmax: 3, crowd: 2, rivals: 1, close: 1, tablePct: 35, nataPct: 25, moverPct: 0,  photo: 0,  tramPct: 0,  drinkPct: 50 },
+      { id: 'stage',   name: 'Main Stage',          act: 2, catches: 5, speed: 230, gap: 8800, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 1, tablePct: 20, nataPct: 20, moverPct: 0,  photo: 0,  tramPct: 0,  drinkPct: 0  },
+      { id: 'mint',    name: 'The Mint Room',       act: 3, catches: 5, speed: 245, gap: 8600, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 2, tablePct: 10, nataPct: 15, moverPct: 45, photo: 0,  tramPct: 0,  drinkPct: 0  },
+      { id: 'cellar',  name: 'Coffee Cellar',       act: 4, catches: 5, speed: 255, gap: 8600, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 2, tablePct: 25, nataPct: 15, moverPct: 25, photo: 70, tramPct: 0,  drinkPct: 45 },
+      { id: 'rooftop', name: 'Golden Hour Rooftop', act: 5, catches: 5, speed: 270, gap: 8400, fmin: 0, fmax: 2, crowd: 2, rivals: 2, close: 3, tablePct: 0,  nataPct: 10, moverPct: 50, photo: 0,  tramPct: 14, drinkPct: 0  }
     ];
 
     /* The moments of the event (the crowd lives them; the Moment trait is the level you read best). */
@@ -160,7 +164,7 @@
     /* ---------- heat: a clean streak makes you run faster and the look-alikes closer ---------- */
     function heatOf(s) { var h = Math.floor(s.combo / 8); return h > 5 ? 5 : h; }
     function speedOf(s) {
-      var v = Math.floor(LEVELS[s.lv].speed * (100 + 6 * heatOf(s)) / 100);
+      var v = Math.floor(LEVELS[s.lv].speed * (100 + 6 * heatOf(s) + (s.bull > 0 ? 25 : 0)) / 100);
       return s.stun > 0 ? Math.floor(v / 2) : v;
     }
     function closeness(s, L) {
@@ -180,7 +184,7 @@
         tick: 0,
         pos: 0,
         lane: 1, laneAt: 0,
-        stun: 0,
+        stun: 0, bull: 0, tipsy: 0, killer: -1,
         lv: 0, cleared: 0, won: 0,
         caught: 0, pending: 0, open: 0, fill: 0,
         queue: [], targetAt: 0,
@@ -189,7 +193,7 @@
         battery: MAX_BATTERY,
         points: 0, combo: 0, bestCombo: 0, errors: 0,
         stats: {
-          rows: 0, perfect: 0, good: 0, bumped: 0, crashed: 0, missed: 0, natas: 0, chargers: 0,
+          rows: 0, perfect: 0, good: 0, bumped: 0, crashed: 0, missed: 0, natas: 0, chargers: 0, fives: 0, drinks: 0,
           perfects: [0, 0, 0, 0, 0, 0],      // perfect catches per level
           captures: [0, 0, 0, 0, 0, 0],      // all catches per level
           oops: [0, 0, 0, 0, 0, 0],          // oops per level (the share grid)
@@ -234,7 +238,12 @@
 
     function genRow(s) {
       var L = LEVELS[s.lv], d = s.nextD, tail = s.queue[s.queue.length - 1], close = closeness(s, L), lanes = lanesShuffled(s), i;
-      if (s.fill > 0) {
+      var tramRoll = rint(s, 100), tramSide = rint(s, 2);    // always drawn, whatever the branch
+      if (s.fill > 0 && tramRoll < L.tramPct) {
+        s.fill--;
+        addActor(s, d, tramSide, tramSide, KIND.TRAM, 0);
+        addActor(s, d, tramSide + 1, tramSide + 1, KIND.TRAM, 0);
+      } else if (s.fill > 0) {
         s.fill--;
         var n = 1 + rint(s, L.crowd);
         for (i = 0; i < n; i++) {
@@ -246,7 +255,9 @@
         }
         // the free lane may hold a nata, rarely a charger (only when it can matter)
         var roll = rint(s, 100);
+        var drinkRoll = rint(s, 100);
         if (roll < L.nataPct) addActor(s, d, lanes[n], lanes[n], s.battery < MAX_BATTERY && roll < 5 ? KIND.CHARGER : KIND.NATA, 0);
+        else if (drinkRoll < L.drinkPct) addActor(s, d, lanes[n], lanes[n], KIND.DRINK, 0);
       } else {
         addActor(s, d, lanes[0], startLane(s, L, lanes[0]), KIND.TARGET, tail);
         for (i = 1; i <= L.rivals; i++) {
@@ -267,7 +278,17 @@
       s.stun = STUN_TICKS;
       s.points -= Math.min(PENALTY, s.points);
     }
-    function bumpCombo(s) { s.combo++; if (s.combo > s.bestCombo) s.bestCombo = s.combo; }
+    function bumpCombo(s) {
+      s.combo++;
+      if (s.combo > s.bestCombo) s.bestCombo = s.combo;
+      if (s.combo % BULL_EVERY === 0) s.bull = BULL_TICKS;
+    }
+    /* Running through somebody during a Bull Run: they high-five you. */
+    function highFive(s, a) {
+      a.res = 'five';
+      s.stats.fives++;
+      s.points += FIVE_POINTS;
+    }
 
     function resolveRow(s, d) {
       var hit = null, target = null, i, a, L = LEVELS[s.lv], t = s.tick, bad = false;
@@ -289,15 +310,24 @@
           if (perfect) s.stats.perfects[L.act]++;
           hit.res = perfect ? 'perfect' : 'good';
           s.caught++;
+        } else if (s.bull > 0 && hit.kind <= KIND.TRAM) {
+          highFive(s, hit);
         } else if (hit.kind === KIND.CROWD) {
           oops(s); bad = true;
           s.stats.bumped++;
           s.stats.bumps[hit.look & 15]++;
+          s.killer = hit.look & 15;
           hit.res = 'bumped';
-        } else if (hit.kind === KIND.TABLE) {
+        } else if (hit.kind === KIND.TABLE || hit.kind === KIND.TRAM) {
           oops(s); bad = true;
           s.stats.crashed++;
+          s.killer = hit.kind === KIND.TRAM ? KILLER.TRAM : KILLER.OBSTACLE;
           hit.res = 'crashed';
+        } else if (hit.kind === KIND.DRINK) {
+          s.stats.drinks++;
+          s.points += DRINK_POINTS;
+          s.tipsy = Math.min(TIPSY_MAX, s.tipsy + TIPSY_TICKS);
+          hit.res = 'drink';
         } else if (hit.kind === KIND.NATA) {
           s.stats.natas++;
           s.points += NATA_POINTS;
@@ -311,7 +341,7 @@
       if (target) {
         if (target !== hit) {
           target.res = 'missed';
-          if (!bad) { oops(s); bad = true; s.stats.missed++; }
+          if (!bad && s.bull === 0) { oops(s); bad = true; s.stats.missed++; s.killer = KILLER.MISSED; }
         }
         s.pending--;
         s.queue.shift();
@@ -353,6 +383,8 @@
       s.tick++;
       s.pos += speedOf(s);
       if (s.stun > 0) s.stun--;
+      if (s.bull > 0) s.bull--;
+      if (s.tipsy > 0) s.tipsy--;
       var t = s.tick, i, a, keep = [];
       // a row is decided when you reach it (the arcade waits a moment more for an input on its way)
       var due = s.pos - s.late * speedOf(s);
@@ -407,7 +439,7 @@
       return {
         total: s.points,
         perfect: st.perfect, good: st.good, bumped: st.bumped, crashed: st.crashed, missed: st.missed,
-        natas: st.natas, chargers: st.chargers, rows: st.rows,
+        natas: st.natas, chargers: st.chargers, rows: st.rows, fives: st.fives, drinks: st.drinks, killer: s.killer,
         caught: st.perfect + st.good, battery: s.battery, cleared: s.cleared,
         errors: s.errors, bestCombo: s.bestCombo,
         accuracy: attempts ? Math.floor(100 * st.perfect / attempts) : 0,
@@ -476,7 +508,7 @@
     var api = {
       TICK_MS: TICK_MS, TPS: TPS, GAME_TICKS: GAME_TICKS, GAME_SECONDS: GAME_SECONDS, LANES: LANES, KIND: KIND,
       MAX_BATTERY: MAX_BATTERY, PENALTY: PENALTY, EXIT_TICKS: EXIT_TICKS, STUN_TICKS: STUN_TICKS, PERFECT_TICKS: PERFECT_TICKS,
-      MAX_ACTORS: MAX_ACTORS, FIRST_ROW: FIRST_ROW, DOOR_AHEAD: DOOR_AHEAD, LEVELS: LEVELS, ACTIONS: ACTIONS,
+      MAX_ACTORS: MAX_ACTORS, BULL_EVERY: BULL_EVERY, BULL_TICKS: BULL_TICKS, KILLER: KILLER, FIRST_ROW: FIRST_ROW, DOOR_AHEAD: DOOR_AHEAD, LEVELS: LEVELS, ACTIONS: ACTIONS,
       RARITIES: RARITIES, ACTION_TRAITS: ACTION_TRAITS, EXPRESSIONS: EXPRESSIONS, PROPS: PROPS, ROLES: ROLES, BADGES: BADGES, BADGE_OF_ROLE: BADGE_OF_ROLE,
       HAIRS: HAIRS, HAIR_COLORS: HAIR_COLORS, HIJAB_COLORS: HIJAB_COLORS, FACIAL_HAIR: FACIAL_HAIR,
       BACKDROPS: BACKDROPS, EVENT: EVENT,

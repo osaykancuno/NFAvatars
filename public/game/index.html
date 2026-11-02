@@ -146,6 +146,10 @@
     .score-line { font-size: 15px; font-weight: 700; }
     .score-line b { font-size: 26px; }
     .share-grid { font-size: 20px; letter-spacing: 2px; margin: 4px 0 0; }
+    .damage { list-style: none; margin: 8px 0; padding: 8px; background: #1a1526; color: #fff6e5; border-radius: 12px; font-size: 13px; font-weight: 700; text-align: left; }
+    .damage li + li { margin-top: 3px; }
+    .damage li:first-child { color: #ff8a8a; }
+    .shame { display: block; width: min(100%, 280px); margin: 6px auto 8px; image-rendering: pixelated; border-radius: 8px; background: #120a22; }
     .traits { width: 100%; border-collapse: collapse; margin: 10px 0 4px; font-size: 14px; text-align: left; }
     .traits th, .traits td { padding: 6px 4px; border-bottom: 2px dashed var(--paper-2); }
     .traits th { color: var(--muted); font-weight: 700; width: 34%; }
@@ -210,8 +214,8 @@
           <ol class="how">
             <li>Somebody at the party <b>pulled the rug</b>. Their photo is on your phone.</li>
             <li><b>Tap left or right</b> to change lane. Run <b>into</b> the person on the photo, around everybody else.</li>
-            <li>Bump the wrong person and your phone loses a bar. <b>Five bars</b>, then it's over.</li>
-            <li>Six places of Lisbon. <b>Catch the one who did it = Legendary.</b></li>
+            <li>Bump the wrong person and your phone loses a bar (and you hear about it). <b>Five bars</b>, then it's over.</li>
+            <li>Six places of Lisbon. <b>Catch the one who did it = Legendary.</b> Fill your Wall of Shame.</li>
           </ol>
           <p class="species-line">They all look alike. Nobody is fungible.</p>
           <div class="actions column">
@@ -268,6 +272,9 @@
           <p id="avatar-name" class="avatar-name">—</p>
           <p class="score-line">Score <b id="final-score">0</b> · <span id="survival-line">—</span></p>
           <p id="share-grid" class="share-grid" aria-hidden="true"></p>
+          <ul id="damage" class="damage" aria-label="What your run did to the party"></ul>
+          <p id="shame-title" class="label"></p>
+          <canvas id="shame-canvas" class="shame" width="320" height="160" aria-hidden="true"></canvas>
           <table class="traits" aria-label="NFT traits">
             <tbody>
               <tr><th scope="row">Role</th><td id="t-role">—</td></tr>
@@ -290,6 +297,7 @@
           </div>
           <div class="actions">
             <button id="btn-share" class="btn small" type="button">Share on X</button>
+            <button id="btn-report" class="btn small" type="button">Share report</button>
             <button id="btn-save" class="btn small" type="button">Save PNG</button>
           </div>
           <div class="actions">
@@ -350,19 +358,23 @@
     var SHIFT_FROM = 12000, SHIFT_TO = 7000;   // movers change lane between these distances
     var EXIT_TICKS = 14;                   // a resolved person stays this long, for the reaction
     var MAX_ACTORS = 28;
-    var KIND = { CROWD: 0, TARGET: 1, TABLE: 2, NATA: 3, CHARGER: 4 };
+    var KIND = { CROWD: 0, TARGET: 1, TABLE: 2, TRAM: 3, NATA: 4, CHARGER: 5, DRINK: 6 };   // up to TRAM they block a lane
+    var BULL_EVERY = 15, BULL_TICKS = 70;  // every 15 in a row, 3.5 s of Bull Run: you run faster and everybody high-fives you
+    var FIVE_POINTS = 50, DRINK_POINTS = 100, TIPSY_TICKS = 100, TIPSY_MAX = 260;
+    var KILLER = { OBSTACLE: 16, TRAM: 17, MISSED: 18 };   // who cost you the last bar (0..15: the role you bumped)
 
     /* The six places. act = the moment people live there (and the Moment trait it earns).
        catches: people to catch to open the door. speed: mm per tick. gap: mm between rows. fmin..fmax: rows before a target.
        crowd: people per row at most. rivals: look-alikes beside a target. close: how alike (0 nothing in common .. 3 one trait apart).
-       photo: ticks the photo stays on after it arrives (0 = always on; the art turns the screen off, a memory test). */
+       photo: ticks the photo stays on after it arrives (0 = always on; the art turns the screen off, a memory test).
+       tramPct: rows that are Tram 28, blocking two lanes. drinkPct: free lanes with a drink: points, and you see double for a while. */
     var LEVELS = [
-      { id: 'metro',   name: 'Metro Baixa-Chiado',  act: 0, catches: 4, speed: 200, gap: 9500, fmin: 1, fmax: 2, crowd: 1, rivals: 1, close: 0, tablePct: 0,  nataPct: 25, moverPct: 0,  photo: 0  },
-      { id: 'brunch',  name: 'Bottomless Brunch',   act: 1, catches: 5, speed: 215, gap: 9000, fmin: 1, fmax: 3, crowd: 2, rivals: 1, close: 1, tablePct: 35, nataPct: 35, moverPct: 0,  photo: 0  },
-      { id: 'stage',   name: 'Main Stage',          act: 2, catches: 5, speed: 230, gap: 8800, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 1, tablePct: 20, nataPct: 20, moverPct: 0,  photo: 0  },
-      { id: 'mint',    name: 'The Mint Room',       act: 3, catches: 5, speed: 245, gap: 8600, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 2, tablePct: 10, nataPct: 15, moverPct: 45, photo: 0  },
-      { id: 'cellar',  name: 'Coffee Cellar',       act: 4, catches: 5, speed: 255, gap: 8600, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 2, tablePct: 25, nataPct: 15, moverPct: 25, photo: 70 },
-      { id: 'rooftop', name: 'Golden Hour Rooftop', act: 5, catches: 5, speed: 270, gap: 8400, fmin: 0, fmax: 2, crowd: 2, rivals: 2, close: 3, tablePct: 0,  nataPct: 10, moverPct: 50, photo: 0  }
+      { id: 'metro',   name: 'Metro Baixa-Chiado',  act: 0, catches: 4, speed: 200, gap: 9500, fmin: 1, fmax: 2, crowd: 1, rivals: 1, close: 0, tablePct: 0,  nataPct: 25, moverPct: 0,  photo: 0,  tramPct: 18, drinkPct: 0  },
+      { id: 'brunch',  name: 'Bottomless Brunch',   act: 1, catches: 5, speed: 215, gap: 9000, fmin: 1, fmax: 3, crowd: 2, rivals: 1, close: 1, tablePct: 35, nataPct: 25, moverPct: 0,  photo: 0,  tramPct: 0,  drinkPct: 50 },
+      { id: 'stage',   name: 'Main Stage',          act: 2, catches: 5, speed: 230, gap: 8800, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 1, tablePct: 20, nataPct: 20, moverPct: 0,  photo: 0,  tramPct: 0,  drinkPct: 0  },
+      { id: 'mint',    name: 'The Mint Room',       act: 3, catches: 5, speed: 245, gap: 8600, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 2, tablePct: 10, nataPct: 15, moverPct: 45, photo: 0,  tramPct: 0,  drinkPct: 0  },
+      { id: 'cellar',  name: 'Coffee Cellar',       act: 4, catches: 5, speed: 255, gap: 8600, fmin: 1, fmax: 2, crowd: 2, rivals: 2, close: 2, tablePct: 25, nataPct: 15, moverPct: 25, photo: 70, tramPct: 0,  drinkPct: 45 },
+      { id: 'rooftop', name: 'Golden Hour Rooftop', act: 5, catches: 5, speed: 270, gap: 8400, fmin: 0, fmax: 2, crowd: 2, rivals: 2, close: 3, tablePct: 0,  nataPct: 10, moverPct: 50, photo: 0,  tramPct: 14, drinkPct: 0  }
     ];
 
     /* The moments of the event (the crowd lives them; the Moment trait is the level you read best). */
@@ -469,7 +481,7 @@
     /* ---------- heat: a clean streak makes you run faster and the look-alikes closer ---------- */
     function heatOf(s) { var h = Math.floor(s.combo / 8); return h > 5 ? 5 : h; }
     function speedOf(s) {
-      var v = Math.floor(LEVELS[s.lv].speed * (100 + 6 * heatOf(s)) / 100);
+      var v = Math.floor(LEVELS[s.lv].speed * (100 + 6 * heatOf(s) + (s.bull > 0 ? 25 : 0)) / 100);
       return s.stun > 0 ? Math.floor(v / 2) : v;
     }
     function closeness(s, L) {
@@ -489,7 +501,7 @@
         tick: 0,
         pos: 0,
         lane: 1, laneAt: 0,
-        stun: 0,
+        stun: 0, bull: 0, tipsy: 0, killer: -1,
         lv: 0, cleared: 0, won: 0,
         caught: 0, pending: 0, open: 0, fill: 0,
         queue: [], targetAt: 0,
@@ -498,7 +510,7 @@
         battery: MAX_BATTERY,
         points: 0, combo: 0, bestCombo: 0, errors: 0,
         stats: {
-          rows: 0, perfect: 0, good: 0, bumped: 0, crashed: 0, missed: 0, natas: 0, chargers: 0,
+          rows: 0, perfect: 0, good: 0, bumped: 0, crashed: 0, missed: 0, natas: 0, chargers: 0, fives: 0, drinks: 0,
           perfects: [0, 0, 0, 0, 0, 0],      // perfect catches per level
           captures: [0, 0, 0, 0, 0, 0],      // all catches per level
           oops: [0, 0, 0, 0, 0, 0],          // oops per level (the share grid)
@@ -543,7 +555,12 @@
 
     function genRow(s) {
       var L = LEVELS[s.lv], d = s.nextD, tail = s.queue[s.queue.length - 1], close = closeness(s, L), lanes = lanesShuffled(s), i;
-      if (s.fill > 0) {
+      var tramRoll = rint(s, 100), tramSide = rint(s, 2);    // always drawn, whatever the branch
+      if (s.fill > 0 && tramRoll < L.tramPct) {
+        s.fill--;
+        addActor(s, d, tramSide, tramSide, KIND.TRAM, 0);
+        addActor(s, d, tramSide + 1, tramSide + 1, KIND.TRAM, 0);
+      } else if (s.fill > 0) {
         s.fill--;
         var n = 1 + rint(s, L.crowd);
         for (i = 0; i < n; i++) {
@@ -555,7 +572,9 @@
         }
         // the free lane may hold a nata, rarely a charger (only when it can matter)
         var roll = rint(s, 100);
+        var drinkRoll = rint(s, 100);
         if (roll < L.nataPct) addActor(s, d, lanes[n], lanes[n], s.battery < MAX_BATTERY && roll < 5 ? KIND.CHARGER : KIND.NATA, 0);
+        else if (drinkRoll < L.drinkPct) addActor(s, d, lanes[n], lanes[n], KIND.DRINK, 0);
       } else {
         addActor(s, d, lanes[0], startLane(s, L, lanes[0]), KIND.TARGET, tail);
         for (i = 1; i <= L.rivals; i++) {
@@ -576,7 +595,17 @@
       s.stun = STUN_TICKS;
       s.points -= Math.min(PENALTY, s.points);
     }
-    function bumpCombo(s) { s.combo++; if (s.combo > s.bestCombo) s.bestCombo = s.combo; }
+    function bumpCombo(s) {
+      s.combo++;
+      if (s.combo > s.bestCombo) s.bestCombo = s.combo;
+      if (s.combo % BULL_EVERY === 0) s.bull = BULL_TICKS;
+    }
+    /* Running through somebody during a Bull Run: they high-five you. */
+    function highFive(s, a) {
+      a.res = 'five';
+      s.stats.fives++;
+      s.points += FIVE_POINTS;
+    }
 
     function resolveRow(s, d) {
       var hit = null, target = null, i, a, L = LEVELS[s.lv], t = s.tick, bad = false;
@@ -598,15 +627,24 @@
           if (perfect) s.stats.perfects[L.act]++;
           hit.res = perfect ? 'perfect' : 'good';
           s.caught++;
+        } else if (s.bull > 0 && hit.kind <= KIND.TRAM) {
+          highFive(s, hit);
         } else if (hit.kind === KIND.CROWD) {
           oops(s); bad = true;
           s.stats.bumped++;
           s.stats.bumps[hit.look & 15]++;
+          s.killer = hit.look & 15;
           hit.res = 'bumped';
-        } else if (hit.kind === KIND.TABLE) {
+        } else if (hit.kind === KIND.TABLE || hit.kind === KIND.TRAM) {
           oops(s); bad = true;
           s.stats.crashed++;
+          s.killer = hit.kind === KIND.TRAM ? KILLER.TRAM : KILLER.OBSTACLE;
           hit.res = 'crashed';
+        } else if (hit.kind === KIND.DRINK) {
+          s.stats.drinks++;
+          s.points += DRINK_POINTS;
+          s.tipsy = Math.min(TIPSY_MAX, s.tipsy + TIPSY_TICKS);
+          hit.res = 'drink';
         } else if (hit.kind === KIND.NATA) {
           s.stats.natas++;
           s.points += NATA_POINTS;
@@ -620,7 +658,7 @@
       if (target) {
         if (target !== hit) {
           target.res = 'missed';
-          if (!bad) { oops(s); bad = true; s.stats.missed++; }
+          if (!bad && s.bull === 0) { oops(s); bad = true; s.stats.missed++; s.killer = KILLER.MISSED; }
         }
         s.pending--;
         s.queue.shift();
@@ -662,6 +700,8 @@
       s.tick++;
       s.pos += speedOf(s);
       if (s.stun > 0) s.stun--;
+      if (s.bull > 0) s.bull--;
+      if (s.tipsy > 0) s.tipsy--;
       var t = s.tick, i, a, keep = [];
       // a row is decided when you reach it (the arcade waits a moment more for an input on its way)
       var due = s.pos - s.late * speedOf(s);
@@ -716,7 +756,7 @@
       return {
         total: s.points,
         perfect: st.perfect, good: st.good, bumped: st.bumped, crashed: st.crashed, missed: st.missed,
-        natas: st.natas, chargers: st.chargers, rows: st.rows,
+        natas: st.natas, chargers: st.chargers, rows: st.rows, fives: st.fives, drinks: st.drinks, killer: s.killer,
         caught: st.perfect + st.good, battery: s.battery, cleared: s.cleared,
         errors: s.errors, bestCombo: s.bestCombo,
         accuracy: attempts ? Math.floor(100 * st.perfect / attempts) : 0,
@@ -785,7 +825,7 @@
     var api = {
       TICK_MS: TICK_MS, TPS: TPS, GAME_TICKS: GAME_TICKS, GAME_SECONDS: GAME_SECONDS, LANES: LANES, KIND: KIND,
       MAX_BATTERY: MAX_BATTERY, PENALTY: PENALTY, EXIT_TICKS: EXIT_TICKS, STUN_TICKS: STUN_TICKS, PERFECT_TICKS: PERFECT_TICKS,
-      MAX_ACTORS: MAX_ACTORS, FIRST_ROW: FIRST_ROW, DOOR_AHEAD: DOOR_AHEAD, LEVELS: LEVELS, ACTIONS: ACTIONS,
+      MAX_ACTORS: MAX_ACTORS, BULL_EVERY: BULL_EVERY, BULL_TICKS: BULL_TICKS, KILLER: KILLER, FIRST_ROW: FIRST_ROW, DOOR_AHEAD: DOOR_AHEAD, LEVELS: LEVELS, ACTIONS: ACTIONS,
       RARITIES: RARITIES, ACTION_TRAITS: ACTION_TRAITS, EXPRESSIONS: EXPRESSIONS, PROPS: PROPS, ROLES: ROLES, BADGES: BADGES, BADGE_OF_ROLE: BADGE_OF_ROLE,
       HAIRS: HAIRS, HAIR_COLORS: HAIR_COLORS, HIJAB_COLORS: HIJAB_COLORS, FACIAL_HAIR: FACIAL_HAIR,
       BACKDROPS: BACKDROPS, EVENT: EVENT,
@@ -815,7 +855,7 @@
       symbol: 'NFA',
       creator: '@osaykancuno',
       // Public URL of the game, used in the share text. Empty = the page URL.
-      gameUrl: 'https://notfungibleavatars.party/play/',
+      gameUrl: 'https://nfavatars.netlify.app/play/',
       // The Wall Arcade credit line (required for games in the arcade).
       wallCredit: {
         text: 'A REMIX THE WALL EXPERIMENT · NFC SUMMIT 2027 · LISBON',
@@ -832,7 +872,7 @@
       credits: { mode: 'demo', demoStart: 3, costPerPlay: 1 },
 
       /* ------------------------------------------------------------------
-       * FREE TRIAL — the game on notfungibleavatars.party (on: true).
+       * FREE TRIAL — the game on nfavatars.netlify.app (on: true).
        * Shorter runs, no credits, no wallet, nothing minted here. Not Fungible Avatars are minted only on
        * THE WALL ARCADE, with SuperRare credits, when a run ends: 1 credit = 1 full run = 1 NFT.
        * on: false brings back the credit + mint flow below (kept as the reference for the arcade).
@@ -1940,6 +1980,14 @@
     ];
     const OBSTACLE_JOKE = ['', 'You ate the table. Bottomless indeed.', 'You hit the speaker. Everyone heard.', 'You hit the plinth. That was a 1/1.', 'You hit the barrel. Aged like your portfolio.', 'The seagull took your lunch.'];
     const MISS_JOKE = ['They walked right past you. NGMI.', 'Gone. Paper hands.', 'They saw you. They sold.', 'Missed them. Have fun staying poor at this.', 'Vanished like a roadmap.'];
+    /* Everything the one who did it texts you while you chase them. */
+    const DM_LEVEL = ['gm. looking for me?', 'try the natas. i already took the treasury.', 'i am on stage. or am i.', 'everyone here looks like me. awkward.', 'your battery looks low. shame.', 'ok fine. you are good. catch me if you can.'];
+    const DM_CATCH = ['that was my intern.', 'they know nothing.', 'my marketing team. whatever.', 'my cofounder. never liked them.', 'that was the advisor. they advised against this.', 'they will never talk. nda.', 'you caught the community manager. wagmi i guess.', 'that one was just holding my bag.', 'ok that was my lawyer. awkward.', 'that was my other wallet.'];
+    const DM_ROOF = ['ow.', 'that was a body double. probably.', 'stop doing that.', 'i can explain.', 'ok ok ok ok ok'];
+    const DM_BUMP = ['lol', 'that was not me.', 'keep going, i am shorting you.', 'floor is looking great.', 'ser. that is a person.', 'screenshotted.', 'bullish on you missing me.', 'nice aim anon.'];
+    const DM_LOW = 'charge your phone, anon.';
+    const DRINK_TEXT = ['', 'Bottomless means bottomless.', '', '', 'Espresso number four. You can hear colours.', ''];
+    const KILLER_TEXT = ['the Artist', 'a Collector', 'the Dev', 'the Founder', 'the Curator', 'a Streamer', 'a Degen', 'the DJ', 'a Whale', 'the Bodyguard', 'the Barista', 'a Gamer', 'the Meme Lord', 'the Photographer', 'a Skater', 'the Chef', 'the furniture', 'Tram 28', 'looking the other way'];
     const STREAK_TEXT = { 10: 'LFG!', 20: 'WAGMI', 30: 'TO THE MOON', 40: 'GIGABRAIN', 50: 'GOD MODE', 60: 'NOBODY IS FUNGIBLE' };
 
     /* ---------- textures: 64 wide, palette indices; walls are 128 tall ---------- */
@@ -2055,8 +2103,61 @@
       return out;
     }
 
+    /* What your run did to the party: for the end screen, the post and the report. */
+    function floorOf(bumps) {
+      let f = 100;
+      bumps.forEach((n, role) => { for (let i = 0; i < n; i++) f = f * (role === 8 ? 0.6 : 0.97); });
+      return Math.round(f);
+    }
+    function damageLines(sc) {
+      const b = sc.bumps, out = ['Floor: ' + (floorOf(b) < 100 ? '-' + (100 - floorOf(b)) + '%' : 'intact')];
+      if (b[2]) out.push('Mainnet: moved to ' + (2027 + b[2]));
+      if (b[10]) out.push('Oat milk: none left');
+      if (b[7]) out.push('Music: stopped ' + b[7] + (b[7] > 1 ? ' times' : ' time'));
+      if (b[3]) out.push('Roadmap: updated');
+      if (b[4]) out.push('Reviews: 2/10');
+      if (b[12]) out.push('You: a template');
+      if (sc.drinks) out.push('Drinks: ' + sc.drinks);
+      if (sc.fives) out.push('High fives: ' + sc.fives);
+      return out;
+    }
+    function causeOfDeath(sc) {
+      return sc.battery <= 0 && sc.killer >= 0 ? 'Cause of death: ' + KILLER_TEXT[sc.killer] : '';
+    }
+    /* The picture to post: words, a chart and squares, no person in it. */
+    function reportCard(canvas, sc, opts0) {
+      canvas.width = 1200; canvas.height = 630;
+      const c = canvas.getContext('2d'), o = opts0 || {};
+      c.fillStyle = '#100a22'; c.fillRect(0, 0, 1200, 630);
+      c.fillStyle = '#b3262e'; c.fillRect(0, 0, 1200, 14); c.fillStyle = '#e8b53a'; c.fillRect(0, 14, 1200, 5);
+      const t2 = (s, x, y, size, col, weight, align) => { c.font = (weight || 800) + ' ' + size + 'px ' + FONT; c.textAlign = align || 'left'; c.textBaseline = 'middle'; c.fillStyle = col; c.fillText(s, x, y); };
+      t2('INCIDENT REPORT', 56, 76, 28, '#e8b53a', 900);
+      t2(o.daily ? 'Not Fungible Moments · Daily #' + o.daily : 'Not Fungible Moments', 1144, 76, 26, '#b8c6ea', 800, 'right');
+      t2(sc.survived ? 'I caught the one who pulled the rug.' : causeOfDeath(sc) || 'The party ended before I caught them.', 56, 150, sc.survived ? 50 : 46, '#ffffff', 900);
+      const colors = { '🟩': '#2fbf71', '🟨': '#ffcf1f', '🟥': '#e23a52', '⬛': '#2a2438' };
+      Array.from(o.grid || '').forEach((sq, i) => { c.fillStyle = colors[sq] || '#2a2438'; c.fillRect(56 + i * 74, 200, 62, 62); });
+      t2('Score ' + sc.total, 56, 310, 40, '#ffcf1f', 900);
+      t2('Caught ' + sc.caught + '  ·  Bumped ' + (sc.bumped + sc.crashed) + '  ·  Best streak ' + sc.bestCombo, 56, 362, 28, '#d9dcf0', 700);
+      damageLines(sc).slice(0, 5).forEach((l, i) => t2(l, 56, 414 + i * 36, 26, i === 0 && floorOf(sc.bumps) < 100 ? '#ff6b6b' : '#ffffff', 800));
+      // the floor chart
+      const f = floorOf(sc.bumps), x0 = 700, y0 = 200, w = 440, h = 260, falls = [];
+      c.fillStyle = '#1b1438'; c.fillRect(x0, y0, w, h);
+      let v = 100; falls.push(v); sc.bumps.forEach((n, role) => { for (let i = 0; i < n; i++) { v *= role === 8 ? 0.6 : 0.97; falls.push(v); } });
+      c.strokeStyle = f < 100 ? '#ff3b3b' : '#2fbf71'; c.lineWidth = 7; c.beginPath();
+      const steps = Math.max(1, falls.length - 1);
+      falls.forEach((val, i) => { const x = x0 + 20 + i * (w - 40) / steps, y = y0 + h - 24 - (val / 100) * (h - 60); if (i) c.lineTo(x, y); else c.moveTo(x, y); });
+      if (falls.length === 1) { c.moveTo(x0 + 20, y0 + 36); c.lineTo(x0 + w - 20, y0 + 36); }
+      c.stroke();
+      t2('FLOOR', x0 + 18, y0 + 24, 20, '#b8c6ea', 800);
+      t2((f < 100 ? '-' + (100 - f) : '+0') + '%', x0 + w - 18, y0 + 24, 30, f < 100 ? '#ff6b6b' : '#5be38f', 900, 'right');
+      t2('Wall of Shame ' + (o.shame || 0) + '/16', x0, 498, 28, '#ff8ac0', 900);
+      t2('They all look alike. Can you tell them apart?', 1144, 590, 26, '#ffffff', 800, 'right');
+      t2('#NotFungibleAvatars', 56, 590, 24, '#7fc8ff', 800);
+    }
+
     function create(E, A, options) {
       const opts = options || {};
+      const root0 = typeof window !== 'undefined' ? window : root;
       const low = document.createElement('canvas');
       low.width = LOW_W; low.height = LOW_H;
       const lc = low.getContext('2d', { alpha: false });
@@ -2205,6 +2306,16 @@
           px(c, 18, 24, 36, 40, '#7a4524'); px(c, 14, 32, 44, 24, '#94572e');
           [28, 44, 58].forEach((y) => px(c, 15, y, 42, 3, '#3f2015')); px(c, 26, 24, 2, 40, '#5d341b'); px(c, 44, 24, 2, 40, '#5d341b');
           px(c, 30, 14, 12, 10, '#fff6e5'); px(c, 32, 10, 2, 4, '#cfa77a'); px(c, 38, 8, 2, 6, '#cfa77a');
+        } else if (key === 'tram') {               // Tram 28, coming right at you: two lanes wide
+          px(c, 6, 8, 60, 56, '#ffcf1f'); px(c, 6, 8, 60, 3, '#fff1b8'); px(c, 6, 44, 60, 4, '#f4f4ee'); px(c, 6, 48, 60, 16, '#e7b40f');
+          px(c, 10, 14, 52, 22, '#1a2740'); px(c, 12, 16, 22, 18, '#7fb0ea'); px(c, 38, 16, 22, 18, '#7fb0ea'); px(c, 14, 18, 6, 10, '#cfe6ff'); px(c, 40, 18, 6, 10, '#cfe6ff');
+          px(c, 26, 2, 20, 6, '#1a1526'); c.fillStyle = '#ffcf1f'; c.font = '700 7px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('28', 36, 5.5);
+          px(c, 12, 52, 8, 6, '#fff6d8'); px(c, 52, 52, 8, 6, '#fff6d8'); px(c, 28, 52, 16, 3, '#54506a'); px(c, 10, 64, 12, 2, '#1a1526'); px(c, 50, 64, 12, 2, '#1a1526');
+        } else if (key === 'drink1') {             // a mimosa
+          px(c, 32, 26, 8, 14, '#ffa63d'); px(c, 32, 24, 8, 3, '#fff1cf'); px(c, 33, 40, 6, 2, '#eaf2ff'); px(c, 35, 42, 2, 12, '#eaf2ff'); px(c, 30, 54, 12, 2, '#eaf2ff'); px(c, 38, 18, 4, 6, '#ff7a3d');
+        } else if (key === 'drink4') {             // a bica, the fourth
+          px(c, 28, 38, 16, 14, '#fff6e5'); px(c, 44, 41, 5, 7, '#fff6e5'); px(c, 30, 38, 12, 3, '#3f2015'); px(c, 24, 52, 24, 3, '#e8dfcc');
+          px(c, 31, 28, 2, 6, '#cfa77a'); px(c, 38, 26, 2, 8, '#cfa77a');
         } else {                                   // a bollard and a seagull on it
           px(c, 30, 40, 12, 24, '#3a3546'); px(c, 28, 38, 16, 3, '#54506a');
           px(c, 26, 28, 18, 10, '#f3f6ff'); px(c, 42, 24, 8, 8, '#ffffff'); px(c, 49, 27, 4, 2, '#ffb02e'); px(c, 45, 26, 2, 2, '#1a1526'); px(c, 22, 30, 8, 5, '#9aa3b8');
@@ -2212,7 +2323,7 @@
         props.set(key, cv);
         return cv;
       }
-      const PROP_OF = { [E.KIND.TABLE]: (lv) => 'table' + Math.max(1, Math.min(5, lv)), [E.KIND.NATA]: () => 'nata', [E.KIND.CHARGER]: () => 'charger' };
+      const PROP_OF = { [E.KIND.TABLE]: (lv) => 'table' + Math.max(1, Math.min(5, lv)), [E.KIND.TRAM]: () => 'tram', [E.KIND.NATA]: () => 'nata', [E.KIND.CHARGER]: () => 'charger', [E.KIND.DRINK]: (lv) => (lv === 4 ? 'drink4' : 'drink1') };
 
       /* ---------- music: a little fado-flavoured chiptune, faster with the heat ---------- */
       let ac = null, soundOn = opts.sound !== false, noiseBuf = null, nextNote = 0, stepN = 0, musicOn = false;
@@ -2249,13 +2360,22 @@
         beep() { tone(1500, 0.05, 'square', 0.035); },
         door() { noise(0.3, 0.09); [392, 523, 659, 784].forEach((v, i) => tone(v, 0.2, 'triangle', 0.07, 0, i * 0.07)); },
         win() { [523, 659, 784, 1047, 1319, 1568].forEach((v, i) => tone(v, 0.24, 'square', 0.06, 0, i * 0.11)); },
-        dead() { tone(620, 0.7, 'sawtooth', 0.06, 0.08); }
+        dead() { [392, 370, 349, 311].forEach((v, i) => tone(v, i === 3 ? 0.9 : 0.3, 'sawtooth', 0.075, i === 3 ? 0.9 : 1, i * 0.32)); },   // the sad trombone
+        clap() { noise(0.05, 0.14); noise(0.05, 0.11, 0.06); tone(880, 0.07, 'square', 0.04); },
+        bull() { [523, 659, 784, 1047, 784, 1047, 1319].forEach((v, i) => tone(v, 0.1, 'square', 0.065, 0, i * 0.07)); },
+        bell() { tone(1760, 0.3, 'triangle', 0.09); tone(1760, 0.3, 'triangle', 0.09, 0, 0.26); },
+        scratch() { tone(1400, 0.1, 'sawtooth', 0.07, 0.3); tone(500, 0.12, 'sawtooth', 0.07, 2.4, 0.1); noise(0.2, 0.08); },
+        drop() { tone(160, 0.5, 'sine', 0.2, 0.25); },
+        dm() { tone(1568, 0.04, 'sine', 0.05); tone(2093, 0.05, 'sine', 0.04, 0, 0.05); },
+        gulp() { tone(320, 0.08, 'sine', 0.1, 1.8); tone(420, 0.09, 'sine', 0.09, 1.8, 0.1); },
+        zip() { noise(0.25, 0.08); tone(300, 0.3, 'sawtooth', 0.05, 4); },
+        babble(n) { for (let i = 0; i < n; i++) tone(240 + ((i * 97) % 5) * 55, 0.05, 'square', 0.03, 0, i * 0.065); }   // everybody talks in little beeps
       };
       const BASS = [[0, 0, 7, 0, 3, 3, 7, 3], [0, 0, 5, 5, 3, 3, 2, 2], [0, 12, 0, 7, 5, 5, 3, 7], [0, 3, 7, 10, 0, 3, 8, 7], [0, 0, 8, 8, 5, 5, 7, 7], [0, 7, 12, 7, 5, 12, 3, 7]];
       const ARP = [[12, 15, 19, 15], [12, 17, 15, 19], [19, 15, 12, 15], [24, 19, 15, 12], [12, 15, 20, 19], [12, 19, 24, 19]];
       function schedule(lv, heat) {
         const a = soundOn ? ac : null;
-        if (!a || !musicOn) return;
+        if (!a || !musicOn || musicHold > 0) return;
         if (nextNote < a.currentTime) nextNote = a.currentTime + 0.05;
         const spb = 60 / (120 + lv * 7 + heat * 5) / 2;
         while (nextNote < a.currentTime + 0.18) {
@@ -2271,6 +2391,7 @@
 
       /* ---------- what happened since the last frame ---------- */
       let seen = new Map(), prev = null, camLane = 1, rugShift = 0, rugVel = 0, shake = 0, flash = 0, flashCol = '#ffffff', card = null, caption = null, phoneShake = 0, newFace = 0, lurch = 0;
+      let musicHold = 0, gag = null, dmBubble = null, dmWait = 0, shameNew = 0, gullT = 6, gull = null, bullBanner = 0, rainT = 0, bellSeen = new Set(), wasLow = false;
       let particles = [], polaroids = [], bumped = [], splats = [], popups = [], attractT = 0, lowBeep = 0, tick0 = -1, stepPhase = 0, doorLit = 0, spriteRects = [], tips = 0;
       let announce = opts.announce || function () {};
       const reduced = () => !!opts.reducedMotion && opts.reducedMotion();
@@ -2285,7 +2406,31 @@
       function popup(str, color, x, y, size) { popups.push({ str, color, x, y, size: size || 22, life: 0 }); }
       function reset() {
         seen = new Map(); prev = null; camLane = 1; rugShift = 0; rugVel = 0; shake = 0; flash = 0; card = null; caption = null; phoneShake = 0; newFace = 0; lurch = 0;
+        musicHold = 0; gag = null; dmBubble = null; dmWait = 0; shameNew = 0; gullT = 6; gull = null; bullBanner = 0; bellSeen = new Set(); wasLow = false;
         particles = []; polaroids = []; bumped = []; splats = []; popups = []; lowBeep = 0; tick0 = -1; stepPhase = 0; doorLit = 0; spriteRects = []; tips = 0; stepN = 0; nextNote = 0;
+      }
+      function text2dm(str, force) {
+        if (!force && dmWait > 0) return;
+        dmBubble = { str, life: 0 }; dmWait = 3.2; phoneShake = Math.max(phoneShake, 0.5); SND.dm();
+      }
+      /* The Wall of Shame: everybody you ever ran into, kept on this device. */
+      function shameRead() { try { return (JSON.parse(root0.localStorage.getItem('nfa.shame.v1')) || []).filter((n) => Number.isInteger(n) && n >= 0 && n < 16); } catch (e) { return []; } }
+      function shameAdd(role) {
+        const list = shameRead();
+        if (list.indexOf(role) >= 0) return;
+        list.push(role);
+        try { root0.localStorage.setItem('nfa.shame.v1', JSON.stringify(list)); } catch (e) { /* storage blocked */ }
+        shameNew = 1;
+      }
+      /* One gag per role: bumping people should be worth seeing. Every one of them runs for about a second. */
+      const GAG_SECS = [1.4, 1.3, 1.1, 1.2, 1.1, 1.8, 1.6, 1.5, 1.5, 1.0, 1.4, 1.3, 1.5, 1.0, 1.2, 1.5];
+      function startGag(role) {
+        gag = { role, life: 0, max: GAG_SECS[role], seed: Math.floor(Math.random() * 1000) };
+        SND.babble(5);
+        if (role === 7) { musicHold = 1.4; SND.scratch(); }
+        if (role === 8) { SND.drop(); }
+        if (role === 9) { shake = 22; lurch = 1.5; }
+        if (role === 13) { flash = 1; flashCol = '#ffffff'; }
       }
       function diff(p) {
         const now = new Map(), L = E.LEVELS[p.lv];
@@ -2298,6 +2443,7 @@
         if (prev) {
           if (p.lv !== prev.lv) {
             card = { lv: p.lv, life: 0 }; flash = 1; flashCol = '#ffffff'; SND.door(); burst(30, ['#ffcf1f', '#ffffff', '#e2603a', '#1f5fbf'], W / 2, H * 0.42);
+            rugVel = -46; SND.zip(); text2dm(DM_LEVEL[p.lv], true);
             announce('Level ' + (p.lv + 1) + ': ' + LEVEL_TEXT[p.lv].title + '. ' + LEVEL_TEXT[p.lv].hint);
           }
           const hadT = prev.queue[0], hasT = p.queue[0];
@@ -2305,10 +2451,14 @@
           if (p.door && !prev.door) say('EVERYONE CAUGHT. THE DOOR IS OPEN!', '#ffcf1f', 2.2);
           if (p.won && !prev.won) { SND.win(); flash = 1; flashCol = '#ffe9a8'; musicOn = false; }
           if (p.battery <= 0 && prev.battery > 0) { SND.dead(); musicOn = false; say('Your phone died. So did the lead.', '#ff8a8a', 3); }
+          if (p.bull > 0 && prev.bull === 0) { bullBanner = 1; SND.bull(); flash = 0.5; flashCol = '#ffcf1f'; burst(40, ['#ff4dcb', '#ffcf1f', '#28e0d0', '#5be38f', '#ffffff'], W / 2, H * 0.4); text2dm('wait. no. stop running like that.'); announce('Bull run! Everybody high-fives you.'); }
+          if (p.battery === 1 && !wasLow) { wasLow = true; text2dm(DM_LOW, true); }
+          if (p.battery > 1) wasLow = false;
         } else {
           card = { lv: p.lv, life: 0 };
+          text2dm(DM_LEVEL[p.lv], true);
         }
-        prev = { lv: p.lv, queue: p.queue.slice(), targetAt: p.targetAt, door: p.door, won: p.won, battery: p.battery };
+        prev = { lv: p.lv, queue: p.queue.slice(), targetAt: p.targetAt, door: p.door, won: p.won, battery: p.battery, bull: p.bull };
         void L;
       }
       function onResolved(a, p) {
@@ -2319,20 +2469,31 @@
           flash = 0.6; flashCol = '#ffffff';
           SND.shutter(p.combo);
           burst(pf ? 26 : 14, ['#1f5fbf', '#ffcf1f', '#e2603a', '#2fbf71', '#ffffff'], W / 2, H * 0.42);
-          popup((pf ? 'CAUGHT · PERFECT' : 'CAUGHT') , pf ? '#5be38f' : '#ffcf1f', W / 2, H * 0.3, pf ? 26 : 22);
+          popup((pf ? 'CAUGHT · PERFECT' : 'CAUGHT') , pf ? '#5be38f' : '#ffcf1f', W / 2, H * 0.6, pf ? 26 : 22);
           announce(pf ? 'Caught, perfect read.' : 'Caught.');
+          if (p.lv === 5) text2dm(DM_ROOF[Math.min(DM_ROOF.length - 1, p.caught - 1)], true);
+          else text2dm(DM_CATCH[(p.lv * 5 + p.caught + (p.seed % 7)) % DM_CATCH.length], true);
         } else if (a.res === 'bumped') {
+          const role = a.look & 15;
           bumped.push({ look: a.look, life: 0, side: a.lane < 1 ? -1 : 1 });
-          SND.bonk(); hurt(p.lv);
-          say(ROLE_JOKE[a.look & 15], '#ffffff');
+          SND.bonk(); hurt(p.lv, role);
+          say(ROLE_JOKE[role], '#ffffff');
+          startGag(role); shameAdd(role);
+          text2dm(DM_BUMP[a.id % DM_BUMP.length]);
         } else if (a.res === 'crashed') {
           SND.crash(); hurt(p.lv);
-          say(OBSTACLE_JOKE[Math.max(1, Math.min(5, p.lv))], '#ffffff');
+          say(a.kind === K.TRAM ? 'You hit Tram 28. First time it has ever been on schedule.' : OBSTACLE_JOKE[Math.max(1, Math.min(5, p.lv))], '#ffffff');
         } else if (a.res === 'missed') {
           if (a.kind === K.TARGET && p.lane !== a.lane && !p.actors.some((x) => x.d === a.d && x.res === 'bumped')) {
             SND.bonk(); hurt(p.lv);
             say(MISS_JOKE[a.id % MISS_JOKE.length], '#ffb3b3');
           }
+        } else if (a.res === 'five') {
+          SND.clap(); popup('UP TOP! +50', '#ffe9a0', W / 2, H * 0.34, 22);
+          if (a.kind <= K.TARGET) bumped.push({ look: a.look, life: 0, side: a.lane < 1 ? -1 : 1, five: true });
+        } else if (a.res === 'drink') {
+          SND.gulp(); popup('+100', '#ffe9a0', W / 2, H * 0.36, 22);
+          if (DRINK_TEXT[p.lv]) say(DRINK_TEXT[p.lv], '#ffe9a0', 1.6);
         } else if (a.res === 'nata') {
           SND.nata(); popup('+50 NATA', '#ffe9a0', W / 2, H * 0.36, 18);
         } else if (a.res === 'charger') {
@@ -2340,11 +2501,13 @@
         }
         if (a.kind === K.TARGET && (a.res === 'perfect' || a.res === 'good') && STREAK_TEXT[p.combo]) popup(STREAK_TEXT[p.combo], '#f6a5b8', W / 2, H * 0.24, 28);
       }
-      function hurt(lv) {
-        shake = 10; flash = 0.5; flashCol = '#ff3b3b'; lurch = 1; rugVel = 9; phoneShake = 1;
+      function hurt(lv, role) {
+        shake = 10; flash = 0.5; flashCol = '#ff3b3b'; lurch = 1; rugVel = 22; phoneShake = 1;
         if (reduced()) return;
-        const col = ['#7fb0ea', '#ffa63d', '#e23a52', '#ff4dcb', '#5d341b', '#f3f6ff'][lv];
-        for (let i = 0; i < 7; i++) splats.push({ x: 30 + Math.random() * 300, y: 90 + Math.random() * 320, r: 5 + Math.floor(Math.random() * 16), c: col, life: 0, seed: i * 17 + Math.floor(Math.random() * 40) });
+        const paint = ['#e2603a', '#1f5fbf', '#2fbf71', '#ffcf1f', '#ff4dcb'];
+        const col = role === 10 ? '#4a2a14' : ['#7fb0ea', '#ffa63d', '#e23a52', '#ff4dcb', '#5d341b', '#f3f6ff'][lv];
+        const n = role === 0 ? 16 : role === 10 ? 12 : 6;
+        for (let i = 0; i < n; i++) splats.push({ x: 30 + Math.random() * 300, y: 90 + Math.random() * 320, r: 5 + Math.floor(Math.random() * (role === 0 ? 22 : 16)), c: role === 0 ? paint[i % 5] : col, life: 0, seed: i * 17 + Math.floor(Math.random() * 40) });
       }
 
       /* ---------- text ---------- */
@@ -2424,13 +2587,19 @@
           if (p.battery === 1 && !state.finished) { lowBeep -= dt; if (lowBeep <= 0) { lowBeep = 1.4; SND.beep(); } }
           if (!state.paused && !state.finished) stepPhase += dt * (6 + (E.speedOf(p) / 40));
         } else {
-          attractT += dt;
-          lvI = Math.floor(attractT / 7) % PLACES.length;
+          attractT += dt * (state.boost || 1);
+          lvI = state.place != null ? state.place : Math.floor(attractT / 7) % PLACES.length;
           posF = attractT * 4;
           stepPhase = attractT * 8;
           camLane = 1 + Math.sin(attractT * 0.7) * 0.8;
         }
         if (!state.paused) {
+          musicHold = Math.max(0, musicHold - dt); dmWait = Math.max(0, dmWait - dt); shameNew = Math.max(0, shameNew - dt * 0.45); bullBanner = Math.max(0, bullBanner - dt * 0.7);
+          if (dmBubble) { dmBubble.life += dt; if (dmBubble.life > 3) dmBubble = null; }
+          if (gag) { gag.life += dt; if (gag.life > gag.max) { if (gag.role === 7) { shake = 16; SND.drop(); } gag = null; } }
+          if (p && p.bull > 0) { rainT -= dt; if (rainT <= 0) { rainT = 0.12; burst(6, ['#ff4dcb', '#ffcf1f', '#28e0d0', '#5be38f'], Math.random() * W, 100); } }
+          if (gull) { gull.t += dt; if (gull.t > 1.5) gull = null; }
+          if (p && p.lv === 5 && !state.finished) { gullT -= dt; if (gullT <= 0) { gullT = 7 + Math.random() * 5; gull = { t: 0, plop: false }; } }
           shake = Math.max(0, shake - dt * 32); flash = Math.max(0, flash - dt * 3.6); phoneShake = Math.max(0, phoneShake - dt * 3.2); newFace = Math.max(0, newFace - dt * 1.2); lurch = Math.max(0, lurch - dt * 2.6);
           rugVel *= Math.pow(0.02, dt); rugShift += rugVel * dt; doorLit += dt;
           for (const a of particles) { a.life += dt; a.vy += 620 * dt; a.x += a.vx * dt; a.y += a.vy * dt; }
@@ -2442,11 +2611,15 @@
           if (caption) { caption.life += dt; if (caption.life > caption.max) caption = null; }
           if (card) { card.life += dt; if (card.life > 2.6) card = null; }
         }
-        const camX = (camLane - 1) * LANE_W * CAM_FOLLOW;
+        // a drink: the corridor sways at the brunch, shakes in the cellar
+        const tipsy = p && !reducedM ? Math.min(1, p.tipsy / 100) : 0;
+        const espresso = lvI === 4;
+        const swayX = tipsy ? (espresso ? (Math.random() - 0.5) * 0.09 : Math.sin(time * 1.7) * 0.42) * tipsy : 0;
+        const camX = (camLane - 1) * LANE_W * CAM_FOLLOW + swayX;
         const camZ = posF - CAM_BACK - lurch * lurch * 0.5;
         const bob = reducedM ? 0 : Math.sin(stepPhase) * 1.6;
-        const hy = 148 + bob + (shake > 0 && !reducedM ? (Math.random() - 0.5) * shake * 0.6 : 0);
-        const f = 132 - heat * 4;
+        const hy = 148 + bob + (shake > 0 && !reducedM ? (Math.random() - 0.5) * shake * 0.6 : 0) + (tipsy && !espresso ? Math.sin(time * 2.3) * 7 * tipsy : 0);
+        const f = (p && p.bull > 0 ? 104 : 132) - heat * 4 + (tipsy && !espresso ? Math.sin(time * 1.1) * 8 * tipsy : 0);
         const cx = LOW_W / 2;
         const doorZ = p && p.door ? (p.door / 1000 - camZ) : 1e9;
         renderWorld(lvI, camX, camZ, hy, f, time, doorZ, rugShift);
@@ -2487,9 +2660,10 @@
           }
         }
         // speed lines when you are on a streak; steam in the cellar
-        if (heat >= 2 && !reducedM && p && !state.finished) {
-          lc.strokeStyle = 'rgba(255,255,255,.28)'; lc.lineWidth = 1;
-          for (let i = 0; i < heat * 3; i++) {
+        const bullOn = p && p.bull > 0;
+        if ((heat >= 2 || bullOn) && !reducedM && p && !state.finished) {
+          lc.strokeStyle = bullOn ? 'hsla(' + Math.floor(time * 500) % 360 + ',100%,70%,.55)' : 'rgba(255,255,255,.28)'; lc.lineWidth = 1;
+          for (let i = 0; i < (bullOn ? 26 : heat * 3); i++) {
             const a = (i * 2.399 + Math.floor(time * 18) * 1.7) % 6.283, r0 = 60 + ((i * 37) % 40), r1 = r0 + 22 + heat * 6;
             lc.beginPath(); lc.moveTo(cx + Math.cos(a) * r0, hy + Math.sin(a) * r0); lc.lineTo(cx + Math.cos(a) * r1, hy + Math.sin(a) * r1); lc.stroke();
           }
@@ -2514,8 +2688,7 @@
           for (const a of p.actors) {
             const z = a.d / 1000 - camZ;
             if (z < 0.55 || z > doorZ || z > P.fogDist + 3) continue;
-            if (a.st === 1 && a.res !== 'nata' && a.res !== 'charger' && (a.res === 'perfect' || a.res === 'good' || a.res === 'bumped')) continue;
-            if (a.st === 1 && (a.res === 'nata' || a.res === 'charger')) continue;
+            if (a.st === 1 && a.res !== '' && a.res !== 'missed' && a.res !== 'crashed') continue;
             list.push({ a, z });
           }
           list.sort((x, y) => y.z - x.z);
@@ -2523,7 +2696,7 @@
           for (const e of list) {
             const a = e.a, z = e.z, s0 = f / z;
             const laneF = E.actorLane(a, p.pos) / 1000;
-            const wx = (laneF - 1) * LANE_W;
+            const wx = (laneF - 1 + (a.kind === E.KIND.TRAM ? 0.5 : 0)) * LANE_W;
             let cv = null;
             const phaseT = time + a.id * 0.37;
             if (a.kind === E.KIND.CROWD || a.kind === E.KIND.TARGET) {
@@ -2534,7 +2707,9 @@
             } else {
               cv = propSprite(PROP_OF[a.kind](p.lv));
             }
-            const pickup = a.kind === E.KIND.NATA || a.kind === E.KIND.CHARGER;
+            if (a.kind === E.KIND.TRAM && p.actors.some((o) => o.d === a.d && o.kind === E.KIND.TRAM && o.lane < a.lane)) continue;   // one tram, two lanes
+            if (a.kind === E.KIND.TRAM && a.st === 0 && z < 21 && !bellSeen.has(a.d)) { bellSeen.add(a.d); SND.bell(); say('TRAM 28!', '#ffcf1f', 1.3); }
+            const pickup = a.kind === E.KIND.NATA || a.kind === E.KIND.CHARGER || a.kind === E.KIND.DRINK;
             const gs = GRID_M * s0 * scr * (pickup ? 0.62 : 1);   // device pixels per grid pixel; things to pick up are small
             const lift = pickup ? 0.1 + Math.sin(phaseT * 4) * 0.04 : 0;
             const footX = (cx + (wx - camX) * s0) * scr + ox, footY = (hy + (EYE - lift) * s0) * scr;
@@ -2558,18 +2733,33 @@
         /* someone you ran into: arms crossed, right in your face */
         for (const b of bumped) {
           const q = b.life / 0.7;
-          paintPerson(sc, b.look, 'nope', 0, 0, 0, time, undefined);
-          const size = (250 + 120 * q) * k, dx = (W / 2 + b.side * 170 * q * q) * k - size / 2, dy = (H * 0.36) * k - size * 0.48;
+          if (b.five) paintPerson(sc, b.look, 'action', 5, 0, Math.min(1, q * 1.6), time, undefined);
+          else paintPerson(sc, b.look, 'nope', 0, 0, 0, time, undefined);
+          const size = (b.five ? 190 + 110 * q : 250 + 120 * q) * k, dx = (W / 2 + b.side * (b.five ? 170 + 90 * q : 170 * q * q)) * k - size / 2, dy = (H * 0.36) * k - size * 0.48;
           ctx.globalAlpha = 1 - Math.max(0, q - 0.6) / 0.4;
           ctx.drawImage(sprite, Math.round(dx), Math.round(dy), Math.round(size), Math.round(size));
           ctx.globalAlpha = 1;
         }
 
+        // seeing double after a mimosa
+        if (tipsy && !espresso) {
+          ctx.globalAlpha = 0.32 * tipsy;
+          ctx.drawImage(ctx.canvas, Math.round(Math.sin(time * 1.3) * 16 * k), Math.round(Math.cos(time * 1.9) * 5 * k));
+          ctx.globalAlpha = 1;
+        }
         ctx.setTransform(k, 0, 0, k, 0, 0);
         /* vignette, like looking down a dark corridor */
         const vig = ctx.createRadialGradient(W / 2, H * 0.44, H * 0.28, W / 2, H * 0.44, H * 0.72);
         vig.addColorStop(0, 'rgba(5,3,14,0)'); vig.addColorStop(1, lvI === 5 ? 'rgba(40,10,30,.38)' : 'rgba(5,3,14,.68)');
         ctx.fillStyle = vig; ctx.fillRect(0, 0, W, H);
+
+        if (bullOn && !reducedM) {                 // the Bull Run: the whole frame goes rainbow
+          const h0 = Math.floor(time * 240) % 360;
+          ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.28;
+          ctx.fillStyle = 'hsl(' + h0 + ',100%,55%)'; ctx.fillRect(0, 0, W, H);
+          ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+          for (let i = 0; i < 16; i++) { ctx.fillStyle = 'hsl(' + ((h0 + i * 24) % 360) + ',100%,62%)'; ctx.fillRect(0, 90 + i * 34, 6, 34); ctx.fillRect(W - 6, 90 + i * 34, 6, 34); }
+        }
 
         /* stains on the lens */
         for (const s of splats) {
@@ -2584,15 +2774,19 @@
         }
         ctx.globalAlpha = 1;
 
+        drawGull(ctx, time);
+        if (gag) drawGag(ctx, k, time);
+
         /* the phone: the photo of who you are after */
         const shakeP = phoneShake > 0 && !reducedM ? Math.sin(time * 70) * phoneShake * 5 : 0;
         const handBob = reducedM ? 0 : Math.sin(stepPhase * 0.5) * 5, handY = reducedM ? 0 : Math.abs(Math.sin(stepPhase * 0.5)) * 6;
-        drawPhone(ctx, k, p, time, handBob + shakeP, handY - (p ? 0 : 0));
+        if (!state.noPhone) drawPhone(ctx, k, p, time, handBob + shakeP, handY);
         if (p && newFace > 0 && !state.finished && p.queue[0] !== undefined) {
           text(ctx, 'NEW FACE', W - 92, H - 240, 14, '#ffcf1f', 'center', 900, 4);
         }
         ctx.setTransform(k, 0, 0, k, 0, 0);
 
+        if (dmBubble && p && !state.ending) drawDm(ctx);
         if (flash > 0 && !reducedM) { ctx.globalAlpha = Math.min(0.85, flash); ctx.fillStyle = flashCol; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
 
         /* the photos you take fly up to the corner */
@@ -2623,6 +2817,19 @@
         ctx.globalAlpha = 1;
 
         if (p) hud(ctx, p, time, state);
+        if (bullBanner > 0 && p && !state.ending) {
+          const a = Math.min(1, bullBanner * 3), sc0 = 1 + (1 - bullBanner) * 0.14;
+          ctx.save(); ctx.globalAlpha = a; ctx.translate(W / 2, 188); ctx.scale(sc0, sc0); ctx.rotate(-0.05);
+          text(ctx, 'BULL RUN!', 0, 0, 44, 'hsl(' + Math.floor(time * 600) % 360 + ',100%,66%)', 'center', 900, 8);
+          text(ctx, 'everybody high-fives you', 0, 34, 14, '#ffffff', 'center', 800, 4);
+          ctx.restore();
+        }
+        if (shameNew > 0 && p && !state.ending) {
+          ctx.globalAlpha = Math.min(1, shameNew * 3);
+          ctx.fillStyle = 'rgba(12,8,28,.9)'; ctx.fillRect(W / 2 - 92, 152, 184, 24);
+          text(ctx, 'WALL OF SHAME ' + shameRead().length + '/16', W / 2, 165, 13, '#ff8ac0', 'center', 900);
+          ctx.globalAlpha = 1;
+        }
         if (caption && p && !state.ending) {
           const a = Math.min(1, caption.life * 7, (caption.max - caption.life) * 4);
           ctx.globalAlpha = Math.max(0, a);
@@ -2656,6 +2863,129 @@
           text(ctx, '◀', 38, H * 0.56, 44, '#ffffff', 'center', 900, 6); text(ctx, '▶', W - 38, H * 0.56, 44, '#ffffff', 'center', 900, 6);
           text(ctx, 'TAP THE SIDES TO CHANGE LANE', W / 2 - 38, H - 34, 12, '#ffffff', 'center', 900, 4);
           ctx.globalAlpha = 1;
+        }
+      }
+      /* The one who did it, texting you. */
+      function drawDm(ctx) {
+        const d = dmBubble, a = Math.min(1, d.life * 7, (3 - d.life) * 4), x = 10, w = 176;
+        ctx.save(); ctx.globalAlpha = Math.max(0, a);
+        ctx.font = '700 13px ' + FONT;
+        const words = d.str.split(' '), lines = []; let line = '';
+        for (const word of words) { const t2 = line ? line + ' ' + word : word; if (ctx.measureText(t2).width > w - 20 && line) { lines.push(line); line = word; } else line = t2; }
+        if (line) lines.push(line);
+        const h = 26 + lines.length * 17, y = H - 150 - h + (1 - Math.min(1, d.life * 7)) * 12;
+        ctx.fillStyle = '#1a1526'; ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#b3262e'; ctx.fillRect(x, y, w, 14);
+        ctx.fillStyle = '#e8b53a'; ctx.fillRect(x + 4, y + 4, 6, 6); ctx.fillStyle = '#7d1820'; ctx.fillRect(x + 6, y + 6, 2, 2);
+        text(ctx, 'anon who pulled the rug', x + 14, y + 7.5, 9, '#ffffff', 'left', 800);
+        lines.forEach((l, i) => text(ctx, l, x + 8, y + 26 + i * 17, 13, '#ffffff', 'left', 700));
+        ctx.restore();
+      }
+      /* Lisbon says hi: a seagull crosses the rooftop and leaves its opinion on your lens. */
+      function drawGull(ctx, time) {
+        if (!gull || !A.seagull) return;
+        const x = -40 + gull.t / 1.5 * (W + 80), y = 130 + Math.sin(gull.t * 3) * 34;
+        A.seagull(ctx, x, y, 22, time);
+        if (!gull.plop && x > W * 0.45) { gull.plop = true; SND.nata(); splats.push({ x: x, y: y + 60, r: 15, c: '#f3f6ff', life: 0, seed: 11 }); text2dm('that gull works for me.'); }
+      }
+      /* One gag per role. */
+      function drawGag(ctx, k, time) {
+        const g = gag, q = g.life / g.max, fade = Math.min(1, (g.max - g.life) * 5), pop = Math.min(1, g.life * 8), big = 1 + (1 - pop) * 0.6;
+        const stamp = (draw) => { ctx.save(); ctx.globalAlpha = fade; ctx.translate(W / 2, 330); ctx.scale(big, big); draw(); ctx.restore(); };
+        switch (g.role) {
+          case 1: stamp(() => {                    // Collector: you are for sale now
+            ctx.rotate(-0.16); ctx.fillStyle = '#fff6e5'; ctx.fillRect(-96, -40, 192, 80); ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.strokeRect(-96, -40, 192, 80);
+            ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(-80, 0, 6, 0, 7); ctx.fill();
+            text(ctx, 'LISTED', 10, -14, 26, '#b3262e', 'center', 900); text(ctx, '0.0001 ETH · OBO', 10, 16, 15, INK, 'center', 800);
+          }); break;
+          case 2: {                                // Dev: production is down
+            ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+            for (let i = 0; i < 9; i++) { const y = ((g.seed * (i + 3) * 37) % 600) * k, h = (10 + (i * 13) % 30) * k, dx = (((i * 53 + Math.floor(time * 30)) % 40) - 20) * k; ctx.drawImage(ctx.canvas, 0, y, W * k, h, dx, y, W * k, h); }
+            ctx.restore();
+            ctx.globalAlpha = fade; ctx.fillStyle = 'rgba(0,10,0,.86)'; ctx.fillRect(30, 270, 300, 92);
+            ['> deploy mainnet', 'ERROR: dev was bumped', '> moved to Q' + (1 + g.seed % 4) + ' ' + (2027 + g.seed % 9)].forEach((l, i) => { ctx.font = '700 15px ui-monospace, Consolas, monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = i === 1 ? '#ff6b6b' : '#5be38f'; ctx.fillText(l, 42, 292 + i * 25); });
+            ctx.globalAlpha = 1; break;
+          }
+          case 3: {                                // Founder: while you are here, the deck
+            const y = 150 + (1 - pop) * -240;
+            ctx.save(); ctx.globalAlpha = fade; ctx.fillStyle = '#fff'; ctx.fillRect(50, y, 260, 170); ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.strokeRect(50, y, 260, 170);
+            text(ctx, 'OUR VISION', 180, y + 24, 20, INK, 'center', 900);
+            ctx.strokeStyle = '#2fbf71'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(74, y + 138); ctx.lineTo(150, y + 122); ctx.lineTo(214, y + 96); ctx.lineTo(286, y + 44); ctx.stroke();
+            text(ctx, 'Series A?', 112, y + 62, 15, '#e2603a', 'center', 800); ctx.restore(); break;
+          }
+          case 4: stamp(() => {                    // Curator: the verdict
+            ctx.rotate(0.2); ctx.strokeStyle = '#e23a52'; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(0, 0, 74, 0, 7); ctx.stroke();
+            text(ctx, '2/10', 0, -8, 50, '#e23a52', 'center', 900); text(ctx, 'derivative', 0, 34, 15, '#e23a52', 'center', 800);
+          }); break;
+          case 5: {                                // Streamer: you are content
+            const chat = ['LMAOOO', 'KEKW', 'CLIP IT', 'did they just', 'F', 'run it back', 'this guy', '+1 viewer', 'who is this', 'MOD', 'ser...', 'NGMI'];
+            ctx.save(); ctx.globalAlpha = fade; ctx.fillStyle = 'rgba(10,6,24,.7)'; ctx.fillRect(0, 150, 130, 300);
+            ctx.fillStyle = '#e23a52'; ctx.fillRect(8, 158, 42, 18); text(ctx, 'LIVE', 29, 167, 11, '#fff', 'center', 900);
+            text(ctx, (41000 + g.seed * 13 + Math.floor(g.life * 9000)).toLocaleString('en-US'), 58, 167, 11, '#fff', 'left', 800);
+            const rows = Math.floor(g.life * 9);
+            for (let i = 0; i < Math.min(rows, 12); i++) text(ctx, chat[(i + g.seed) % chat.length], 10, 192 + i * 21, 13, ['#5be38f', '#ffcf1f', '#7fc8ff', '#ff8ac0'][i % 4], 'left', 800);
+            ctx.restore(); break;
+          }
+          case 6: {                                // Degen: is it an airdrop?
+            ctx.save(); ctx.globalAlpha = fade;
+            for (let i = 0; i < 14; i++) {
+              const x = 18 + ((i * 73 + g.seed) % 324), y = -30 + ((g.life * (90 + i * 13) * 2 + i * 41) % 620);
+              ctx.fillStyle = '#fff6e5'; ctx.beginPath(); ctx.arc(x, y - 14, 11, Math.PI, 0); ctx.fill();
+              ctx.strokeStyle = '#fff6e5'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x - 11, y - 14); ctx.lineTo(x, y); ctx.lineTo(x + 11, y - 14); ctx.stroke();
+              ctx.fillStyle = '#ffc21a'; ctx.fillRect(x - 5, y, 10, 10); ctx.fillStyle = '#b38600'; ctx.fillRect(x - 2, y + 3, 4, 4);
+            }
+            text(ctx, 'AIRDROP?', W / 2, 250, 38, '#ffc21a', 'center', 900, 6); text(ctx, 'worth $0.00', W / 2, 288, 15, '#ffffff', 'center', 800, 4);
+            ctx.restore(); break;
+          }
+          case 7: {                                // DJ: the music stops, the record spins down
+            ctx.save(); ctx.globalAlpha = fade; ctx.translate(W / 2, 300); ctx.rotate(time * (6 - q * 5));
+            ctx.fillStyle = '#14101f'; ctx.beginPath(); ctx.arc(0, 0, 70, 0, 7); ctx.fill(); ctx.strokeStyle = '#3a3448'; ctx.lineWidth = 2;
+            [58, 46, 34].forEach((r) => { ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.stroke(); });
+            ctx.fillStyle = '#e2603a'; ctx.beginPath(); ctx.arc(0, 0, 20, 0, 7); ctx.fill(); ctx.fillStyle = '#fff6e5'; ctx.fillRect(-3, -18, 6, 12); ctx.restore();
+            ctx.globalAlpha = fade; text(ctx, 'THE BASS DROPPED ANYWAY', W / 2, 396, 17, '#ffffff', 'center', 900, 5); ctx.globalAlpha = 1; break;
+          }
+          case 8: {                                // Whale: the chart
+            ctx.save(); ctx.globalAlpha = fade * 0.92; ctx.fillStyle = 'rgba(8,16,44,.72)'; ctx.fillRect(16, 170, 328, 210);
+            const m = Math.min(1, q * 2.4), pts = 18; ctx.lineWidth = 7; ctx.strokeStyle = '#ff3b3b'; ctx.beginPath();
+            for (let i = 0; i <= pts * m; i++) { const x = 28 + i * 304 / pts, y = 196 + Math.pow(i / pts, 2.4) * 165 + ((i * g.seed) % 11) - 5; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
+            ctx.stroke();
+            text(ctx, 'FLOOR -40%', W / 2 + 34, 208, 34, '#ff3b3b', 'center', 900, 6); ctx.restore(); break;
+          }
+          case 9: stamp(() => { text(ctx, 'BOLD.', 0, 0, 74, '#ffffff', 'center', 900, 10); }); break;   // Bodyguard
+          case 10: stamp(() => { ctx.rotate(-0.05); text(ctx, 'OAT MILK: 0', 0, -60, 34, '#fff1cf', 'center', 900, 7); }); break;   // Barista
+          case 11: {                               // Gamer: insert coin
+            ctx.save(); ctx.globalAlpha = fade; ctx.fillStyle = 'rgba(0,0,0,.66)'; ctx.fillRect(0, 210, W, 210);
+            text(ctx, 'CONTINUE?', W / 2, 256, 34, '#ff3b3b', 'center', 900, 5);
+            text(ctx, String(9 - Math.min(9, Math.floor(g.life * 7))), W / 2, 318, 58, '#ffffff', 'center', 900, 5);
+            ctx.fillStyle = '#e8e4f0'; ctx.fillRect(W / 2 - 22, 362, 44, 44); ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.strokeRect(W / 2 - 22, 362, 44, 44);
+            text(ctx, 'F', W / 2, 385, 26, INK, 'center', 900); ctx.restore(); break;
+          }
+          case 12: {                               // Meme Lord: you are a template now
+            ctx.save(); ctx.globalAlpha = fade; ctx.font = '900 34px Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 7; ctx.strokeStyle = '#000'; ctx.fillStyle = '#fff';
+            [['NOBODY:', 196], ['YOU:', 372], ['RUNNING INTO ME', 412]].forEach((l) => { ctx.strokeText(l[0], W / 2, l[1]); ctx.fillText(l[0], W / 2, l[1]); });
+            ctx.restore(); break;
+          }
+          case 13: {                               // Photographer: spots in your eyes
+            ctx.save(); ctx.globalAlpha = fade * 0.6;
+            [[120, 280, 40, '#5be38f'], [230, 340, 26, '#ff4dcb'], [170, 410, 34, '#28e0d0']].forEach((b) => { ctx.fillStyle = b[3]; ctx.beginPath(); ctx.arc(b[0], b[1], b[2], 0, 7); ctx.fill(); });
+            ctx.restore(); break;
+          }
+          case 14: {                               // Skater: the board keeps going
+            const x = -60 + q * (W + 120), y = 300 - Math.sin(q * Math.PI) * 110;
+            ctx.save(); ctx.translate(x, y); ctx.rotate(q * 12);
+            ctx.fillStyle = '#e2603a'; ctx.fillRect(-46, -6, 92, 12); ctx.fillStyle = '#1a1526'; ctx.fillRect(-46, -6, 92, 3);
+            ctx.fillStyle = '#fff6e5'; [-30, 30].forEach((dx) => { ctx.fillRect(dx - 7, 6, 14, 12); }); ctx.restore();
+            ctx.globalAlpha = fade; text(ctx, 'NICE OLLIE', W / 2, 200, 26, '#ffffff', 'center', 900, 6); ctx.globalAlpha = 1; break;
+          }
+          case 15: {                               // Chef: compliments, to the face
+            const y = 300 + q * q * 90;
+            ctx.save(); ctx.globalAlpha = fade;
+            ctx.fillStyle = '#c98a2e'; ctx.beginPath(); ctx.arc(W / 2, y, 96, 0, 7); ctx.fill();
+            ctx.fillStyle = '#ffe9a0'; ctx.beginPath(); ctx.arc(W / 2, y, 78, 0, 7); ctx.fill();
+            ctx.fillStyle = '#7a3f14'; [[-26, -22, 18], [22, 8, 24], [-8, 30, 13]].forEach((b) => { ctx.beginPath(); ctx.arc(W / 2 + b[0], y + b[1], b[2], 0, 7); ctx.fill(); });
+            ctx.restore(); break;
+          }
+          default: break;                          // Artist: the paint on the lens is the gag
         }
       }
       const litCanvas = document.createElement('canvas'); litCanvas.width = 72; litCanvas.height = 72;
@@ -2715,6 +3045,8 @@
         ctx.fillStyle = '#14101f'; ctx.fillRect(bx, by, 52, 18);
         for (let i = 0; i < E.MAX_BATTERY; i++) if (i < bars && (!red || Math.sin(time * 9) > -0.4)) { ctx.fillStyle = red ? '#ff4d4d' : bars === 2 ? '#ffcf1f' : '#5be38f'; ctx.fillRect(bx + 2 + i * 10, by + 2, 8, 14); }
         if (red) text(ctx, 'LOW BATTERY', W / 2 + 4, 56, 12, '#ff8a8a', 'center', 900);
+        const floor = floorOf(p.stats.bumps);
+        if (floor < 100) text(ctx, 'FLOOR -' + (100 - floor) + '%', W / 2 + 4, 72, 12, '#ff5d5d', 'center', 900);
       }
       /* The lane a tap means: a person you tapped in another lane of the next row, else one lane towards that side
          (somebody big right in front of you must never swallow the tap that dodges them). */
@@ -2726,8 +3058,22 @@
         const step = x < W / 2 ? -1 : 1;
         return Math.max(0, Math.min(E.LANES - 1, p.lane + step));
       }
+      /* The Wall of Shame, one square per role: a face once you have run into them, a question mark before. */
+      function drawShame(ctx, w, cell) {
+        const list = shameRead(), cols = Math.floor(w / cell);
+        ctx.imageSmoothingEnabled = false;
+        for (let i = 0; i < 16; i++) {
+          const x = (i % cols) * cell, y = Math.floor(i / cols) * cell, on = list.indexOf(i) >= 0;
+          ctx.fillStyle = on ? '#fff1cf' : '#231d30'; ctx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+          if (on) {
+            paintPerson(sc, A.makeLook({ role: i, skin: (i * 3) % 6, hair: i % 7, hairColor: (i * 5) % 8, facial: 0, glasses: i % 3 === 0 ? 1 : 0 }), 'idle', 0, 0, 0, 0.1, undefined);
+            ctx.drawImage(sprite, 12, 8, 48, 48, x + 2, y + 2, cell - 4, cell - 4);
+          } else { ctx.fillStyle = '#6f6783'; ctx.font = '800 ' + Math.floor(cell * 0.46) + 'px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', x + cell / 2, y + cell / 2); }
+        }
+        return list.length;
+      }
       return {
-        frame, reset, laneFromTap,
+        frame, reset, laneFromTap, drawShame, shameCount: () => shameRead().length,
         startAudio() { audio(); musicOn = true; },
         stopAudio() { musicOn = false; },
         setSound(on) { soundOn = !!on; if (on) audio(); },
@@ -2737,7 +3083,7 @@
         joke: (role) => ROLE_JOKE[role]
       };
     }
-    root.AERunner = { create, LEVEL_TEXT, ROLE_JOKE };
+    root.AERunner = { create, LEVEL_TEXT, ROLE_JOKE, reportCard, damageLines, causeOfDeath, floorOf };
   })(this);
   </script>
 
@@ -2895,7 +3241,7 @@
       $('btn-play').textContent = 'PLAY FREE · ' + sec + ' S';
       document.querySelector('#title-screen .tagline').textContent = 'Lisbon edition · free trial · ' + sec + ' s · can you tell them apart?';
       document.querySelector('#title-screen .how li:last-child').innerHTML =
-        'Five bars and it\'s over. The <b>six levels</b>, the one who did it and the <b>mint</b> are on <b>THE WALL ARCADE</b>.';
+        'The <b>six levels</b>, the one who did it and the <b>mint</b> are on <b>THE WALL ARCADE</b>.';
     }
 
     function startRun(seed, paid, runId, dailyN) {
@@ -2961,7 +3307,12 @@
       badge.textContent = tr.rarityName.toUpperCase(); badge.className = 'rarity-badge r' + tr.rarity;
       $('avatar-name').textContent = session.name;
       $('final-score').textContent = sc.total + (newBest ? ' ★' : '');
-      $('survival-line').textContent = sc.survived ? 'You caught them!' : sc.battery <= 0 ? 'Phone died, level ' + (sc.cleared + 1) : TRIAL ? 'Free trial, level ' + (sc.cleared + 1) : 'Party over, level ' + (sc.cleared + 1);
+      $('survival-line').textContent = sc.survived ? 'You caught them!' : sc.battery <= 0 ? root.AERunner.causeOfDeath(sc) : TRIAL ? 'Free trial, level ' + (sc.cleared + 1) : 'Party over, level ' + (sc.cleared + 1);
+      $('damage').innerHTML = root.AERunner.damageLines(sc).map((l) => '<li>' + esc(l) + '</li>').join('');
+      const shameCanvas = $('shame-canvas');
+      shameCanvas.width = 320; shameCanvas.height = 160;
+      const shameCount = runner.drawShame(shameCanvas.getContext('2d'), 320, 40);
+      $('shame-title').textContent = 'Wall of Shame ' + shameCount + '/16';
       $('share-grid').textContent = E.shareGrid(sc);
       const tag = (t) => ' <span class="tag r' + t + '">' + E.RARITIES[t] + '</span>';
       $('t-role').textContent = session.role + ' · ' + session.badge + ' pass';
@@ -3062,13 +3413,13 @@
       let role = -1, n = 0;
       sc.bumps.forEach((v, i) => { if (v > n) { n = v; role = i; } });
       if (role < 0) return 'I bumped nobody. Nobody is fungible.';
-      return runner.joke(role) + (n > 1 ? ' ' + n + ' times.' : '');
+      return runner.joke(role) + (n > 1 ? ' ' + n + ' times.' : '') + ' ' + root.AERunner.damageLines(sc)[0] + '.';
     }
     function shareText() {
       const sc = session.score;
       const url = CONFIG.gameUrl || (root.location.protocol.startsWith('http') ? root.location.origin + root.location.pathname : '');
       const head = session.daily ? 'Not Fungible Moments · Daily #' + session.daily : 'Not Fungible Moments';
-      return head + '\n' + E.shareGrid(sc) + '\n' + (sc.survived ? 'I caught the one who pulled the rug. ' : 'Level ' + (sc.cleared + 1) + ' of 6. ') + 'Score ' + sc.total + '.\n' + worstBump(sc) +
+      return head + '\n' + E.shareGrid(sc) + '\n' + (sc.survived ? 'I caught the one who pulled the rug. ' : (root.AERunner.causeOfDeath(sc) ? root.AERunner.causeOfDeath(sc) + '. ' : '') + 'Level ' + (sc.cleared + 1) + ' of 6. ') + 'Score ' + sc.total + '.\n' + worstBump(sc) + ' Wall of Shame ' + runner.shameCount() + '/16.' +
         '\nThey all look alike. Can you tell them apart? ' + CONFIG.creator + (url ? '\n' + url : '') + '\n#NotFungibleAvatars #NFCLisbon #TheWallArcade';
     }
 
@@ -3108,6 +3459,19 @@
       if (!w && navigator.clipboard) navigator.clipboard.writeText(shareText()).then(() => { $('mint-status').textContent = 'Share text copied.'; }, () => {});
     });
     $('btn-save').addEventListener('click', savePNG);
+    $('btn-report').addEventListener('click', async () => {
+      const c = document.createElement('canvas'), sc = session.score;
+      root.AERunner.reportCard(c, sc, { daily: session.daily, grid: E.shareGrid(sc), shame: runner.shameCount() });
+      const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
+      const file = new File([blob], 'not-fungible-moments-report.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], text: shareText() }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+      }
+      const a = document.createElement('a');
+      a.download = file.name; a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    });
     $('btn-again').addEventListener('click', () => { if (session && session.paid) openConsent(); else if (session && session.daily) startDaily(); else startTrial(); });
     $('btn-menu').addEventListener('click', goTitle);
     $('credits-chip').addEventListener('click', async () => {
