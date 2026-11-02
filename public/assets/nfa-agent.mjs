@@ -1,7 +1,7 @@
 /*
  * A Not Fungible Avatar as an agent: its voice comes from its traits (role, expression, item, moment).
  * Used by the site (the Agents tab) and by the function /api/agent. Plain rules, no model and no secret: the same words
- * for the same traits and the same message, so anyone can check them. A real model can replace reply() behind the same endpoint.
+ * for the same traits and the same message, so anyone can check them. /api/agent can put a free model in front of reply().
  */
 const ROLES = [
   { bio: 'I paint first and explain never.', gm: 'gm. Careful, the paint is wet.', rug: 'A rug is just a canvas that left. I would frame it.', floor: 'I do not check the floor. I paint on it.', quips: ['Everything is a study for something bigger.', 'This conversation is now part of the piece.'] },
@@ -40,6 +40,9 @@ export function personaOf(traits) {
   };
 }
 
+const MONEY = /\b(floor|price|worth|pump|dump|sell|buy|invest|financial|prezzo|comprare|vendere)\b/;
+export const isMoneyQuestion = (message) => MONEY.test(String(message || '').toLowerCase());
+
 /* What the avatar answers. Never investment advice, whatever its role says about the floor. */
 export function reply(persona, message) {
   const R = ROLES[persona.traits.role & 15];
@@ -48,7 +51,7 @@ export function reply(persona, message) {
   let out;
   if (/\b(gm|hi|hello|hey|hiya|ciao|salve|bom dia|buongiorno)\b/.test(text)) out = R.gm;
   else if (/\b(rug|rugs|rugged|scam|culprit|who did|colpevole)\b/.test(text)) out = R.rug;
-  else if (/\b(floor|price|worth|pump|dump|sell|buy|invest|financial|prezzo|comprare|vendere)\b/.test(text)) out = R.floor + ' Not financial advice, I am a pixel.';
+  else if (MONEY.test(text)) out = R.floor + ' Not financial advice, I am a pixel.';
   else if (/\b(wallet|agent|agents|agente|8004|6551|identity|autonomous|onchain|on-chain)\b/.test(text)) out = 'I am built to have my own on-chain identity and my own wallet once minted. For now I talk, and I run the Daily for you.';
   else if (/\b(item|hold|holding|carry|carrying|hand|hands)\b/.test(text)) out = persona.item;
   else if (/\b(moment|famous|best|loop)\b/.test(text)) out = persona.moment;

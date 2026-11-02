@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@napi-rs/canvas": "0.1.65",
+    "@netlify/blobs": "11.1.7",
     "@noble/curves": "2.0.1",
     "@noble/hashes": "2.0.1",
     "gifenc": "1.0.3"

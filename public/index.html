@@ -14,8 +14,8 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png">
   <link rel="icon" href="assets/logo.png">
-  <link rel="stylesheet" href="assets/brand.css?v=2">
-  <link rel="stylesheet" href="assets/site.css?v=2">
+  <link rel="stylesheet" href="assets/brand.css?v=3">
+  <link rel="stylesheet" href="assets/site.css?v=3">
 </head>
 <body>
   <canvas id="world" width="360" height="640" aria-hidden="true"></canvas>
@@ -28,8 +28,8 @@
       <button class="tab" role="tab" id="tab-home" aria-controls="home" data-tab="home" type="button">Party</button>
       <button class="tab" role="tab" id="tab-game" aria-controls="game" data-tab="game" type="button">The Game</button>
       <button class="tab" role="tab" id="tab-people" aria-controls="people" data-tab="people" type="button">People</button>
-      <button class="tab" role="tab" id="tab-agents" aria-controls="agents" data-tab="agents" type="button">Agents</button>
       <button class="tab" role="tab" id="tab-mint" aria-controls="mint" data-tab="mint" type="button">Mint</button>
+      <button class="tab" role="tab" id="tab-agents" aria-controls="agents" data-tab="agents" type="button">Next</button>
       <button class="tab" role="tab" id="tab-faq" aria-controls="faq" data-tab="faq" type="button">FAQ</button>
     </nav>
     <a class="bar-link" href="collection/">Collection</a>
@@ -57,7 +57,7 @@
         <div class="doors" aria-label="Where to next">
           <button type="button" data-goto="game"><b>The Game</b><span>Six places, one face</span></button>
           <button type="button" data-goto="people"><b>People</b><span>Tap one and see</span></button>
-          <button type="button" data-goto="agents"><b>Agents</b><span>Talk to an avatar</span></button>
+          <button type="button" data-goto="mint"><b>Mint</b><span>1 run, 1 person</span></button>
         </div>
       </div>
       <div class="ticker" aria-hidden="true"><div id="ticker"></div></div>
@@ -109,8 +109,9 @@
     <section class="panel" id="agents" role="tabpanel" aria-labelledby="tab-agents" tabindex="-1" hidden>
       <div class="agents-layout">
         <div class="glass agent-card">
-          <p class="eyebrow">NOT FUNGIBLE AGENTS</p>
-          <h2>Your avatar does not just stand there.</h2>
+          <p class="eyebrow">WHERE THE PARTY GOES NEXT</p>
+          <h2>The people of the party can grow.</h2>
+          <p class="agents-lead">First come the art and the fun. Then, one day, your avatar can do more than stand there: talk, play, have a wallet of its own. A first taste, for fun.</p>
           <div class="agent-picker" id="agent-picker" role="radiogroup" aria-label="Choose an avatar"></div>
           <div class="agent-who">
             <canvas id="agent-canvas" aria-label="The avatar you are talking to"></canvas>
@@ -131,7 +132,7 @@
           <div class="subpane" data-agent-pane="talk">
             <div id="chat-log" class="chat-log" role="log" aria-live="polite"></div>
             <form id="chat-form" class="chat-form"><label class="sr-only" for="chat-input">Say something</label><input id="chat-input" maxlength="280" autocomplete="off" placeholder="gm. Who pulled the rug?"><button class="nfa-btn nfa-btn--cta" type="submit">Say</button></form>
-            <p class="fine">Preview: this voice is written from the avatar's traits, not an AI model yet.</p>
+            <p class="fine" id="chat-note">A preview, for fun. What you type may go to a free AI service: do not share anything personal. Nothing here is advice.</p>
           </div>
           <div class="subpane" data-agent-pane="run" hidden>
             <p>Today's Daily, played by your avatar with the skill of its traits. Same people you face. Can you beat it?</p>
@@ -142,7 +143,7 @@
             <ul class="agent-how">
               <li><b>Identity</b><span>A registration file in the ERC-8004 format, the on-chain identity standard for agents. <em>The file is live. Registering is the owner's choice, once minted.</em></span></li>
               <li><b>Wallet</b><span>Any ERC-721 can have its own ERC-6551 wallet, so the avatar can hold things of its own. <em>Once minted.</em></span></li>
-              <li><b>Voice</b><span>Its personality comes from its traits: role, expression, item, moment. Other agents can ask it things through an open endpoint. <em>Live, written rules.</em></span></li>
+              <li><b>Voice</b><span>Its personality comes from its traits: role, expression, item, moment. Other agents can ask it things through an open endpoint. <em>Live: a free AI model when available, written lines otherwise.</em></span></li>
               <li><b>Work</b><span>It plays the Daily on its own, with the skill its traits give it. <em>Live, right here.</em></span></li>
             </ul>
             <p class="fine">The owner of the NFT stays in charge. Nothing here is financial advice: these are pixels.</p>
@@ -161,7 +162,7 @@
         <details name="mint"><summary>2 · Go to THE WALL ARCADE</summary><p>Open <a data-link="arcade" href="#">THE WALL ARCADE</a>, pick Not Fungible Moments and sign in with SuperRare.</p></details>
         <details name="mint"><summary>3 · Spend 1 credit, run up to 3 minutes</summary><p>The game asks before it spends the credit. Your run is scored on SuperRare's server, so nobody can fake a score.</p></details>
         <details name="mint"><summary>4 · Meet the one who pulled the rug</summary><p>When the run ends you see who it was: role, look, moment, expression, item and tier.</p></details>
-        <details name="mint"><summary>5 · Mint them</summary><p>Press Mint on the end screen. SuperRare opens the checkout, you confirm in your wallet and your Not Fungible Avatar lands there. Each run mints once, never the same person twice.</p></details>
+        <details name="mint"><summary>5 · Mint them, right there</summary><p>Press Mint on the end screen, without leaving the game. SuperRare's window opens over it, you confirm in your wallet and your Not Fungible Avatar lands there. Each run mints once, never the same person twice.</p></details>
         <details name="mint"><summary>How traits are earned</summary>
           <table class="trait-table"><caption class="sr-only">How each trait is earned</caption><tbody>
             <tr><th scope="row">Background</th><td>Your tier, a Lisbon scene: Azulejo Wall, Tram 28 Ride, Alfama Rooftops, Tagus Golden Hour</td></tr>
@@ -185,7 +186,7 @@
         <details name="faq"><summary>Which chain? Where is the contract?</summary><p><span id="faq-chain">Ethereum, minted through SuperRare. The contract address appears here at launch.</span></p></details>
         <details name="faq"><summary>How many Not Fungible Avatars will exist?</summary><p>10,000 at most, and never the same person twice. One per paid run that gets minted: each run can mint only once, so the supply grows with the players until it hits the cap.</p></details>
         <details name="faq"><summary>What do I get?</summary><p>An animated Not Fungible Avatar: the person you caught, living their moment on loop, with a voice of its own.</p></details>
-        <details name="faq"><summary>Is my avatar a real agent?</summary><p>The pieces are standard and open: an ERC-8004 identity, an ERC-6551 wallet, a voice from its traits and a job it does on its own, the Daily. Registering the identity and creating the wallet happen once it is minted, and they are the owner's choice. Today the voice is written rules, not an AI model.</p></details>
+        <details name="faq"><summary>What is "Next"?</summary><p>Where the collection can go after the party: avatars that talk and play on their own, on open standards (an ERC-8004 identity, an ERC-6551 wallet, both once minted and only if the owner wants). It is an experiment for later, not the point of the project: the point is the art and the fun.</p></details>
         <details name="faq"><summary>How do I get a Legendary?</summary><p>Clear all six levels and catch the one who pulled the rug, on the rooftop, before your phone dies. No luck, no allowlist, just your eyes.</p></details>
         <details name="faq"><summary>Is it fair?</summary><p>On THE WALL ARCADE every run is scored by SuperRare's server, not by your browser. Every trait comes from that verified run: one mint per run, no trait above your tier, never the same person twice.</p></details>
         <details name="faq"><summary>Who are the characters?</summary><p>Original pixel people: artists, collectors, devs, founders, curators, streamers, degens, DJs, whales, bodyguards, baristas, gamers, meme lords, photographers, skaters and chefs. Every look, every background, independent of the role.</p></details>
@@ -206,9 +207,9 @@
   <div id="toast" class="toast" role="status"></div>
 
   <!-- The game's own engine + art (generated from ../index.html by `npm run brand`). -->
-  <script src="assets/site-config.js?v=2"></script>
-  <script src="assets/nfa-art.js?v=2"></script>
-  <script src="assets/nfa-runner.js?v=2"></script>
+  <script src="assets/site-config.js?v=3"></script>
+  <script src="assets/nfa-art.js?v=3"></script>
+  <script src="assets/nfa-runner.js?v=3"></script>
   <script>
   (function () {
     'use strict';
@@ -432,7 +433,7 @@
     /* ---------- the world behind everything: the game's own corridor, a different place of Lisbon for every tab ---------- */
     const R = window.AERunner, runner = R.create(E, A, { sound: false, reducedMotion: () => reduced });
     const world = $('world'), wctx = world.getContext('2d');
-    const PLACE = { home: 0, game: 0, people: 1, agents: 3, mint: 2, faq: 4 };
+    const PLACE = { home: 0, game: 0, people: 1, mint: 2, agents: 3, faq: 4 };
     let place = 0, boost = 1, worldLast = performance.now(), worldT = 0, worldPaused = false;
     function drawWorld(now) {
       const dt = Math.min(0.05, (now - worldLast) / 1000); worldLast = now; worldT += dt;
@@ -455,7 +456,7 @@
     }
 
     /* ---------- tabs ---------- */
-    const TABS = ['home', 'game', 'people', 'agents', 'mint', 'faq'];
+    const TABS = ['home', 'game', 'people', 'mint', 'agents', 'faq'];
     const OLD = { how: 'mint', traits: 'mint', levels: 'game', moments: 'people', lisbon: 'faq', top: 'home' };   // links from before the tabs
     const tabButtons = [...document.querySelectorAll('[data-tab]')];
     let levelSel = 0;
@@ -542,7 +543,7 @@
     const toast = $('toast');
     let toastTimer = 0;
     function say(msg) { toast.textContent = msg; toast.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('on'), 2600); }
-    import('./assets/nfa-agent.mjs?v=2').then(({ personaOf, reply }) => {
+    import('./assets/nfa-agent.mjs?v=3').then(({ personaOf, reply }) => {
       const tier = (i) => (i < 3 ? 0 : i < 6 ? 1 : i < 9 ? 2 : 3);
       const SAMPLES = [
         { id: 1, act: 5, r: 3, e: 9, p: 9, l: L(8, 1, 6, 3, 0, 1), s: 38120 },
@@ -587,7 +588,12 @@
         const input = $('chat-input'), text = input.value.trim();
         if (!text) return;
         bubble('me', text); input.value = '';
-        setTimeout(() => bubble('them', reply(curPersona, text)), 320);
+        const t = cur;
+        fetch($('agent-json').getAttribute('href'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: text }) })
+          .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+          .then((j) => j.reply)
+          .catch(() => reply(curPersona, text))
+          .then((answer) => { if (cur === t) bubble('them', answer); });
       });
       /* The agent plays the Daily by itself: the very engine, the same people as everyone today, its skill from its traits. */
       function agentRun(t) {
@@ -637,6 +643,6 @@
     requestAnimationFrame(loop);
   })();
   </script>
-  <script src="assets/site-music.js?v=2" data-src="assets/nfa-theme.mp3" defer></script>
+  <script src="assets/site-music.js?v=3" data-src="assets/nfa-theme.mp3" defer></script>
 </body>
 </html>

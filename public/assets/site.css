@@ -261,6 +261,7 @@ html.app { scroll-behavior: auto; }
 .panel .tile span { font-size: 12px; }
 
 .agents-layout { display: grid; grid-template-columns: 1fr 1.15fr; gap: 14px; }
+.agents-lead { margin: 0 0 12px; font-size: 14px; line-height: 1.4; color: #dfe7ff; }
 .agent-picker { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
 .agent-picker button { appearance: none; cursor: pointer; padding: 0; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.18); border-radius: 10px; overflow: hidden; }
 .agent-picker button[aria-checked="true"] { border-color: var(--nfa-tram); background: rgba(255,207,31,.2); }
