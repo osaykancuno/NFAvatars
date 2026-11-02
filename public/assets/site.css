@@ -320,3 +320,6 @@ html.app { scroll-behavior: auto; }
 @media (prefers-reduced-motion: reduce) {
   .panel, #door-flash.on { animation: none; }
 }
+
+/* the letters hop one by one: a word must never break between them */
+.nfa-headline .accent { display: inline-block; white-space: nowrap; }
