@@ -14,8 +14,8 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png">
   <link rel="icon" href="assets/logo.png">
-  <link rel="stylesheet" href="assets/brand.css">
-  <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/brand.css?v=2">
+  <link rel="stylesheet" href="assets/site.css?v=2">
 </head>
 <body>
   <canvas id="world" width="360" height="640" aria-hidden="true"></canvas>
@@ -206,9 +206,9 @@
   <div id="toast" class="toast" role="status"></div>
 
   <!-- The game's own engine + art (generated from ../index.html by `npm run brand`). -->
-  <script src="assets/site-config.js"></script>
-  <script src="assets/nfa-art.js"></script>
-  <script src="assets/nfa-runner.js"></script>
+  <script src="assets/site-config.js?v=2"></script>
+  <script src="assets/nfa-art.js?v=2"></script>
+  <script src="assets/nfa-runner.js?v=2"></script>
   <script>
   (function () {
     'use strict';
@@ -542,7 +542,7 @@
     const toast = $('toast');
     let toastTimer = 0;
     function say(msg) { toast.textContent = msg; toast.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('on'), 2600); }
-    import('./assets/nfa-agent.mjs').then(({ personaOf, reply }) => {
+    import('./assets/nfa-agent.mjs?v=2').then(({ personaOf, reply }) => {
       const tier = (i) => (i < 3 ? 0 : i < 6 ? 1 : i < 9 ? 2 : 3);
       const SAMPLES = [
         { id: 1, act: 5, r: 3, e: 9, p: 9, l: L(8, 1, 6, 3, 0, 1), s: 38120 },
@@ -637,6 +637,6 @@
     requestAnimationFrame(loop);
   })();
   </script>
-  <script src="assets/site-music.js" data-src="assets/nfa-theme.mp3" defer></script>
+  <script src="assets/site-music.js?v=2" data-src="assets/nfa-theme.mp3" defer></script>
 </body>
 </html>

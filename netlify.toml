@@ -14,4 +14,4 @@
 [[headers]]
   for = "/assets/*"
   [headers.values]
-    cache-control = "public, max-age=3600"
+    cache-control = "public, max-age=0, must-revalidate"
