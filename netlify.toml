@@ -1,0 +1,17 @@
+# Not Fungible Avatars on Netlify: the collection site (public/) and the NFT GIFs (/nft.gif, a function).
+# Netlify must build on Linux (deploy from a Git repository, or see README for the CLI): the function uses
+# @napi-rs/canvas, a native module, and needs its Linux binary.
+
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@napi-rs/canvas"]
+  included_files = ["public/assets/nfa-art.js", "netlify/functions/fonts/*"]
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    cache-control = "public, max-age=3600"

@@ -1,0 +1,16 @@
+{
+  "name": "not-fungible-avatars-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Not Fungible Avatars: the collection site (public/) and the NFT GIF function (/nft.gif) for Netlify",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "0.1.65",
+    "@noble/curves": "2.0.1",
+    "@noble/hashes": "2.0.1",
+    "gifenc": "1.0.3"
+  }
+}

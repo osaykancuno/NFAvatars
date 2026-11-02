@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mint your run · Not Fungible Avatars</title>
+  <meta name="description" content="Mint the Not Fungible Avatar you caught in a run of Not Fungible Moments on THE WALL ARCADE. Gas only.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0f1b3d">
+  <link rel="icon" href="../assets/logo.png">
+  <link rel="stylesheet" href="../assets/brand.css">
+  <link rel="stylesheet" href="../assets/site.css">
+  <style>
+    .mint-layout { display: grid; grid-template-columns: minmax(280px, 400px) 1fr; gap: 32px; align-items: start; }
+    .mint-avatar { display: block; width: 100%; height: auto; aspect-ratio: 1; border: var(--nfa-outline); border-radius: 28px; box-shadow: 0 10px 0 var(--nfa-ink); background: var(--nfa-cream); }
+    .mint-rarity { display: inline-block; padding: 4px 14px; border: var(--nfa-outline); border-radius: 999px; font-weight: 900; font-size: 13px; letter-spacing: .12em; color: #fff; }
+    .mint-rarity.r0 { background: var(--nfa-common); } .mint-rarity.r1 { background: var(--nfa-rare); }
+    .mint-rarity.r2 { background: #b14dff; } .mint-rarity.r3 { background: var(--nfa-golden-hour); color: var(--nfa-ink); }
+    .mint-name { margin: 14px 0 12px; }
+    .mint-traits { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0 0 18px; font-size: 15px; }
+    .mint-traits dt { font-weight: 900; } .mint-traits dd { margin: 0; }
+    .mint-status { min-height: 1.5em; margin: 14px 0 0; color: #dfe7ff; }
+    .mint-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .nfa-btn:disabled { opacity: .55; cursor: default; }
+    [hidden] { display: none !important; }   /* .nfa-btn sets display: keep the hidden attribute winning */
+    @media (max-width: 760px) { .mint-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="../"><img src="../assets/logo.png" alt="" width="38" height="38"><span>NOT FUNGIBLE <b>AVATARS</b></span></a>
+      <nav class="nav-links" aria-label="Site">
+        <a class="sec" href="../">Home</a>
+        <a href="../play/">Play</a>
+        <a href="../collection/">Collection</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero" id="mint-bad" hidden aria-labelledby="bad-title">
+      <div class="wrap">
+        <span class="chip">MINT</span>
+        <h1 id="bad-title" class="nfa-headline">NO RUN <span class="accent">HERE</span></h1>
+        <p class="lead">This page mints a run of Not Fungible Moments played on THE WALL ARCADE. Open it from the link on the end screen of your run.</p>
+        <a class="nfa-btn" href="../play/">How to mint</a>
+      </div>
+    </section>
+
+    <section class="page-hero" id="mint-run" hidden aria-labelledby="mint-name">
+      <div class="wrap mint-layout">
+        <canvas id="mint-avatar" class="mint-avatar" width="480" height="480" role="img" aria-label="The Not Fungible Avatar of your run"></canvas>
+        <div>
+          <span class="chip">YOUR RUN ON THE WALL ARCADE <span aria-hidden="true">•</span> GAS ONLY</span>
+          <p style="margin:18px 0 0"><span id="mint-rarity" class="mint-rarity"></span></p>
+          <h1 id="mint-name" class="nfa-headline mint-name"></h1>
+          <dl id="mint-traits" class="card mint-traits"></dl>
+          <div class="mint-actions">
+            <button id="mint-go" class="nfa-btn nfa-btn--cta" type="button">Mint · gas only</button>
+            <a id="mint-app" class="nfa-btn nfa-btn--cta" hidden>Open in MetaMask</a>
+          </div>
+          <p id="mint-status" class="mint-status" aria-live="polite">Free mint: you pay only the network fee.</p>
+          <div id="mint-done" hidden>
+            <h2 id="mint-done-title"></h2>
+            <div class="mint-actions">
+              <a id="mint-opensea" class="nfa-btn nfa-btn--cta" target="_blank" rel="noopener noreferrer" hidden>See it on OpenSea</a>
+              <a id="mint-tx" class="nfa-btn" target="_blank" rel="noopener noreferrer" hidden>Transaction</a>
+            </div>
+          </div>
+          <p class="notice" style="margin-top:18px">It goes to <b id="mint-to"></b>, the wallet that played the run, whoever sends the transaction. Each run mints once.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="row">
+        <a class="brand" href="../"><img src="../assets/logo.png" alt="" width="38" height="38"><span>NOT FUNGIBLE <b>AVATARS</b></span></a>
+      </div>
+      <div class="row">
+        <a class="credit" href="https://onthewall.nfcsummit.com" target="_blank" rel="noopener noreferrer">A REMIX THE WALL EXPERIMENT · NFC SUMMIT 2027 · LISBON</a>
+      </div>
+      <div class="row"><span>Original characters, art and code by @osaykancuno.</span></div>
+    </div>
+  </footer>
+
+  <script src="../assets/nfa-art.js"></script>
+  <script src="../assets/mint.js"></script>
+</body>
+</html>

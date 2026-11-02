@@ -1,0 +1,65 @@
+/*
+ * NOT FUNGIBLE AVATARS — brand tokens "LISBOA" (Lisbon edition, NFC Summit 2027)
+ * Azulejo blue, tram 28 yellow, terracotta roofs, pastel de nata cream, Lisbon sky.
+ * The same values as index.html :root. Import this file in the collection site
+ * so the game, the site and the OpenSea page look like one thing.
+ */
+:root {
+  /* core */
+  --nfa-night: #0f1b3d;       /* page background (azulejo night) */
+  --nfa-deep: #1f3c88;        /* gradients, panels on dark */
+  --nfa-azulejo: #1f5fbf;     /* tile blue: brand primary */
+  --nfa-tram: #ffcf1f;        /* tram 28 yellow: the one CTA per screen */
+  --nfa-terracotta: #e2603a;  /* roofs: accent, titles' shadow, mint */
+  --nfa-rose: #f6a5b8;        /* pink facades */
+  --nfa-green: #2fbf71;       /* PERFECT, success */
+  --nfa-sky: #7cc6ff;         /* Lisbon sky */
+  --nfa-ink: #1b1d3a;         /* every outline and dark text */
+  --nfa-cream: #fff6e5;       /* pastel de nata cream: paper panels */
+
+  /* Lisbon details */
+  --nfa-azulejo-white: #f4f8ff;
+  --nfa-bridge: #c62f22;      /* the red bridge over the Tagus */
+  --nfa-calcada: #f3ead8;     /* calcada portuguesa */
+  --nfa-golden-hour: #ffc21a;
+
+  /* event badges */
+  --nfa-badge-nfc: #1f5fbf;
+  --nfa-badge-stage: #ffcf1f;
+  --nfa-badge-staff: #e2603a;
+  --nfa-badge-press: #2fbf71;
+
+  /* rarity */
+  --nfa-common: #9aa3b8;
+  --nfa-rare: #3da5ff;
+  --nfa-epic: #b14dff;
+  --nfa-legendary: #ffc21a;
+
+  /* shape */
+  --nfa-radius: 20px;
+  --nfa-outline: 3px solid var(--nfa-ink);
+  --nfa-sticker-shadow: 0 6px 0 var(--nfa-ink);
+  --nfa-font: "Fredoka", ui-rounded, "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+
+  /* gradients */
+  --nfa-day: linear-gradient(180deg, #7cc6ff 0%, #cdeaff 50%, #ffe6bf 100%);   /* the game's stage */
+  --nfa-night-grad: linear-gradient(135deg, #0f1b3d 0%, #1f3c88 60%, #1f5fbf 100%);
+}
+
+/* Sticker button, as in the game */
+.nfa-btn {
+  font: 800 16px/1 var(--nfa-font);
+  background: #fff; color: var(--nfa-ink);
+  border: var(--nfa-outline); border-radius: 14px; box-shadow: 0 4px 0 var(--nfa-ink);
+  padding: 12px 18px; cursor: pointer;
+}
+.nfa-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--nfa-ink); }
+.nfa-btn--cta { background: var(--nfa-tram); }
+.nfa-btn--accent { background: var(--nfa-terracotta); color: #fff; }
+
+/* Sticker headline: ink outline + terracotta drop shadow */
+.nfa-headline {
+  font: 900 clamp(32px, 6vw, 72px)/1 var(--nfa-font);
+  color: #fff; -webkit-text-stroke: 2px var(--nfa-ink); paint-order: stroke fill;
+  text-shadow: 4px 4px 0 var(--nfa-terracotta);
+}
