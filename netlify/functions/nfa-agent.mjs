@@ -84,7 +84,9 @@ export default async (req) => {
   if (!t) return fail(400, 'Not a Not Fungible Avatar');
   if (req.method === 'POST') {
     let body;
-    try { body = await req.json(); } catch { return fail(400, 'Send JSON: { "message": "gm" }'); }
+    const text = await req.text();
+    if (text.length > 2048) return fail(413, 'Too large');
+    try { body = JSON.parse(text); } catch { return fail(400, 'Send JSON: { "message": "gm" }'); }
     if (!body || typeof body.message !== 'string' || !body.message.trim() || body.message.length > 280) return fail(400, 'message: 1 to 280 characters');
     const persona = personaOfToken(t), ai = await aiReply(persona, body.message, process.env, fetch, dailyQuota);
     return new Response(JSON.stringify({ reply: ai ?? reply(persona, body.message), source: ai ? 'ai' : 'written' }), { headers: { ...headers, 'cache-control': 'no-store' } });
@@ -94,4 +96,4 @@ export default async (req) => {
   return new Response(JSON.stringify(registrationFile(t, site, process.env.NFA_CONTRACT || null)), { headers: { ...headers, 'cache-control': 'public, max-age=3600' } });
 };
 
-export const config = { path: '/api/agent' };
+export const config = { path: '/api/agent', rateLimit: { windowLimit: 20, windowSize: 60, aggregateBy: ['ip', 'domain'] } };

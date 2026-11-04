@@ -11,6 +11,15 @@
  */
 import { grant, mintConfig, mintedInfo, mintStatus, rpcChain, studioBoard } from './claim-core.mjs';
 
+/* Tickets sent in the last minutes (Netlify Blobs), so a page asking again, or anyone posting the same run, never pays gas twice. */
+async function sentMemo() {
+  try {
+    const { getStore } = await import('@netlify/blobs');
+    const store = getStore({ name: 'nfa-claim', consistency: 'strong' });
+    return { get: async (k) => (await store.get(k, { type: 'json' }))?.at ?? null, set: (k, at) => store.setJSON(k, { at }) };
+  } catch { return null; }
+}
+
 export default async (req) => {
   const headers = { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type', 'cache-control': 'no-store' };
   const json = (status, body) => new Response(JSON.stringify(body), { status, headers });
@@ -30,7 +39,7 @@ export default async (req) => {
     if (text.length > 2048) return json(413, { error: 'Too large' });
     let body;
     try { body = JSON.parse(text); } catch { return json(400, { error: 'Expected JSON' }); }
-    const r = await grant(body, cfg, chain, studioBoard(cfg));
+    const r = await grant(body, cfg, chain, studioBoard(cfg), Date.now(), await sentMemo());
     return json(r.status, r.body);
   } catch (error) {
     console.error('claim', error);
@@ -38,4 +47,4 @@ export default async (req) => {
   }
 };
 
-export const config = { path: '/api/claim' };
+export const config = { path: '/api/claim', rateLimit: { windowLimit: 40, windowSize: 60, aggregateBy: ['ip', 'domain'] } };

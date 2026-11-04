@@ -23,3 +23,16 @@
   for = "/assets/*"
   [headers.values]
     cache-control = "public, max-age=0, must-revalidate"
+
+# the pages people use (the home and the mint) cannot be framed by another site; /game/ stays embeddable, it is the NFT's live viewer
+[[headers]]
+  for = "/"
+  [headers.values]
+    content-security-policy = "frame-ancestors 'self'"
+    x-frame-options = "SAMEORIGIN"
+
+[[headers]]
+  for = "/mint/*"
+  [headers.values]
+    content-security-policy = "frame-ancestors 'none'"
+    x-frame-options = "DENY"

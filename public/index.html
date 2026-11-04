@@ -15,7 +15,7 @@
   <meta name="twitter:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png">
   <link rel="icon" href="assets/logo.png">
   <link rel="stylesheet" href="assets/brand.css?v=3">
-  <link rel="stylesheet" href="assets/site.css?v=11">
+  <link rel="stylesheet" href="assets/site.css?v=12">
 </head>
 <body>
   <canvas id="world" width="360" height="640" aria-hidden="true"></canvas>
@@ -348,7 +348,8 @@
     function scene(canvas, draw) {
       const s = { canvas, ctx: canvas.getContext('2d'), draw, visible: false, t0: performance.now(), parts: [] };
       scenes.push(s);
-      if ('IntersectionObserver' in window) new IntersectionObserver((es) => { s.visible = es[0].isIntersecting; }, { rootMargin: '100px' }).observe(canvas);
+      // a canvas in a hidden tab has no box, so it never intersects: only what is on screen is drawn
+      if ('IntersectionObserver' in window) new IntersectionObserver((es) => { s.visible = es[0].isIntersecting; if (s.visible && reduced) render(s, performance.now(), 0); }, { rootMargin: '100px' }).observe(canvas);
       else s.visible = true;
       return s;
     }
@@ -390,13 +391,17 @@
       s.draw(s.ctx, s.canvas.width, s.canvas.height, t, s, now);
       drawParts(s, s.ctx, dt);
     }
-    let lastNow = performance.now();
+    /* 30 frames a second is plenty for pixel people (and half the work on a phone); 60 while confetti flies or a tile was just poked. */
     function loop(now) {
-      const dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
-      for (const s of scenes) if (s.visible || !s.drawn) { render(s, now, dt); s.drawn = true; }
+      for (const s of scenes) {
+        if (!s.visible) continue;
+        const since = now - (s.last || 0);
+        if (since < 32 && !s.parts.length && !(s.hot > now)) continue;
+        render(s, now, Math.min(0.05, since / 1000)); s.last = now;
+      }
       if (!reduced) requestAnimationFrame(loop);
     }
-    window.addEventListener('resize', () => { for (const s of scenes) render(s, performance.now(), 0); });
+    if (reduced) window.addEventListener('resize', () => { for (const s of scenes) if (s.visible) render(s, performance.now(), 0); });   // still pictures: redraw at the new size
 
     /* A performer: idles and looks at you, sometimes does its moment on its own, does it at once when poked. */
     function performer(p) { return Object.assign({ playAt: -1e9, next: 1 + Math.random() * 4 }, p); }
@@ -411,7 +416,7 @@
         squash: acting && k < 0.1 ? [1.08, 0.92] : null
       });
     }
-    function poke(s, p, x, y) { p.playAt = performance.now(); burst(s, x, y, 22); }
+    function poke(s, p, x, y) { p.playAt = performance.now(); s.hot = p.playAt + 1500; burst(s, x, y, 22); }
 
     /* A tile = a canvas card with one performer. */
     function tile(container, title, text, look, act, face, prop, badgeIndex) {
@@ -494,8 +499,10 @@
       const dt = Math.min(0.05, (now - worldLast) / 1000); worldLast = now; worldT += dt;
       runner.frame(wctx, 1, null, 0, dt, worldT, { place, boost, noPhone: true });
     }
+    let worldAt = 0;
     function worldLoop(now) {
-      if (!document.hidden && !worldPaused) drawWorld(now);
+      // 30 frames a second, except while rushing through a door
+      if (!document.hidden && !worldPaused && (now - worldAt >= 32 || boost > 1.05)) { drawWorld(now); worldAt = now; }
       boost += (1 - boost) * 0.06;
       if (!reduced) requestAnimationFrame(worldLoop);
     }
@@ -525,7 +532,7 @@
       // Two ways to shrink: zoom re-wraps text (it helps text, not grids of squares, which only get wider in their own pixels),
       // a scale shrinks everything in proportion. Try a few zooms, scale whatever is left, keep what leaves the text biggest.
       let best = { size: 0, z: 1, s: 1 };
-      for (let z = 1; z >= 0.6; z = +(z - 0.05).toFixed(2)) {
+      for (let z = 1; z >= 0.6; z = +(z - 0.1).toFixed(1)) {      // five layouts at most
         p.style.zoom = z === 1 ? '' : String(z);
         const h = p.getBoundingClientRect().height, s = Math.min(1, avail / h);
         if (z * s > best.size + 0.004) best = { size: z * s, z, s };
@@ -540,7 +547,6 @@
     const refit = () => { clearTimeout(fitQueued); fitQueued = setTimeout(fitPanel, 30); };   // a timer, not rAF: it also runs in a background tab
     window.addEventListener('resize', refit);
     document.addEventListener('toggle', refit, true);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
     window.addEventListener('load', refit);
     function openTab(id, focus) {
       if (id === 'play') { openTab('home'); openGame(); return; }      // the old /play/ page now opens the game over the site
@@ -575,7 +581,7 @@
         buttons.forEach((o) => o.setAttribute('aria-selected', o === b ? 'true' : 'false'));
         document.querySelectorAll('[' + paneAttr + ']').forEach((p) => { p.hidden = p.getAttribute(paneAttr) !== b.dataset[key]; });
         document.querySelectorAll('.reveal').forEach((el) => el.classList.add('in'));
-        window.dispatchEvent(new Event('resize'));
+        refit();
       }));
     }
     subtabs('data-sub', 'data-pane');
@@ -593,9 +599,10 @@
       const fmtInt = (n) => (n == null ? '—' : Number(n).toLocaleString('en'));
       const fmtAmt = (n, sym) => (n == null ? '—' : (n === 0 ? '0' : n < 0.001 ? '<0.001' : Number(n.toPrecision(4)).toLocaleString('en', { maximumFractionDigits: 4 })) + (sym ? ' ' + sym : ''));
       const ago = (t) => { if (!t) return ''; const sec = Math.max(0, Date.now() / 1000 - t); return sec < 3600 ? Math.round(sec / 60) + ' min ago' : sec < 86400 ? Math.round(sec / 3600) + ' h ago' : Math.round(sec / 86400) + ' days ago'; };
-      const cards = (list, withPrice) => list.filter((x) => x.image).slice(0, 6).map((x) =>
-        '<a href="' + esc(x.url || opensea || '#') + '" target="_blank" rel="noopener noreferrer"><img src="' + esc(x.image) + '" alt="' + esc(x.name) + '" loading="lazy">' +
-        '<span>' + esc(x.name.replace('Not Fungible Avatar ', '')) + '</span><small>' + (withPrice && x.price != null ? esc(fmtAmt(x.price, x.symbol)) + ' · ' : '') + esc(ago(x.time)) + '</small></a>').join('');
+      const https = (u) => (typeof u === 'string' && /^https:\/\//.test(u) ? u : '');      // links and pictures from outside: https only
+      const cards = (list, withPrice) => list.filter((x) => https(x.image)).slice(0, 6).map((x) =>
+        '<a href="' + esc(https(x.url) || https(opensea) || '#') + '" target="_blank" rel="noopener noreferrer"><img src="' + esc(x.image) + '" alt="' + esc(String(x.name || '')) + '" loading="lazy">' +
+        '<span>' + esc(String(x.name || '').replace('Not Fungible Avatar ', '')) + '</span><small>' + (withPrice && x.price != null ? esc(fmtAmt(x.price, x.symbol)) + ' · ' : '') + esc(ago(x.time)) + '</small></a>').join('');
       const set = (k, v) => { const el = document.querySelector('[data-k="' + k + '"]'); if (el) el.textContent = v; };
       function show(d) {
         const st = d.stats;
@@ -605,7 +612,7 @@
         $('updated').textContent = 'From OpenSea · updated ' + new Date(d.updatedAt).toLocaleTimeString() + ' (refreshes every few minutes).';
         if (d.mints.length) { $('mints').innerHTML = cards(d.mints, false); $('mints-empty').hidden = true; }
         if (d.sales.length) { $('sales').innerHTML = cards(d.sales, true); $('sales').hidden = false; $('sales-title').hidden = false; }
-        if (!opensea && d.collection.url) {
+        if (!opensea && https(d.collection.url)) {
           opensea = d.collection.url;
           document.querySelectorAll('[data-link="opensea"]').forEach((a) => { a.href = opensea; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.removeAttribute('aria-disabled'); a.textContent = a.textContent.replace('OpenSea · at launch', 'View on OpenSea'); });
         }

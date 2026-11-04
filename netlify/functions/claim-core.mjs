@@ -28,6 +28,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d{1,9})?(Z|[+-]\d\d:\d\d)$/;
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 const BEFORE = 60_000, AFTER = 15 * 60_000, LEAF = 1000, BUDGET = 24;      // the search: a minute before startedAt, 15 minutes after; down to one second; requests per POST
+const SEARCH_MS = 7000;                                                       // and at most 7 s of it, inside Netlify's 10 s
+const SENT_MS = 180_000;                                                      // a ticket just sent is not sent again for 3 minutes (it is on its way)
 
 export function mintConfig(env) {
   const contract = (env.NFA_CONTRACT || '').trim().toLowerCase();
@@ -82,7 +84,7 @@ export function studioBoard(cfg) {
     const res = await fetch(url, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error('leaderboard ' + res.status);
     const j = await res.json();
-    if (!j || !Array.isArray(j.entries)) throw new Error('leaderboard: no entries');
+    if (!j || !Array.isArray(j.entries) || j.entries.length > 200) throw new Error('leaderboard: no entries');
     return j.entries;
   };
 }
@@ -94,13 +96,13 @@ export function studioBoard(cfg) {
  * two (down to one second) and both halves are searched, breadth first. An empty window holds no run at all and is not split.
  * At most `budget` requests. startedAt is the page's word: a wrong one only means the run is not found. Returns { entry, requests } or { entry: null, requests }.
  */
-export async function findRun(board, runId, startedAt, { now = Date.now(), budget = BUDGET } = {}) {
+export async function findRun(board, runId, startedAt, { now = Date.now(), budget = BUDGET, deadline = Date.now() + SEARCH_MS } = {}) {
   const id = String(runId).toLowerCase();
   const from = startedAt - BEFORE, to = Math.min(startedAt + AFTER, now + 1000);
   let requests = 0;
   if (!(to > from)) return { entry: null, requests };
   const queue = [[from, to]];
-  while (queue.length && requests < budget) {
+  while (queue.length && requests < budget && Date.now() < deadline) {      // within the function's time limit: the page asks again
     const [a, b] = queue.shift();
     requests++;
     const entries = await board(a, b);
@@ -160,12 +162,13 @@ export function parseClaim(body) {
  * The traits of a leaderboard entry, or an Error: server-verified, a wallet, a score this game can give.
  * Returns { wallet, chainId, tier, points, traits: { to, action, expression, prop, rarity, score }, look } for the run.
  */
-export function entryToRun(entry, runId, seed) {
+export function entryToRun(entry, runId, seed, chainId = 1) {
   const p = entry && entry.player;
   if (!entry || entry.trustLevel !== 'server_verified') return new Error('Studio has not verified this run.');
   if (!p || p.kind !== 'wallet') return new Error('This run was not played with a wallet, so it cannot be minted.');
   if (typeof p.id !== 'string' || !ADDRESS.test(p.id)) return new Error('This run has no valid wallet.');
-  if (!Number.isSafeInteger(p.chainId) || p.chainId < 1) return new Error('This run has no valid chain.');
+  // a wallet signed in on Ethereum (or on the collection's own chain): a smart wallet of another chain may not exist at this address here
+  if (!Number.isSafeInteger(p.chainId) || (p.chainId !== 1 && p.chainId !== chainId)) return new Error('This run was played with a wallet of another chain.');
   const text = typeof entry.score === 'number' ? String(entry.score) : entry.score;
   if (typeof text !== 'string' || !/^\d{1,16}$/.test(text) || !Number.isSafeInteger(Number(text))) return new Error('This run has no valid score.');
   const score = Number(text), tier = tierOfScore(score), points = pointsOfScore(score);
@@ -182,17 +185,21 @@ export function entryToRun(entry, runId, seed) {
  * body = { runId, seed, startedAt }. `board` reads Studio's leaderboard (see studioBoard). 200 once the run's ticket is on chain
  * (with the wallet it went to), 202 while the page should ask again (the run is not on the leaderboard yet, or the ticket is on its way).
  */
-export async function grant(body, cfg, chain, board, now = Date.now()) {
+export async function grant(body, cfg, chain, board, now = Date.now(), memo = null) {
   if (!cfg.open) return answer(503, { error: 'The mint is not open yet.' });
   const c = parseClaim(body);
   if (c instanceof Error) return answer(400, { error: c.message });
+  // the cheap checks first: a run already on chain, or a ticket just sent, costs no leaderboard search and no gas
+  const runId = runIdOf(c.runId, lookOfSeed(c.seed));
+  const used = await chain.call(cfg.contract, '0x' + readers.isRunUsed + runId.slice(2));
+  if (BigInt(used) === 1n) return answer(200, { granted: true });
+  const memoKey = 'sent/' + cfg.chainId + '/' + cfg.contract + '/' + runId.slice(0, 62);
+  const sentAt = memo ? await memo.get(memoKey).catch(() => null) : null;
+  if (sentAt && now - sentAt < SENT_MS) return answer(202, { pending: true });
   const { entry } = await findRun(board, c.runId, c.startedAt, { now });
   if (!entry) return answer(202, { pending: true });
-  const run = entryToRun(entry, c.runId, c.seed);
+  const run = entryToRun(entry, c.runId, c.seed, cfg.chainId);
   if (run instanceof Error) return answer(403, { error: run.message });
-  const runId = runIdOf(c.runId, run.look);
-  const used = await chain.call(cfg.contract, '0x' + readers.isRunUsed + runId.slice(2));
-  if (BigInt(used) === 1n) return answer(200, { granted: true, wallet: run.wallet, chainId: run.chainId });
   const signature = signHash(cfg.signerKey, mintHash(cfg.chainId, cfg.contract, run.traits, runId));
   const data = grantCalldata(run.traits, runId, signature);
   try { await chain.estimate(cfg.relayer, cfg.contract, data); } catch (error) {
@@ -208,8 +215,10 @@ export async function grant(body, cfg, chain, board, now = Date.now()) {
   try { await chain.send(raw); } catch (error) {
     // two runs at once can pick one nonce: this one simply asks again and goes out with the next
     if (!/nonce|known|underpriced/i.test(String(error?.message))) throw error;
+    return answer(202, { pending: true, wait: 'retry' });
   }
-  return answer(202, { pending: true });
+  if (memo) await memo.set(memoKey, now).catch(() => undefined);
+  return answer(202, { pending: true, wallet: run.wallet });
 }
 
 /** The tokens this transaction minted to `to` on the collection: ids as decimal strings. */

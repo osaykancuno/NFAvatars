@@ -37,7 +37,7 @@ export default async () => {
   const base = (process.env.OPENSEA_API_BASE || 'https://api.opensea.io').replace(/\/+$/, '');
   if (!slug) return reply({ configured: false }, 300);
   const get = async (path) => {
-    const res = await fetch(base + path, { headers: Object.assign({ accept: 'application/json' }, key ? { 'x-api-key': key } : {}) });
+    const res = await fetch(base + path, { headers: Object.assign({ accept: 'application/json' }, key ? { 'x-api-key': key } : {}), signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error(path + ' → ' + res.status);
     return res.json();
   };

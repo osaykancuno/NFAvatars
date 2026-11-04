@@ -44,6 +44,7 @@ export default async (req) => {
         'content-type': 'image/gif',
         'cache-control': 'public, max-age=31536000, immutable',
         'netlify-cdn-cache-control': 'public, durable, max-age=31536000, immutable',
+        'netlify-vary': 'query=a|e|p|r|l',      // the picture depends on these only: other parameters do not make a new render
         'access-control-allow-origin': '*'
       }
     });
