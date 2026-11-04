@@ -15,7 +15,7 @@
   <meta name="twitter:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png">
   <link rel="icon" href="assets/logo.png">
   <link rel="stylesheet" href="assets/brand.css?v=3">
-  <link rel="stylesheet" href="assets/site.css?v=3">
+  <link rel="stylesheet" href="assets/site.css?v=11">
 </head>
 <body>
   <canvas id="world" width="360" height="640" aria-hidden="true"></canvas>
@@ -28,11 +28,11 @@
       <button class="tab" role="tab" id="tab-home" aria-controls="home" data-tab="home" type="button">Party</button>
       <button class="tab" role="tab" id="tab-game" aria-controls="game" data-tab="game" type="button">The Game</button>
       <button class="tab" role="tab" id="tab-people" aria-controls="people" data-tab="people" type="button">People</button>
+      <button class="tab" role="tab" id="tab-collection" aria-controls="collection" data-tab="collection" type="button">Collection</button>
       <button class="tab" role="tab" id="tab-mint" aria-controls="mint" data-tab="mint" type="button">Mint</button>
       <button class="tab" role="tab" id="tab-agents" aria-controls="agents" data-tab="agents" type="button">Next</button>
       <button class="tab" role="tab" id="tab-faq" aria-controls="faq" data-tab="faq" type="button">FAQ</button>
     </nav>
-    <a class="bar-link" href="collection/">Collection</a>
     <button class="nfa-btn nfa-btn--cta bar-play" type="button" data-play data-confetti>Play free</button>
   </header>
 
@@ -69,22 +69,23 @@
         <p class="eyebrow">THE GAME</p>
         <h2>Six places. One face.</h2>
         <p class="section-lead">Run in first person with one photo on your phone. Run <b>into</b> the person on it, around everybody else. Pick a place and walk through the door.</p>
-        <div class="level-rail" role="tablist" aria-label="The six levels" id="level-rail"></div>
-        <div class="level-detail" id="level-detail" aria-live="polite"></div>
+        <div class="subtabs" role="tablist" aria-label="About the game">
+          <button role="tab" type="button" class="sub" data-game-sub="levels" aria-selected="true">The six places</button>
+          <button role="tab" type="button" class="sub" data-game-sub="gags" aria-selected="false">Getting it wrong</button>
+          <button role="tab" type="button" class="sub" data-game-sub="bull" aria-selected="false">Bull Run &amp; Tram 28</button>
+          <button role="tab" type="button" class="sub" data-game-sub="texts" aria-selected="false">The texts</button>
+          <button role="tab" type="button" class="sub" data-game-sub="daily" aria-selected="false">The Daily</button>
+        </div>
+        <div class="subpane" data-game-pane="levels">
+          <div class="level-rail" role="tablist" aria-label="The six levels" id="level-rail"></div>
+          <div class="level-detail" id="level-detail" aria-live="polite"></div>
+        </div>
+        <div class="subpane game-more" data-game-pane="gags" hidden><p>Every one of the 16 roles has its own gag. Bump the whale and the floor chart crashes. Bump the DJ and the music stops. Bump the meme lord and you are a template. Everybody you run into goes on your <b>Wall of Shame</b>: can you collect all 16?</p></div>
+        <div class="subpane game-more" data-game-pane="bull" hidden><p>Fifteen in a row starts a <b>Bull Run</b>: you run faster and everybody high-fives you. <b>Tram 28</b> takes two lanes and it does not brake. A <b>mimosa</b> is worth 100 points, and then you see double for a while.</p></div>
+        <div class="subpane game-more" data-game-pane="texts" hidden><p>Your phone buzzes while you run. "that was my intern." "keep going, i am shorting you." The last chase, on the rooftop, is them in person: that face is the Not Fungible Avatar you mint.</p></div>
+        <div class="subpane game-more" data-game-pane="daily" hidden><p>Same people for everyone, every day. Your run ends with one square per level, your cause of death and an incident report: <span class="tags">#NotFungibleAvatars</span>.</p></div>
         <div class="ctas"><button class="nfa-btn nfa-btn--cta" type="button" data-play data-confetti>Play free, 60 seconds</button><a class="nfa-btn" id="share-x" data-confetti href="#" target="_blank" rel="noopener noreferrer">Share on X</a></div>
       </div>
-      <details class="glass-details" name="game-more"><summary>Getting it wrong is half the fun</summary>
-        <p>Every one of the 16 roles has its own gag. Bump the whale and the floor chart crashes. Bump the DJ and the music stops. Bump the meme lord and you are a template. Everybody you run into goes on your <b>Wall of Shame</b>: can you collect all 16?</p>
-      </details>
-      <details class="glass-details" name="game-more"><summary>Bull Run, Tram 28 and the bottomless brunch</summary>
-        <p>Fifteen in a row starts a <b>Bull Run</b>: you run faster and everybody high-fives you. <b>Tram 28</b> takes two lanes and it does not brake. A <b>mimosa</b> is worth 100 points, and then you see double for a while.</p>
-      </details>
-      <details class="glass-details" name="game-more"><summary>The one who did it keeps texting you</summary>
-        <p>Your phone buzzes while you run. "that was my intern." "keep going, i am shorting you." The last chase, on the rooftop, is them in person: that face is the Not Fungible Avatar you mint.</p>
-      </details>
-      <details class="glass-details" name="game-more"><summary>The Daily, and the report you post</summary>
-        <p>Same people for everyone, every day. Your run ends with one square per level, your cause of death and an incident report: <span class="tags">#NotFungibleAvatars</span>.</p>
-      </details>
     </section>
 
     <!-- PEOPLE -->
@@ -102,6 +103,51 @@
         <div class="subpane" data-pane="moments" hidden><p class="joke">The luck of the run picks the moment your avatar lives forever, in your tier's version.</p><div class="tiles-grid moments" id="moments-grid"></div></div>
         <div class="subpane" data-pane="items" hidden><p class="joke">The luck of the run picks the item, up to your tier. Pure flex, from an Iced Coffee to the Genesis Block.</p><div class="tiles-grid props" id="props-grid"></div></div>
         <div class="subpane" data-pane="tiers" hidden><p class="joke">Quiet colours for Common, bright ones for Rare, a picture of Lisbon for Epic and Legendary. Every tier is earned.</p><div class="rarities" id="rarity-grid"></div></div>
+      </div>
+    </section>
+
+    <!-- COLLECTION -->
+    <section class="panel" id="collection" role="tabpanel" aria-labelledby="tab-collection" tabindex="-1" hidden>
+      <div class="glass">
+        <p class="eyebrow">THE COLLECTION <span aria-hidden="true">•</span> <span id="chain-chip">ETHEREUM</span></p>
+        <h2>Earned in a run. Drawn once.</h2>
+        <div class="subtabs" role="tablist" aria-label="The collection">
+          <button role="tab" type="button" class="sub" data-col-sub="numbers" aria-selected="true">The numbers</button>
+          <button role="tab" type="button" class="sub" data-col-sub="minted" aria-selected="false">Just minted</button>
+          <button role="tab" type="button" class="sub" data-col-sub="wall" aria-selected="false">The wall</button>
+          <button role="tab" type="button" class="sub" data-col-sub="facts" aria-selected="false">How it works</button>
+        </div>
+        <div class="subpane" data-col-pane="numbers">
+          <ul class="kpis" id="kpis" aria-live="polite">
+            <li><b data-k="supply">—</b><span>Minted</span></li>
+            <li><b data-k="owners">—</b><span>Owners</span></li>
+            <li><b data-k="floor">—</b><span>Floor price</span></li>
+            <li><b data-k="volume">—</b><span>Total volume</span></li>
+            <li><b data-k="daySales">—</b><span>Sales · 24 h</span></li>
+            <li><b data-k="dayVolume">—</b><span>Volume · 24 h</span></li>
+            <li><b data-k="weekVolume">—</b><span>Volume · 7 days</span></li>
+            <li><b data-k="sales">—</b><span>Sales · all time</span></li>
+          </ul>
+          <p class="updated" id="updated">Live numbers from OpenSea appear here at launch.</p>
+        </div>
+        <div class="subpane" data-col-pane="minted" hidden>
+          <div class="gallery" id="mints"></div>
+          <p class="notice" id="mints-empty">The first Not Fungible Avatars show up here as soon as they are minted on THE WALL ARCADE.</p>
+          <p class="eyebrow sales-title" id="sales-title" hidden>LATEST SALES</p>
+          <div class="gallery" id="sales" hidden></div>
+        </div>
+        <div class="subpane col-wall" data-col-pane="wall" hidden>
+          <img src="assets/collection-wall.png" alt="A wall of 126 different Not Fungible Avatars, mostly on flat quiet or bright colours, a few on rooftops and at golden hour" width="1404" height="904" loading="lazy">
+          <p class="fine">Drawn by the contract's own art. Common: a quiet colour. Rare: a bright one. Epic: the Alfama rooftops. Legendary: golden hour over the Tagus.</p>
+        </div>
+        <div class="subpane acc" data-col-pane="facts" hidden>
+          <details name="facts" open><summary>Earned, not bought</summary><p>No public mint and no allowlist: the contract refuses a wallet without a finished run. Each Not Fungible Avatar comes from one paid run on THE WALL ARCADE, scored by SuperRare's server. One wallet can play 50 runs at most.</p></details>
+          <details name="facts"><summary>10,000 different people</summary><p>16 roles, every skin, hair, hair color, facial hair and eyewear. 10,000 at most, on Ethereum, each person minted once.</p></details>
+          <details name="facts"><summary>Tier earned, the rest is luck</summary><p>The tier is earned by playing, and the Background follows it. Moment, Expression and Item are the luck of the run, never above your tier. Legendary only if you catch the one who did it.</p></details>
+          <details name="facts"><summary>Entirely on chain</summary><p>Traits, picture and the live show all live in the contract: no server and no IPFS behind them. The art gets locked for good after launch.</p></details>
+          <details name="facts"><summary>Twelve traits</summary><p>Background · Role · Pass · Hair · Hair Color · Facial Hair · Eyewear · Expression · Item · Moment · Tier · Score.</p></details>
+          <details name="facts"><summary>The contract</summary><p><span id="contract-fact">The contract address appears here at launch.</span> Royalties: 5% to the creator (ERC-2981).</p></details>
+        </div>
       </div>
     </section>
 
@@ -158,23 +204,27 @@
         <p class="eyebrow">HOW TO MINT</p>
         <h2>1 credit = 1 run = 1 Not Fungible Avatar.</h2>
         <p class="section-lead">No open mint: the contract refuses a wallet without a finished run. Every avatar is earned in a real run on THE WALL ARCADE, scored by SuperRare's server, and minted on Ethereum through SuperRare, fully on chain. 10,000 at most, 50 per wallet.</p>
+        <div class="subtabs" role="tablist" aria-label="Minting">
+          <button role="tab" type="button" class="sub" data-mint-sub="steps" aria-selected="true">Five steps</button>
+          <button role="tab" type="button" class="sub" data-mint-sub="traits" aria-selected="false">How traits are earned</button>
+        </div>
+        <div class="subpane acc" data-mint-pane="steps">
         <details name="mint" open><summary>1 · Warm up here</summary><p>Play the free trial as many times as you like. It mints nothing. <button class="linklike" type="button" data-play>Play now</button></p></details>
         <details name="mint"><summary>2 · Go to THE WALL ARCADE</summary><p>Open <a data-link="arcade" href="#">THE WALL ARCADE</a>, pick Not Fungible Avatars and sign in with SuperRare.</p></details>
         <details name="mint"><summary>3 · Spend 1 credit, run up to 3 minutes</summary><p>The game asks before it spends the credit. Your run is scored on SuperRare's server, so nobody can fake a score.</p></details>
         <details name="mint"><summary>4 · Meet the one who pulled the rug</summary><p>When the run ends you see who it was: role, look, moment, expression, item and tier.</p></details>
         <details name="mint"><summary>5 · Mint them, right there</summary><p>Press Mint on the end screen, without leaving the game. SuperRare's window opens over it, you confirm in your wallet and your Not Fungible Avatar lands there. Close the page? Your run is already on chain as yours: mint it whenever you like, from the game or from <a href="mint/">this page</a>. Each run mints once, never the same person twice.</p></details>
-        <details name="mint"><summary>How traits are earned</summary>
-          <p>Your tier is earned by playing. The rest is the luck of the run: moment, expression and item come from the run's own id, which the platform makes, and none of them can go above your tier.</p>
-          <table class="trait-table"><caption class="sr-only">How each trait is earned</caption><tbody>
-            <tr><th scope="row">Background</th><td>Your tier. Common: one quiet colour (Calcada, Nata, Sardine, Bica, Sand, Fog). Rare: one bright colour (Azulejo, Tram, Terracotta, Tagus, Jacaranda, Manjerico). Epic: Alfama Rooftops. Legendary: Tagus Golden Hour. The colour comes from the person</td></tr>
-            <tr><th scope="row">Role · Pass</th><td>One of 16 people, with the colour of their pass, revealed at the end of the run</td></tr>
-            <tr><th scope="row">Hair · Eyewear</th><td>Hair, hair color, facial hair and glasses: never the same person twice</td></tr>
-            <tr><th scope="row">Expression</th><td>The luck of the run, up to your tier: from Low Battery to Unicorn Tears</td></tr>
-            <tr><th scope="row">Item</th><td>The luck of the run, up to your tier: 18 items, from an Iced Coffee to Laser Eyes, a Crown or the Genesis Block</td></tr>
-            <tr><th scope="row">Moment</th><td>The luck of the run, in your tier's version (Front Cam → Broke the Internet)</td></tr>
-            <tr><th scope="row">Tier</th><td>Earned by playing. Legendary = catch the one who did it, on level 6. Otherwise the levels you clear: Epic 4+, Rare 2+</td></tr>
-          </tbody></table>
-        </details>
+        </div>
+        <div class="subpane acc" data-mint-pane="traits" hidden>
+          <p class="traits-lead">Your tier is earned by playing. The rest is the luck of the run: moment, expression and item come from the run's own id, which the platform makes, and none of them can go above your tier.</p>
+          <details name="traits" open><summary>Background</summary><p>Your tier. Common: a quiet colour, Rare: a bright one, both picked by the person. Epic: Alfama Rooftops. Legendary: Tagus Golden Hour.</p></details>
+          <details name="traits"><summary>Role · Pass</summary><p>One of 16 people, with the colour of their pass, revealed at the end of the run.</p></details>
+          <details name="traits"><summary>Hair · Eyewear</summary><p>Hair, hair color, facial hair and glasses: never the same person twice.</p></details>
+          <details name="traits"><summary>Expression</summary><p>The luck of the run, up to your tier: from Low Battery to Unicorn Tears.</p></details>
+          <details name="traits"><summary>Item</summary><p>The luck of the run, up to your tier: 18 items, from an Iced Coffee to Laser Eyes, a Crown or the Genesis Block.</p></details>
+          <details name="traits"><summary>Moment</summary><p>The luck of the run, in your tier's version (Front Cam → Broke the Internet).</p></details>
+          <details name="traits"><summary>Tier</summary><p>Earned by playing. Legendary = catch the one who did it, on level 6. Otherwise the levels you clear: Epic 4+, Rare 2+.</p></details>
+        </div>
       </div>
     </section>
 
@@ -183,6 +233,7 @@
       <div class="glass">
         <p class="eyebrow">FAQ</p>
         <h2>Questions, anon?</h2>
+        <div class="acc">
         <details name="faq"><summary>How much does it cost?</summary><p>The trial on this site is free and mints nothing. On THE WALL ARCADE one full run costs 1 SuperRare credit, and that run's person can be minted when it ends: 1 credit = 1 run = 1 Not Fungible Avatar (plus network gas for the mint).</p></details>
         <details name="faq"><summary>Which chain? Where is the contract?</summary><p><span id="faq-chain">Ethereum, minted through SuperRare, and fully on chain: ownership, traits, picture and the live show all live in the contract, with no server and no IPFS behind them. The contract address appears here at launch.</span></p></details>
         <details name="faq"><summary>How many Not Fungible Avatars will exist?</summary><p>10,000 at most, and never the same person twice. One per paid run: each run can mint only once, and one wallet can play at most 50 runs, so nobody fills the collection alone. The game tells you before it spends a credit if a run could not end in a mint.</p></details>
@@ -191,15 +242,17 @@
         <details name="faq"><summary>How do I get a Legendary?</summary><p>Clear all six levels and catch the one who pulled the rug, on the rooftop, before your phone dies. No luck, no allowlist, just your eyes.</p></details>
         <details name="faq"><summary>Is it fair?</summary><p>On THE WALL ARCADE every run is scored by SuperRare's server, not by your browser. Your tier comes from that verified score and the rest from the run's own id, which the platform makes: one mint per run, no trait above your tier, never the same person twice.</p></details>
         <details name="faq"><summary>Who are the characters?</summary><p>Original pixel people: artists, collectors, devs, founders, curators, streamers, degens, DJs, whales, bodyguards, baristas, gamers, meme lords, photographers, skaters and chefs. Every look, every background, independent of the role.</p></details>
-        <details name="faq"><summary>Made for Lisbon?</summary><p>Not Fungible Avatars is the Lisbon edition of THE WALL ARCADE at NFC Summit 2027: azulejos, calçada, Tram 28, the red bridge at golden hour and a pastel de nata in the wrong place at the wrong time.</p></details>
+        <details name="faq"><summary>Made for Lisbon?</summary><p>A tribute to the NFC Lisbon community: artists and collectors, builders, curators, DJs and the friends you meet at brunch. What stays with you is never a floor price, it is the moments. Azulejos, calçada, Tram 28, the red bridge at golden hour and a pastel de nata in the wrong place at the wrong time: the Lisbon edition of THE WALL ARCADE at NFC Summit 2027.</p></details>
+        </div>
+        <p class="fine faq-credit"><a class="credit" href="https://onthewall.nfcsummit.com" target="_blank" rel="noopener noreferrer">A REMIX THE WALL EXPERIMENT · NFC SUMMIT 2027 · LISBON</a> · By <a data-link="x" href="#">@osaykancuno</a></p>
       </div>
     </section>
 
-    <footer class="foot">
-      <a class="credit" href="https://onthewall.nfcsummit.com" target="_blank" rel="noopener noreferrer">A REMIX THE WALL EXPERIMENT · NFC SUMMIT 2027 · LISBON</a>
-      <span>By <a data-link="x" href="#">@osaykancuno</a> · <span id="contract-line">Contract: at launch</span></span>
-    </footer>
   </main>
+  <footer class="foot">
+    <a class="credit" href="https://onthewall.nfcsummit.com" target="_blank" rel="noopener noreferrer">A REMIX THE WALL EXPERIMENT · NFC SUMMIT 2027 · LISBON</a>
+    <span>By <a data-link="x" href="#">@osaykancuno</a> · <span id="contract-line">Contract: at launch</span></span>
+  </footer>
 
   <dialog id="play-dialog" class="play-dialog" aria-label="Not Fungible Avatars">
     <button class="play-close" type="button" id="play-close" aria-label="Close the game">✕</button>
@@ -435,7 +488,7 @@
     /* ---------- the world behind everything: the game's own corridor, a different place of Lisbon for every tab ---------- */
     const R = window.AERunner, runner = R.create(E, A, { sound: false, reducedMotion: () => reduced });
     const world = $('world'), wctx = world.getContext('2d');
-    const PLACE = { home: 0, game: 0, people: 1, mint: 2, agents: 3, faq: 4 };
+    const PLACE = { home: 0, game: 0, people: 1, collection: 5, mint: 2, agents: 3, faq: 4 };
     let place = 0, boost = 1, worldLast = performance.now(), worldT = 0, worldPaused = false;
     function drawWorld(now) {
       const dt = Math.min(0.05, (now - worldLast) / 1000); worldLast = now; worldT += dt;
@@ -458,11 +511,39 @@
     }
 
     /* ---------- tabs ---------- */
-    const TABS = ['home', 'game', 'people', 'mint', 'agents', 'faq'];
+    const TABS = ['home', 'game', 'people', 'collection', 'mint', 'agents', 'faq'];
     const OLD = { how: 'mint', traits: 'mint', levels: 'game', moments: 'people', lisbon: 'faq', top: 'home' };   // links from before the tabs
     const tabButtons = [...document.querySelectorAll('[data-tab]')];
     let levelSel = 0;
+    /* One screen, like an app: a tab never scrolls. When its content is taller than the screen it shrinks as a whole, in proportion. */
+    function fitPanel() {
+      const box = $('panels'), id = TABS.find((t) => !$(t).hidden), p = id && $(id);
+      if (!p) return;
+      Object.assign(p.style, { zoom: '', transform: '', marginTop: '', marginBottom: '' });
+      const cs = getComputedStyle(box), avail = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      if (p.offsetHeight <= avail) return;
+      // Two ways to shrink: zoom re-wraps text (it helps text, not grids of squares, which only get wider in their own pixels),
+      // a scale shrinks everything in proportion. Try a few zooms, scale whatever is left, keep what leaves the text biggest.
+      let best = { size: 0, z: 1, s: 1 };
+      for (let z = 1; z >= 0.6; z = +(z - 0.05).toFixed(2)) {
+        p.style.zoom = z === 1 ? '' : String(z);
+        const h = p.getBoundingClientRect().height, s = Math.min(1, avail / h);
+        if (z * s > best.size + 0.004) best = { size: z * s, z, s };
+      }
+      p.style.zoom = best.z === 1 ? '' : String(best.z);
+      if (best.s < 1) {
+        const h = p.getBoundingClientRect().height;
+        Object.assign(p.style, { transformOrigin: '50% 0', transform: 'scale(' + best.s + ')', marginTop: '0', marginBottom: (h * best.s - h) / (best.z || 1) + 'px' });
+      }
+    }
+    let fitQueued = 0;
+    const refit = () => { clearTimeout(fitQueued); fitQueued = setTimeout(fitPanel, 30); };   // a timer, not rAF: it also runs in a background tab
+    window.addEventListener('resize', refit);
+    document.addEventListener('toggle', refit, true);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
+    window.addEventListener('load', refit);
     function openTab(id, focus) {
+      if (id === 'play') { openTab('home'); openGame(); return; }      // the old /play/ page now opens the game over the site
       id = OLD[id] || id;
       if (TABS.indexOf(id) < 0) id = 'home';
       TABS.forEach((t) => { $(t).hidden = t !== id; });
@@ -472,6 +553,7 @@
       if (location.hash.slice(1) !== id) history[location.hash ? 'pushState' : 'replaceState'](null, '', '#' + id);   // Back walks through the tabs
       if (focus) $(id).focus({ preventScroll: true });
       document.querySelectorAll('.reveal').forEach((el) => el.classList.add('in'));
+      refit();
     }
     tabButtons.forEach((b, i) => {
       b.addEventListener('click', () => openTab(b.dataset.tab));
@@ -498,6 +580,49 @@
     }
     subtabs('data-sub', 'data-pane');
     subtabs('data-agent-sub', 'data-agent-pane');
+    subtabs('data-game-sub', 'data-game-pane');
+    subtabs('data-col-sub', 'data-col-pane');
+    subtabs('data-mint-sub', 'data-mint-pane');
+
+    /* ---------- the collection: live numbers from OpenSea (through /api/collection), the latest mints and sales ---------- */
+    (function collection() {
+      const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+      let opensea = SITE.openseaUrl;
+      $('chain-chip').textContent = SITE.chainName.toUpperCase();
+      if (SITE.contract) $('contract-fact').innerHTML = 'Contract on ' + esc(SITE.chainName) + ': <a href="' + esc(SITE.explorer + '/address/' + SITE.contract) + '" target="_blank" rel="noopener noreferrer"><code>' + esc(SITE.contract) + '</code></a>.';
+      const fmtInt = (n) => (n == null ? '—' : Number(n).toLocaleString('en'));
+      const fmtAmt = (n, sym) => (n == null ? '—' : (n === 0 ? '0' : n < 0.001 ? '<0.001' : Number(n.toPrecision(4)).toLocaleString('en', { maximumFractionDigits: 4 })) + (sym ? ' ' + sym : ''));
+      const ago = (t) => { if (!t) return ''; const sec = Math.max(0, Date.now() / 1000 - t); return sec < 3600 ? Math.round(sec / 60) + ' min ago' : sec < 86400 ? Math.round(sec / 3600) + ' h ago' : Math.round(sec / 86400) + ' days ago'; };
+      const cards = (list, withPrice) => list.filter((x) => x.image).slice(0, 6).map((x) =>
+        '<a href="' + esc(x.url || opensea || '#') + '" target="_blank" rel="noopener noreferrer"><img src="' + esc(x.image) + '" alt="' + esc(x.name) + '" loading="lazy">' +
+        '<span>' + esc(x.name.replace('Not Fungible Avatar ', '')) + '</span><small>' + (withPrice && x.price != null ? esc(fmtAmt(x.price, x.symbol)) + ' · ' : '') + esc(ago(x.time)) + '</small></a>').join('');
+      const set = (k, v) => { const el = document.querySelector('[data-k="' + k + '"]'); if (el) el.textContent = v; };
+      function show(d) {
+        const st = d.stats;
+        set('supply', fmtInt(d.collection.supply)); set('owners', fmtInt(st.owners)); set('floor', st.floor ? fmtAmt(st.floor, st.floorSymbol) : '—');
+        set('volume', fmtAmt(st.volume, st.volumeSymbol)); set('sales', fmtInt(st.sales)); set('daySales', fmtInt(st.day && st.day.sales));
+        set('dayVolume', st.day ? fmtAmt(st.day.volume, st.day.symbol) : '—'); set('weekVolume', st.week ? fmtAmt(st.week.volume, st.week.symbol) : '—');
+        $('updated').textContent = 'From OpenSea · updated ' + new Date(d.updatedAt).toLocaleTimeString() + ' (refreshes every few minutes).';
+        if (d.mints.length) { $('mints').innerHTML = cards(d.mints, false); $('mints-empty').hidden = true; }
+        if (d.sales.length) { $('sales').innerHTML = cards(d.sales, true); $('sales').hidden = false; $('sales-title').hidden = false; }
+        if (!opensea && d.collection.url) {
+          opensea = d.collection.url;
+          document.querySelectorAll('[data-link="opensea"]').forEach((a) => { a.href = opensea; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.removeAttribute('aria-disabled'); a.textContent = a.textContent.replace('OpenSea · at launch', 'View on OpenSea'); });
+        }
+        refit();
+      }
+      function onChainSupply() {
+        if (!SITE.contract || !SITE.rpcUrl) return;
+        fetch(SITE.rpcUrl, { method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call', params: [{ to: SITE.contract, data: '0x18160ddd' }, 'latest'] }) })
+          .then((res) => res.json()).then((j) => { if (j && typeof j.result === 'string') set('supply', fmtInt(parseInt(j.result, 16))); })
+          .catch(() => { /* keep the dash */ });
+      }
+      fetch('api/collection').then((res) => (res.ok ? res.json() : null)).then((d) => {
+        if (d && d.configured && d.ok) show(d);
+        else { if (d && d.configured) $('updated').textContent = 'OpenSea is not answering right now: the numbers will be back in a few minutes.'; onChainSupply(); }
+      }).catch(onChainSupply);
+    })();
 
     /* ---------- play right here: the game opens over the site, without leaving it ---------- */
     const dialog = $('play-dialog');
