@@ -28,11 +28,11 @@
 [[headers]]
   for = "/"
   [headers.values]
-    content-security-policy = "frame-ancestors 'self'"
+    content-security-policy = "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
     x-frame-options = "SAMEORIGIN"
 
 [[headers]]
   for = "/mint/*"
   [headers.values]
-    content-security-policy = "frame-ancestors 'none'"
+    content-security-policy = "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
     x-frame-options = "DENY"
