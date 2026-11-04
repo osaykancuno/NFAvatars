@@ -11,7 +11,7 @@
  * mintTo spends the wallet's oldest ticket. Sending the same run twice is harmless: the contract takes a run once.
  */
 import {
-  addressOf, canonLook, grantCalldata, hexToBytes, keccak, lookOfSeed, mintHash, picksOf, pointsOfScore, runIdOf, signHash, signRawTx, signerKeyOf,
+  addressOf, canonLook, grantCalldata, grantRecord, grantRunsCalldata, hexToBytes, keccak, lookOfSeed, mintHash, picksOf, pointsOfScore, runIdOf, signHash, signRawTx, signerKeyOf,
   tierOfScore, traitSeedOfRun,
 } from './mint-core.mjs';
 
@@ -19,7 +19,10 @@ export const TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55
 const ZERO_TOPIC = '0x' + '0'.repeat(64);
 const DEFAULT_RPC = { 1: 'https://ethereum-rpc.publicnode.com', 11155111: 'https://ethereum-sepolia-rpc.publicnode.com' };
 const RARE_MINTER = { 1: '0x5fa112EFeD8297bec0010b312208d223E0cE891E', 11155111: '0xd28Dc0B89104d7BBd902F338a0193fF063617ccE' };
-const GWEI = 1_000_000_000n, GRANT_GAS = 220_000n;
+const GWEI = 1_000_000_000n;
+const MAX_GROUP = 20;            // runs per transaction at most
+const LOCK_MS = 30_000;          // one group goes out at a time: the next waits for this, or for the previous one to be sent
+const TIP_MIN = 1_000_000n, TIP_MAX = 20_000_000n;    // the priority fee: 0.001 to 0.02 gwei, what Ethereum asks when it is quiet
 const sel = (signature) => Buffer.from(keccak(Buffer.from(signature)).subarray(0, 4)).toString('hex');
 const word = (n) => BigInt(n).toString(16).padStart(64, '0');
 const addrWord = (a) => a.slice(2).toLowerCase().padStart(64, '0');
@@ -44,7 +47,8 @@ export function mintConfig(env) {
   return {
     open: ok, contract, chainId, signerKey, relayer: signerKey ? addressOf(signerKey) : '', gameId, gameOrigin,
     rpcUrl: (env.NFA_RPC_URL || '').trim() || DEFAULT_RPC[chainId],
-    maxFee: BigInt(Number(env.NFA_MAX_GWEI) > 0 ? Math.round(Number(env.NFA_MAX_GWEI) * 1e9) : 20_000_000_000),   // above this the runs wait
+    // the most the site pays per unit of gas: above it the runs wait in the queue (the ticket comes later, the cost never goes up)
+    maxFee: BigInt(Number(env.NFA_MAX_GWEI) > 0 ? Math.round(Number(env.NFA_MAX_GWEI) * 1e9) : 150_000_000),   // 0.15 gwei
     minBalance: BigInt(env.NFA_MIN_RELAYER_WEI || '300000000000000'),                                             // 0.0003 ETH
     priceWei: BigInt((env.NFA_PRICE_WEI || '1').trim()),                                                          // Connect does not take price 0 yet: 1 wei for now
     unitPrice: (env.NFA_UNIT_PRICE || '0.000000000000000001').trim(),                                             // the same price, as Connect's actions.mint wants it
@@ -181,44 +185,79 @@ export function entryToRun(entry, runId, seed, chainId = 1) {
   };
 }
 
+/** A store kept in memory: a call without Netlify Blobs (tests, local) still works, one run per transaction. */
+export function memoryStore() {
+  const m = new Map();
+  return { get: async (k) => (m.has(k) ? m.get(k) : null), set: async (k, v) => { m.set(k, v); }, del: async (k) => { m.delete(k); },
+    list: async (prefix) => [...m.keys()].filter((k) => k.startsWith(prefix)) };
+}
+
 /**
- * body = { runId, seed, startedAt }. `board` reads Studio's leaderboard (see studioBoard). 200 once the run's ticket is on chain
- * (with the wallet it went to), 202 while the page should ask again (the run is not on the leaderboard yet, or the ticket is on its way).
+ * body = { runId, seed, startedAt }. `board` reads Studio's leaderboard (see studioBoard). `store` = { get, set, del, list } (Netlify Blobs
+ * in production): the runs waiting to go on chain, and the ones just sent. 200 once the run's ticket is on chain, 202 while the page should
+ * ask again (the run is not on the leaderboard yet, it waits for a cheap moment, or its group is on its way).
+ * The site pays the gas, so it pays as little as it can: runs go out in groups (grantRuns: one transaction, one base fee, warm slots),
+ * never above cfg.maxFee per unit of gas.
  */
-export async function grant(body, cfg, chain, board, now = Date.now(), memo = null) {
+export async function grant(body, cfg, chain, board, now = Date.now(), store = memoryStore()) {
   if (!cfg.open) return answer(503, { error: 'The mint is not open yet.' });
   const c = parseClaim(body);
   if (c instanceof Error) return answer(400, { error: c.message });
-  // the cheap checks first: a run already on chain, or a ticket just sent, costs no leaderboard search and no gas
+  // the cheap checks first: a run already on chain, waiting, or just sent costs no leaderboard search and no gas
   const runId = runIdOf(c.runId, lookOfSeed(c.seed));
   const used = await chain.call(cfg.contract, '0x' + readers.isRunUsed + runId.slice(2));
   if (BigInt(used) === 1n) return answer(200, { granted: true });
-  const memoKey = 'sent/' + cfg.chainId + '/' + cfg.contract + '/' + runId.slice(0, 62);
-  const sentAt = memo ? await memo.get(memoKey).catch(() => null) : null;
+  const key = runId.slice(2, 62);
+  const sentAt = await store.get('sent/' + key).catch(() => null);
   if (sentAt && now - sentAt < SENT_MS) return answer(202, { pending: true });
-  const { entry } = await findRun(board, c.runId, c.startedAt, { now });
-  if (!entry) return answer(202, { pending: true });
-  const run = entryToRun(entry, c.runId, c.seed, cfg.chainId);
-  if (run instanceof Error) return answer(403, { error: run.message });
-  const signature = signHash(cfg.signerKey, mintHash(cfg.chainId, cfg.contract, run.traits, runId));
-  const data = grantCalldata(run.traits, runId, signature);
-  try { await chain.estimate(cfg.relayer, cfg.contract, data); } catch (error) {
-    const known = refusal(error);
-    if (known) return answer(known[0], { error: known[1] });
-    throw error;
+  if (!(await store.get('queue/' + key).catch(() => null))) {
+    const { entry } = await findRun(board, c.runId, c.startedAt, { now });
+    if (!entry) return answer(202, { pending: true });
+    const run = entryToRun(entry, c.runId, c.seed, cfg.chainId);
+    if (run instanceof Error) return answer(403, { error: run.message });
+    const signature = signHash(cfg.signerKey, mintHash(cfg.chainId, cfg.contract, run.traits, runId));
+    // asked of the chain for this run alone: 50 runs on the wallet, sold out, closed are said now, not after a credit is lost
+    try { await chain.estimate(cfg.relayer, cfg.contract, grantCalldata(run.traits, runId, signature)); } catch (error) {
+      const known = refusal(error);
+      if (known) return answer(known[0], { error: known[1] });
+      throw error;
+    }
+    await store.set('queue/' + key, { record: grantRecord(run.traits, runId, signature), runId, at: now, wallet: run.wallet });
   }
+  return sendGroup(cfg, chain, store, now);
+}
+
+/** Sends the waiting runs as one grantRuns, when the gas is cheap enough and no other group is going out right now. */
+export async function sendGroup(cfg, chain, store, now = Date.now()) {
+  const lock = await store.get('lock').catch(() => null);
+  if (lock && now - lock < LOCK_MS) return answer(202, { pending: true });
+  await store.set('lock', now).catch(() => undefined);
+  const waiting = [];
+  for (const k of (await store.list('queue/')).slice(0, MAX_GROUP * 2)) {
+    const q = await store.get(k).catch(() => null);
+    if (!q) continue;
+    if (BigInt(await chain.call(cfg.contract, '0x' + readers.isRunUsed + q.runId.slice(2))) === 1n) { await store.del(k); continue; }
+    waiting.push({ k, q });
+  }
+  waiting.sort((a, b) => a.q.at - b.q.at);
+  const group = waiting.slice(0, MAX_GROUP);
+  const release = () => store.set('lock', 0).catch(() => undefined);
+  if (!group.length) { await release(); return answer(202, { pending: true }); }
   const { base, tip } = await chain.fees();
-  const priority = tip > 100_000_000n ? tip : 100_000_000n;      // at least 0.1 gwei
-  const maxFee = base * 2n + priority;
-  if (maxFee > cfg.maxFee) return answer(202, { pending: true, wait: 'gas' });
-  const raw = signRawTx(cfg.signerKey, { chainId: cfg.chainId, nonce: await chain.nonce(cfg.relayer), priority, maxFee, gas: GRANT_GAS, to: cfg.contract, data });
+  const priority = tip < TIP_MIN ? TIP_MIN : tip > TIP_MAX ? TIP_MAX : tip;
+  if (base + priority > cfg.maxFee) { await release(); return answer(202, { pending: true, wait: 'gas' }); }
+  const data = grantRunsCalldata(group.map((g) => g.q.record));
+  const gas = BigInt(await chain.estimate(cfg.relayer, cfg.contract, data)) * 5n / 4n + 10_000n;
+  const raw = signRawTx(cfg.signerKey, { chainId: cfg.chainId, nonce: await chain.nonce(cfg.relayer), priority, maxFee: cfg.maxFee, gas, to: cfg.contract, data });
   try { await chain.send(raw); } catch (error) {
-    // two runs at once can pick one nonce: this one simply asks again and goes out with the next
+    // two groups at once can pick one nonce: the runs stay in the queue and go out with the next
     if (!/nonce|known|underpriced/i.test(String(error?.message))) throw error;
+    await release();
     return answer(202, { pending: true, wait: 'retry' });
   }
-  if (memo) await memo.set(memoKey, now).catch(() => undefined);
-  return answer(202, { pending: true, wallet: run.wallet });
+  for (const g of group) { await store.set('sent/' + g.k.slice(6), now).catch(() => undefined); await store.del(g.k).catch(() => undefined); }
+  await release();
+  return answer(202, { pending: true, group: group.length });
 }
 
 /** The tokens this transaction minted to `to` on the collection: ids as decimal strings. */

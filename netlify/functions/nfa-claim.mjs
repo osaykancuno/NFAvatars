@@ -11,13 +11,16 @@
  */
 import { grant, mintConfig, mintedInfo, mintStatus, rpcChain, studioBoard } from './claim-core.mjs';
 
-/* Tickets sent in the last minutes (Netlify Blobs), so a page asking again, or anyone posting the same run, never pays gas twice. */
-async function sentMemo() {
+/* The runs waiting for a cheap moment to go on chain, in groups, and the ones just sent (Netlify Blobs), so the site never pays twice. */
+async function claimStore() {
   try {
     const { getStore } = await import('@netlify/blobs');
-    const store = getStore({ name: 'nfa-claim', consistency: 'strong' });
-    return { get: async (k) => (await store.get(k, { type: 'json' }))?.at ?? null, set: (k, at) => store.setJSON(k, { at }) };
-  } catch { return null; }
+    const s = getStore({ name: 'nfa-claim', consistency: 'strong' });
+    return {
+      get: async (k) => (await s.get(k, { type: 'json' }))?.v ?? null, set: (k, v) => s.setJSON(k, { v }), del: (k) => s.delete(k),
+      list: async (prefix) => (await s.list({ prefix })).blobs.map((b) => b.key),
+    };
+  } catch { return undefined; }
 }
 
 export default async (req) => {
@@ -39,7 +42,7 @@ export default async (req) => {
     if (text.length > 2048) return json(413, { error: 'Too large' });
     let body;
     try { body = JSON.parse(text); } catch { return json(400, { error: 'Expected JSON' }); }
-    const r = await grant(body, cfg, chain, studioBoard(cfg), Date.now(), await sentMemo());
+    const r = await grant(body, cfg, chain, studioBoard(cfg), Date.now(), await claimStore());
     return json(r.status, r.body);
   } catch (error) {
     console.error('claim', error);

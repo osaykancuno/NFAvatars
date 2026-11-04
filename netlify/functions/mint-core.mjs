@@ -87,6 +87,22 @@ export function grantCalldata(v, runId, signature) {
     + word(v.rarity) + word(v.score) + strip(runId) + word(8 * 32) + word(sig.length / 2) + sig.padEnd(Math.ceil(sig.length / 64) * 64, '0');
 }
 
+const GRANT_RUNS = selector('grantRuns(bytes)');
+
+/** One run as grantRuns reads it: 125 bytes, to (20) action expression prop rarity (1 each) score (4) runId (32) signature (65). */
+export function grantRecord(v, runId, signature) {
+  const b = (n, bytes) => BigInt(n).toString(16).padStart(bytes * 2, '0');
+  const rec = strip(v.to).padStart(40, '0') + b(v.action, 1) + b(v.expression, 1) + b(v.prop, 1) + b(v.rarity, 1) + b(v.score, 4) + strip(runId) + strip(signature);
+  if (rec.length !== 250) throw new Error('a run record is 125 bytes');
+  return rec;
+}
+
+/** The transaction data of grantRuns(records): many runs in one transaction. */
+export function grantRunsCalldata(records) {
+  const data = records.join('');
+  return '0x' + GRANT_RUNS + word(32) + word(data.length / 2) + data.padEnd(Math.ceil(data.length / 64) * 64, '0');
+}
+
 export const keccak = (bytes) => keccak_256(bytes);
 export { hexToBytes };
 
