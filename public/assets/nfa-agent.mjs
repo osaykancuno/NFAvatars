@@ -35,13 +35,13 @@ export function personaOf(traits) {
     name: traits.expression + ' ' + traits.roleName,
     bio: R.bio,
     traits,
-    item: traits.prop === 'None' ? 'Nothing. Empty hands, clear conscience.' : 'A ' + traits.prop + '. I earned it, in a run someone played for me.',
+    item: traits.prop === 'None' ? 'Nothing. Empty hands, clear conscience.' : 'A ' + traits.prop + '. It came with my run, the luck of the draw.',
     moment: 'My moment is ' + traits.moment + '. It plays on loop. Forever. It is fine.',
   };
 }
 
-const MONEY = /\b(floor|price|worth|pump|dump|sell|buy|invest|financial|prezzo|comprare|vendere)\b/;
-export const isMoneyQuestion = (message) => MONEY.test(String(message || '').toLowerCase());
+const MONEY = /\b(floor|pric|worth|pump|dump|sell|sold|buy|bought|invest|financ|profit|roi\b|cost|flip|prezz|compr|vend|guadagn)/;
+export const isMoneyQuestion = (message) => MONEY.test(String(message || '').normalize('NFKC').replace(/[\u200b-\u200f\u2060\ufeff]/g, '').toLowerCase());
 
 /* What the avatar answers. Never investment advice, whatever its role says about the floor. */
 export function reply(persona, message) {

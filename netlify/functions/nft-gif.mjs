@@ -29,10 +29,12 @@ function load() {
   return art;
 }
 
+const ALLOWED = new Set(['v', 'a', 'e', 'p', 'r', 'l', 's', 'id']);
 const MAX_BYTES = 4_000_000;   // a function's response must stay well under 6 MB once encoded
 
 export default async (req) => {
   const q = Object.fromEntries(new URL(req.url).searchParams);
+  if (Object.entries(q).some(([k, v]) => !ALLOWED.has(k) || !/^\d{1,10}$/.test(v))) return new Response('Not a Not Fungible Avatar', { status: 400, headers: { 'cache-control': 'no-store' } });
   try {
     const a = load();
     let gif = renderGif(a, q, { size: 400, fps: 20 });
@@ -46,8 +48,9 @@ export default async (req) => {
       }
     });
   } catch (err) {
-    return new Response('GIF not available: ' + (err && err.message), { status: 500, headers: { 'cache-control': 'no-store' } });
+    console.error('nft.gif', err);
+    return new Response('GIF not available', { status: 500, headers: { 'cache-control': 'no-store' } });
   }
 };
 
-export const config = { path: '/nft.gif' };
+export const config = { path: '/nft.gif', rateLimit: { windowLimit: 60, windowSize: 60, aggregateBy: ['ip', 'domain'] } };

@@ -6,7 +6,7 @@
  * visual traits first. A query the contract would never produce (out of range, inconsistent tiers) gets 400.
  * The answer never changes for a query, so the CDN keeps it for good (bump v= in the contract's baseURI to refresh).
  */
-const DESCRIPTION = 'Not Fungible Avatars are the people of Lisbon, picked out of a crowd of look-alikes in Not Fungible Moments at THE WALL ARCADE. Every trait is earned by playing. Nobody is fungible.';
+const DESCRIPTION = 'Not Fungible Avatars are the people of Lisbon, picked out of a crowd of look-alikes in a game at THE WALL ARCADE. The tier is earned by playing, the rest is the luck of the run. Nobody is fungible.';
 
 /* The same lists as the game engine and the v1 contract (tests/nfa-meta-function.test.mjs checks both). */
 export const NAMES = {
@@ -14,7 +14,8 @@ export const NAMES = {
     'Slow Clap', 'Standing O', 'Crowd Goes Wild', 'Encore Encore', 'Gas Fee Victim', 'Fresh Mint', 'Floor Sweeper', 'Genesis 1/1',
     'Coffee First', 'Barista Mode', 'Latte Art Flex', 'Liquid Gold', 'Fist Bump', 'Up Top', 'Secret Handshake', 'Collab of the Year'],
   expression: ['Low Battery', 'Wait What?', 'Sweaty Palms', 'Good Vibes', 'Told You So', 'Rizz', 'Starstruck', 'Crying Laughing', 'Down Bad', 'Galaxy Brain', 'Unicorn Tears'],
-  prop: ['None', 'Iced Coffee', 'Pastel de Nata', 'Pizza Slice', 'Cold Wallet', 'Spray Can', 'Diamond', 'Rocket', 'Golden Ticket', 'Crown', 'Holo 1/1'],
+  prop: ['None', 'Iced Coffee', 'Pastel de Nata', 'Seed Phrase', 'Red Candle', 'Pizza Slice', 'Cold Wallet', 'Spray Can', 'Green Candle', 'Gas Pump',
+    'Diamond', 'Rocket', 'Golden Ticket', 'Private Key', 'Laser Eyes', 'Crown', 'Holo 1/1', 'Genesis Block'],
   role: ['Artist', 'Collector', 'Dev', 'Founder', 'Curator', 'Streamer', 'Degen', 'DJ', 'Whale', 'Bodyguard', 'Barista', 'Gamer', 'Meme Lord', 'Photographer', 'Skater', 'Chef'],
   pass: ['Guest', 'VIP', 'Backstage', 'All Access'],
   passOfRole: [0, 1, 0, 1, 1, 2, 0, 2, 3, 3, 2, 0, 0, 2, 0, 2],
@@ -22,17 +23,28 @@ export const NAMES = {
   hairColor: ['Black', 'Dark Brown', 'Brown', 'Auburn', 'Blonde', 'Silver', 'White', 'Copper'],
   scarf: ['Navy', 'Plum', 'Sage', 'Sand', 'Azulejo Blue', 'Terracotta', 'Violet', 'Midnight'],
   facial: ['None', 'Beard', 'Moustache'],
-  backdrop: ['Azulejo Wall', 'Tram 28 Ride', 'Alfama Rooftops', 'Tagus Golden Hour'],
+  /* Common: six quiet flat colours; Rare: six bright ones; the colour is the person's (see backdropIndex). Epic and Legendary: a picture. */
+  backdrop: ['Calcada', 'Nata', 'Sardine', 'Bica', 'Sand', 'Fog', 'Azulejo', 'Tram', 'Terracotta', 'Tagus', 'Jacaranda', 'Manjerico', 'Alfama Rooftops', 'Tagus Golden Hour'],
   rarity: ['Common', 'Rare', 'Epic', 'Legendary'],
 };
-const tier = (i) => (i < 3 ? 0 : i < 6 ? 1 : i < 9 ? 2 : 3);
+const tier = (i) => (i < 3 ? 0 : i < 6 ? 1 : i < 9 ? 2 : 3);                    // an Expression's tier
+const propTier = (i) => (i < 5 ? 0 : i < 10 ? 1 : i < 15 ? 2 : 3);                // an Item's tier: 5 Common, 5 Rare, 5 Epic, 3 Legendary
+
+/** Which of the six colours a person gets (the game's backdropIndex and the contract's, on the look that is drawn). */
+export function backdropIndex(look) {
+  let l = look & 0xffff;
+  if (((l >> 13) & 3) === 3 || ((l >> 7) & 7) === 7) l &= 0x9fff;
+  return ((l ^ (l >> 4) ^ (l >> 8) ^ (l >> 12)) & 0xffff) % 6;
+}
+/** The Background trait: Common and Rare a flat colour chosen by the look, Epic and Legendary their picture. */
+export const backdropName = (rarity, look) => NAMES.backdrop[rarity >= 2 ? 10 + rarity : rarity * 6 + backdropIndex(look)];
 
 /** The token's traits from the query, or null when the contract could never have produced them. */
 export function parseToken(q) {
   const int = (v, max) => (typeof v === 'string' && /^\d{1,20}$/.test(v) && Number(v) <= max ? Number(v) : null);
-  const t = { id: int(q.id, Number.MAX_SAFE_INTEGER), a: int(q.a, 23), e: int(q.e, 10), p: int(q.p, 10), r: int(q.r, 3), l: int(q.l, 0xffff), s: int(q.s, 0xffffffff) };
+  const t = { id: int(q.id, Number.MAX_SAFE_INTEGER), a: int(q.a, 23), e: int(q.e, 10), p: int(q.p, 17), r: int(q.r, 3), l: int(q.l, 0xffff), s: int(q.s, 0xffffffff) };
   if (Object.values(t).some((v) => v === null) || t.id < 1) return null;
-  if (t.a % 4 !== t.r || tier(t.e) > t.r || tier(t.p) > t.r) return null;
+  if (t.a % 4 !== t.r || tier(t.e) > t.r || propTier(t.p) > t.r) return null;
   return t;
 }
 
@@ -43,7 +55,7 @@ export function attributes(t) {
   if (facial === 3 || hair === 7) facial = 0;                  // what is drawn: facial hair 3 draws none, a hijab hides it
   const a = (trait_type, value) => ({ trait_type, value });
   return [
-    a('Background', NAMES.backdrop[t.r]), a('Role', NAMES.role[role]), a('Pass', NAMES.pass[NAMES.passOfRole[role]]),
+    a('Background', backdropName(t.r, l)), a('Role', NAMES.role[role]), a('Pass', NAMES.pass[NAMES.passOfRole[role]]),
     a('Hair', NAMES.hair[hair]), a('Hair Color', hair === 7 ? NAMES.scarf[color] + ' Scarf' : NAMES.hairColor[color]),
     a('Facial Hair', NAMES.facial[facial]), a('Eyewear', l >> 15 === 1 ? 'Glasses' : 'None'),
     a('Expression', NAMES.expression[t.e]), a('Item', NAMES.prop[t.p]), a('Moment', NAMES.action[t.a]), a('Tier', NAMES.rarity[t.r]),

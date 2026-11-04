@@ -12,6 +12,14 @@
   included_files = ["public/assets/nfa-art.js", "netlify/functions/fonts/*"]
 
 [[headers]]
+  for = "/*"
+  [headers.values]
+    x-content-type-options = "nosniff"
+    referrer-policy = "strict-origin-when-cross-origin"
+    permissions-policy = "camera=(), microphone=(), geolocation=()"
+    content-security-policy = "object-src 'none'; base-uri 'self'; form-action 'self'"
+
+[[headers]]
   for = "/assets/*"
   [headers.values]
     cache-control = "public, max-age=0, must-revalidate"

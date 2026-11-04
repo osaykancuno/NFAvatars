@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Not Fungible Moments · Not Fungible Avatars</title>
+  <title>Not Fungible Avatars</title>
   <meta name="description" content="Somebody pulled the rug at the party. You have their photo. Run through six places of Lisbon and pick them out of a crowd of look-alikes, in first-person pixels, then mint the one you caught.">
   <meta name="theme-color" content="#1a0f2e">
-  <meta property="og:title" content="Not Fungible Moments · Not Fungible Avatars">
+  <meta property="og:title" content="Not Fungible Avatars">
   <meta property="og:description" content="Somebody pulled the rug. They all look alike. Catch them, mint them. Nobody is fungible.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a0f2e'/%3E%3Cellipse cx='16' cy='18' rx='10' ry='11' fill='%23ff77b7' stroke='%231d1233' stroke-width='2'/%3E%3Ccircle cx='12' cy='15' r='3' fill='%23fff'/%3E%3Ccircle cx='20' cy='15' r='3' fill='%23fff'/%3E%3Ccircle cx='12.5' cy='15.5' r='1.5' fill='%231d1233'/%3E%3Ccircle cx='20.5' cy='15.5' r='1.5' fill='%231d1233'/%3E%3Cpath d='M12 21 q4 4 8 0' stroke='%231d1233' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
   <style>
     /* ============================================================
-       NOT FUNGIBLE MOMENTS — page styles (the game itself is drawn on canvas)
+       NOT FUNGIBLE AVATARS — page styles (the game itself is drawn on canvas)
        ============================================================ */
     /* NFA brand palette "LISBOA" — azulejo blue, tram yellow, terracotta, pastel de nata cream.
        The same tokens live in brand/brand.css (collection site) and brand/BRAND.md (OpenSea). Keep them in sync. */
@@ -52,7 +52,16 @@
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
     .hidden { display: none !important; }
 
-    #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+    #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+    #btn-pause {
+      position: absolute; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 10px;
+      background: rgba(255, 255, 255, .16); color: #fff; font-size: 14px; line-height: 36px; cursor: pointer; touch-action: manipulation;
+    }
+    #rotate-hint { display: none; }
+    @media (orientation: landscape) and (max-height: 500px) {
+      #rotate-hint { display: block; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); max-width: 22vw; color: #fff; opacity: .75; font-size: 13px; line-height: 1.3; pointer-events: none; }
+      #btn-pause { width: 28px; height: 28px; line-height: 28px; font-size: 11px; }
+    }
 
     /* ---------- top bar: brand, SuperRare credits (placeholder), wallet ---------- */
     .topbar {
@@ -76,7 +85,7 @@
     /* ---------- stage ---------- */
     #stage { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; padding: 0 8px 8px; }
     #game {
-      display: block; touch-action: none; user-select: none; -webkit-user-select: none;
+      display: block; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
       border-radius: 22px; box-shadow: 0 0 0 3px var(--ink), 0 12px 40px rgba(0,0,0,.45);
       background: #070510;
     }
@@ -190,7 +199,7 @@
 <body>
   <div id="app">
     <header class="topbar">
-      <div class="brand" aria-label="Not Fungible Moments by Not Fungible Avatars">NOT FUNGIBLE <b>MOMENTS</b></div>
+      <div class="brand" aria-label="Not Fungible Avatars">NOT FUNGIBLE <b>AVATARS</b></div>
       <button id="credits-chip" class="chip" type="button" title="SuperRare credits (placeholder)">
         <span class="dot" aria-hidden="true"></span><span id="credits-label">— credits</span>
       </button>
@@ -200,8 +209,10 @@
     </header>
 
     <main id="stage">
+      <button id="btn-pause" class="hidden" type="button" aria-label="Pause">❚❚</button>
+      <p id="rotate-hint">Better with your phone upright</p>
       <canvas id="game" width="360" height="640" tabindex="0" role="application" aria-roledescription="game"
-              aria-label="Not Fungible Moments. You run down a corridor with a photo on your phone. Run into the person on the photo, around everybody else. Keys: left and right arrows or A and D change lane, 1, 2 and 3 pick a lane, P pauses, M toggles sound. Tap the left or right side of the screen, or tap a person, to change lane.">
+              aria-label="Not Fungible Avatars. You run down a corridor with a photo on your phone. Run into the person on the photo, around everybody else. Keys: left and right arrows or A and D change lane, 1, 2 and 3 pick a lane, P pauses, M toggles sound. Tap the left or right side of the screen, or tap a person, to change lane.">
         Your browser does not support the HTML canvas element.
       </canvas>
 
@@ -209,7 +220,7 @@
       <section id="title-screen" class="overlay" role="dialog" aria-modal="true" aria-labelledby="title-heading">
         <div class="panel">
           <canvas id="logo-canvas" class="logo-canvas" width="280" height="120" aria-hidden="true"></canvas>
-          <h1 id="title-heading" class="title">NOT FUNGIBLE <span>MOMENTS</span></h1>
+          <h1 id="title-heading" class="title">NOT FUNGIBLE <span>AVATARS</span></h1>
           <p class="tagline">Lisbon edition · catch them · up to 3 min · mint the person</p>
           <ol class="how">
             <li>Somebody at the party <b>pulled the rug</b>. Their photo is on your phone.</li>
@@ -238,7 +249,7 @@
         <div class="panel">
           <h2 id="consent-heading">Spend 1 credit?</h2>
           <p class="balance"><span id="consent-before">0</span><small>→</small><span id="consent-after">0</span><small>credits</small></p>
-          <p>A paid run unlocks <b>Mint your Not Fungible Avatar</b> when it ends. How you play sets the traits. Catch the one who did it for <b>Legendary</b>.</p>
+          <p>A paid run unlocks <b>Mint your Not Fungible Avatar</b> when it ends. How far you get sets the tier; the rest is the luck of the run. Catch the one who did it for <b>Legendary</b>.</p>
           <div class="actions column">
             <button id="btn-consent-yes" class="btn primary wide" type="button" data-autofocus>Spend 1 credit &amp; play</button>
             <button id="btn-add-demo" class="btn wide hidden" type="button">Add 3 demo credits</button>
@@ -272,6 +283,10 @@
           <p id="avatar-name" class="avatar-name">—</p>
           <p class="score-line">Score <b id="final-score">0</b> · <span id="survival-line">—</span></p>
           <p id="share-grid" class="share-grid" aria-hidden="true"></p>
+          <div class="actions">
+            <button id="btn-again" class="btn primary" type="button">Play again · 1 credit</button>
+            <button id="btn-menu" class="btn" type="button">Menu</button>
+          </div>
           <ul id="damage" class="damage" aria-label="What your run did to the party"></ul>
           <p id="shame-title" class="label"></p>
           <canvas id="shame-canvas" class="shame" width="320" height="160" aria-hidden="true"></canvas>
@@ -300,10 +315,6 @@
             <button id="btn-report" class="btn small" type="button">Share report</button>
             <button id="btn-save" class="btn small" type="button">Save PNG</button>
           </div>
-          <div class="actions">
-            <button id="btn-again" class="btn primary" type="button">Play again · 1 credit</button>
-            <button id="btn-menu" class="btn" type="button">Menu</button>
-          </div>
         </div>
       </section>
     </main>
@@ -318,7 +329,7 @@
        ========================================================== -->
   <script id="ae-engine">
   /*
-   * NOT FUNGIBLE MOMENTS — deterministic game engine
+   * NOT FUNGIBLE AVATARS — deterministic game engine
    * ------------------------------------------------------------
    * Pure rules: no DOM, no Math.random, no Date, no storage, no network.
    * Same seed + same ordered inputs => same run, same score, same traits.
@@ -401,12 +412,21 @@
     /* Internet-native names for the faces (the art draws them from FACE_OF in ae-art). */
     var EXPRESSIONS = ['Low Battery', 'Wait What?', 'Sweaty Palms', 'Good Vibes', 'Told You So', 'Rizz',
                        'Starstruck', 'Crying Laughing', 'Down Bad', 'Galaxy Brain', 'Unicorn Tears'];
-    /* Items: everyday flexes and crypto memes (pizza, cold wallet, diamond hands, to the moon, 1/1),
-       a taste of Lisbon (pastel de nata) and THE WALL's painted names (spray can). */
-    var PROPS = ['None', 'Iced Coffee', 'Pastel de Nata', 'Pizza Slice', 'Cold Wallet', 'Spray Can',
-                 'Diamond', 'Rocket', 'Golden Ticket', 'Crown', 'Holo 1/1'];
-    /* Backdrop = rarity: a Lisbon scene per tier (NFC Summit 2027, The Wall Arcade). */
-    var BACKDROPS = ['Azulejo Wall', 'Tram 28 Ride', 'Alfama Rooftops', 'Tagus Golden Hour'];
+    /* Items: everyday flexes and crypto memes (seed phrase, candles, cold wallet, gas pump, diamond hands, to the moon, laser eyes, 1/1),
+       a taste of Lisbon (pastel de nata) and THE WALL's painted names (spray can). The tier of each is fixed by the contract:
+       0-4 Common, 5-9 Rare, 10-14 Epic, 15-17 Legendary (TIER_OF_PROP). */
+    var PROPS = ['None', 'Iced Coffee', 'Pastel de Nata', 'Seed Phrase', 'Red Candle',
+                 'Pizza Slice', 'Cold Wallet', 'Spray Can', 'Green Candle', 'Gas Pump',
+                 'Diamond', 'Rocket', 'Golden Ticket', 'Private Key', 'Laser Eyes',
+                 'Crown', 'Holo 1/1', 'Genesis Block'];
+    /* Backdrop: Epic and Legendary have a picture of Lisbon (Alfama Rooftops, Tagus Golden Hour). Common and Rare are one flat
+       colour, taken from the person: Common a quiet one, Rare a bright one, six of each. BACKDROPS lists them in this order
+       (the contract and /api/nfa carry the same list); BACKDROP_COLORS has the hex of the first twelve. */
+    var BACKDROPS = ['Calcada', 'Nata', 'Sardine', 'Bica', 'Sand', 'Fog',
+                     'Azulejo', 'Tram', 'Terracotta', 'Tagus', 'Jacaranda', 'Manjerico',
+                     'Alfama Rooftops', 'Tagus Golden Hour'];
+    var BACKDROP_COLORS = ['#d9d3c7', '#fff1d6', '#aebdcc', '#b98a62', '#e8cf9f', '#c9d3dc',
+                           '#1f5fbf', '#ffcf1f', '#e2603a', '#2a9d8f', '#8f7ad6', '#5fae5b'];
     var EVENT = 'NFC Summit 2027 · Lisbon';
     /* Role = look % 16: the people of the internet and of the party, makers, money, crew and crowd.
        Appearance (skin, hair, beard, glasses) comes from the other bits of the look, independent of the role. */
@@ -420,8 +440,10 @@
     var HAIR_COLORS = ['Black', 'Dark Brown', 'Brown', 'Auburn', 'Blonde', 'Silver', 'White', 'Copper'];
     var HIJAB_COLORS = ['Navy', 'Plum', 'Sage', 'Sand', 'Azulejo Blue', 'Terracotta', 'Violet', 'Midnight'];
     var FACIAL_HAIR = ['None', 'Beard', 'Moustache'];
-    var TIER_OF_11 = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3];   // tier of each EXPRESSIONS / PROPS entry
+    var TIER_OF_11 = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3];   // tier of each EXPRESSIONS entry
     var TIER_START = [0, 3, 6, 9], TIER_COUNT = [3, 3, 3, 2];
+    var TIER_OF_PROP = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3];   // tier of each PROPS entry (the contract's _propTier)
+    var PROP_START = [0, 5, 10, 15], PROP_COUNT = [5, 5, 5, 3];
 
     /* Levels cleared for each tier; Legendary only for catching the one who did it. */
     var RARE_LEVELS = 2, EPIC_LEVELS = 4;
@@ -451,6 +473,18 @@
     }
     /* The one who pulled the rug, the last chase of the run: the person this run mints. */
     function culpritOf(seed) { return canonLook(hash32(seed >>> 0, 0x10c)); }
+
+    /* The Background trait. Epic and Legendary: their picture of Lisbon. Common and Rare: a flat colour, one of six, chosen by
+       the person (a hash of the 16 bits of the look, so it spreads evenly and the contract computes the very same number).
+       Returns { tier, index (into BACKDROPS), value (its name), color (hex, null for a picture) }. */
+    function backdropIndex(look) {
+      look = canonLook(look);
+      return ((look ^ (look >> 4) ^ (look >> 8) ^ (look >> 12)) & 0xffff) % 6;
+    }
+    function backdropOf(rarity, look) {
+      var i = rarity >= 2 ? 10 + rarity : rarity * 6 + backdropIndex(look);
+      return { tier: rarity, index: i, value: BACKDROPS[i], color: rarity >= 2 ? null : BACKDROP_COLORS[i] };
+    }
 
     /* A person close to `look`: closeness 0 changes all five traits you can see from afar, 1 three, 2 two, 3 just one.
        Role (the outfit), hair style, hair colour, glasses, skin. Facial hair stays: too small to judge at a run. */
@@ -773,36 +807,61 @@
       return 0;
     }
 
-    function pickInTier(tier, seed, salt) {
-      return TIER_START[tier] + hash32(seed, salt) % TIER_COUNT[tier];
+    /* The paid official score carries the tier: tier * 100000 + points (points capped at 99999), at least 1 so that a run of zero
+       points still stands on the leaderboard. tier = floor(score / 100000), points = score % 100000. The live HUD and the end screen
+       keep showing points. The verifier's score op and the arcade's scoring return this; the free trial does not use it. */
+    var TIER_STEP = 100000;
+    function encodeScore(tier, points) {
+      return Math.max(1, tier * TIER_STEP + Math.min(Math.max(0, Math.floor(points)), TIER_STEP - 1));
+    }
+    function tierOfScore(score) { return Math.floor(score / TIER_STEP); }
+    function pointsOfScore(score) { return score % TIER_STEP; }
+
+    /* Item or expression of a tier. Expressions: 3/3/3/2 (TIER_OF_11). Items: 5/5/5/3 (TIER_OF_PROP, the contract's own). */
+    function pickInTier(tier, seed, salt, items) {
+      return items ? PROP_START[tier] + hash32(seed, salt) % PROP_COUNT[tier] : TIER_START[tier] + hash32(seed, salt) % TIER_COUNT[tier];
+    }
+
+    /* The luck of the run. A paid run's id is made by the platform and is the same for everybody (the leaderboard shows it), so the
+       moment, the expression and the item come from it and cannot be faked by the page: FNV-1a 32 bit over the lowercase id. */
+    function traitSeedOfRun(runId) {
+      var h = 0x811c9dc5, str = String(runId).toLowerCase();
+      for (var i = 0; i < str.length; i++) {
+        var c = str.codePointAt(i), bytes;
+        if (c > 0xffff) i++;
+        bytes = c < 0x80 ? [c] : c < 0x800 ? [0xc0 | c >> 6, 0x80 | c & 63] : c < 0x10000 ? [0xe0 | c >> 12, 0x80 | c >> 6 & 63, 0x80 | c & 63]
+          : [0xf0 | c >> 18, 0x80 | c >> 12 & 63, 0x80 | c >> 6 & 63, 0x80 | c & 63];
+        for (var j = 0; j < bytes.length; j++) { h ^= bytes[j]; h = Math.imul(h, 0x01000193); }
+      }
+      return h >>> 0;
+    }
+
+    /* From the tier (earned by playing) and the trait seed: the moment, the expression and the item. Each of the last two is a
+       tier from Common up to the run's tier, then one of that tier's. Without a run id (trial, practice) the seed is the trait seed. */
+    function picksOf(rarity, traitSeed) {
+      var ts = traitSeed >>> 0;
+      var act = hash32(ts, 0x51) % 6;
+      var exprTier = hash32(ts, 0xE2) % (rarity + 1), propTier = hash32(ts, 0xA8) % (rarity + 1);
+      var e = pickInTier(exprTier, ts, 0xE1, false), p = pickInTier(propTier, ts, 0xA7, true);
+      return { act: act, action: act * 4 + rarity, expression: { index: e, tier: exprTier }, prop: { index: p, tier: propTier } };
     }
 
     /*
-     * Traits, from performance (capped by the final rarity):
-     *   Action     = the place where you read people best (your signature moment), styled by rarity
-     *   Expression = accuracy (% perfect reads): <40 / 40 / 65 / 85
-     *   Prop       = best streak: <10 / 10 / 20 / 35
-     * Indices are what the NFT stores: action = act*4+tier, expression/prop = 0..10.
+     * Traits. The TIER is earned by playing (rarityOf: the levels you cleared, Legendary only for catching the one who did it).
+     * Everything else is the luck of the run: moment, expression and item come from picksOf(rarity, traitSeed), where traitSeed is
+     * traitSeedOfRun(runId) for a paid run and the run's seed for the free trial and practice (pass it as the 4th argument).
+     * Indices are what the NFT stores: action = act*4+tier, expression 0..10, item 0..17, each capped by the tier.
      */
-    function traitsOf(sc, seed) {
+    function traitsOf(sc, seed, look, traitSeed) {
       var rarity = rarityOf(sc);
-      var best = 0, bestCap = 0, ties = [];                // nobody caught? a front cam it is
-      for (var i = 0; i < ACTIONS.length; i++) {
-        if (sc.perfects[i] === 0 && sc.captures[i] === 0) continue;
-        if (sc.perfects[i] > best || (sc.perfects[i] === best && sc.captures[i] > bestCap)) { best = sc.perfects[i]; bestCap = sc.captures[i]; ties = [i]; }
-        else if (sc.perfects[i] === best && sc.captures[i] === bestCap) ties.push(i);
-      }
-      var sig = ties.length ? ties[hash32(seed >>> 0, 0x51) % ties.length] : 0;   // a tie: the run's seed decides, so a clean run can be any moment
-      var accTier = sc.accuracy >= 85 ? 3 : sc.accuracy >= 65 ? 2 : sc.accuracy >= 40 ? 1 : 0;
-      var comboTier = sc.bestCombo >= 35 ? 3 : sc.bestCombo >= 20 ? 2 : sc.bestCombo >= 10 ? 1 : 0;
-      var exprTier = Math.min(rarity, accTier), propTier = Math.min(rarity, comboTier);
-      var e = pickInTier(exprTier, seed >>> 0, 0xE1), p = pickInTier(propTier, seed >>> 0, 0xA7);
+      var pk = picksOf(rarity, traitSeed == null ? seed : traitSeed);
+      var sig = pk.act, e = pk.expression.index, p = pk.prop.index;
       return {
         rarity: rarity, rarityName: RARITIES[rarity],
-        action: { index: sig * 4 + rarity, act: sig, tier: rarity, value: ACTION_TRAITS[sig][rarity] },
-        expression: { index: e, tier: exprTier, value: EXPRESSIONS[e] },
-        prop: { index: p, tier: propTier, value: PROPS[p] },
-        backdrop: { tier: rarity, value: BACKDROPS[rarity] },
+        action: { index: pk.action, act: sig, tier: rarity, value: ACTION_TRAITS[sig][rarity] },
+        expression: { index: e, tier: pk.expression.tier, value: EXPRESSIONS[e] },
+        prop: { index: p, tier: pk.prop.tier, value: PROPS[p] },
+        backdrop: backdropOf(rarity, look == null ? culpritOf(seed) : look),   // Common/Rare: the colour follows the person who is minted
         event: EVENT,
         name: EXPRESSIONS[e] + ' ' + ACTION_TRAITS[sig][rarity]
       };
@@ -828,12 +887,14 @@
       MAX_ACTORS: MAX_ACTORS, BULL_EVERY: BULL_EVERY, BULL_TICKS: BULL_TICKS, KILLER: KILLER, FIRST_ROW: FIRST_ROW, DOOR_AHEAD: DOOR_AHEAD, LEVELS: LEVELS, ACTIONS: ACTIONS,
       RARITIES: RARITIES, ACTION_TRAITS: ACTION_TRAITS, EXPRESSIONS: EXPRESSIONS, PROPS: PROPS, ROLES: ROLES, BADGES: BADGES, BADGE_OF_ROLE: BADGE_OF_ROLE,
       HAIRS: HAIRS, HAIR_COLORS: HAIR_COLORS, HIJAB_COLORS: HIJAB_COLORS, FACIAL_HAIR: FACIAL_HAIR,
-      BACKDROPS: BACKDROPS, EVENT: EVENT,
-      TIER_OF_11: TIER_OF_11, RARE_LEVELS: RARE_LEVELS, EPIC_LEVELS: EPIC_LEVELS,
+      BACKDROPS: BACKDROPS, BACKDROP_COLORS: BACKDROP_COLORS, EVENT: EVENT,
+      backdropOf: backdropOf, backdropIndex: backdropIndex,
+      TIER_OF_11: TIER_OF_11, TIER_OF_PROP: TIER_OF_PROP, PROP_START: PROP_START, PROP_COUNT: PROP_COUNT, TIER_STEP: TIER_STEP, RARE_LEVELS: RARE_LEVELS, EPIC_LEVELS: EPIC_LEVELS,
       createRun: createRun, advance: advance, applyInput: applyInput, validateInput: validateInput,
       actorLane: actorLane, heatOf: heatOf, speedOf: speedOf, multOf: multOf,
       isFinished: isFinished, survived: survived, score: score, rarityOf: rarityOf, shareGrid: shareGrid,
-      traitsOf: traitsOf, view: view, hash32: hash32, canonLook: canonLook, culpritOf: culpritOf
+      traitsOf: traitsOf, traitSeedOfRun: traitSeedOfRun, picksOf: picksOf, pickInTier: pickInTier,
+      encodeScore: encodeScore, tierOfScore: tierOfScore, pointsOfScore: pointsOfScore, view: view, hash32: hash32, canonLook: canonLook, culpritOf: culpritOf
     };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.AEEngine = api;
@@ -849,7 +910,7 @@
     'use strict';
 
     const CONFIG = {
-      title: 'Not Fungible Moments',
+      title: 'Not Fungible Avatars',
       collection: 'Not Fungible Avatars',
       maxSupply: 10000,                          // the most people the collection will ever hold
       symbol: 'NFA',
@@ -1176,6 +1237,12 @@
     }
     function ell(ctx, x, y, rx, ry) { ctx.beginPath(); ctx.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), 0, 0, TAU); }
     function circle(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, Math.max(0.1, r), 0, TAU); }
+    if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {   // Safari before 16, Firefox before 112
+      CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, rad) {
+        const r = Math.min(typeof rad === 'number' ? rad : (rad && rad[0]) || 0, w / 2, h / 2);
+        this.moveTo(x + r, y); this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r); this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r); this.closePath();
+      };
+    }
     function rrect(ctx, x, y, w, h, rad) { ctx.beginPath(); ctx.roundRect(x, y, w, h, rad); }
     function inked(ctx, fill, lw) {
       ctx.fillStyle = fill; ctx.fill();
@@ -1214,7 +1281,7 @@
     }
 
     /* Props held in the right hand (drawHandProp) when the moment does not need that hand. */
-    const HAND_PROPS = ['Iced Coffee', 'Pastel de Nata', 'Pizza Slice', 'Cold Wallet', 'Spray Can', 'Diamond', 'Golden Ticket'];
+    const HAND_PROPS = ['Iced Coffee', 'Pastel de Nata', 'Seed Phrase', 'Pizza Slice', 'Cold Wallet', 'Spray Can', 'Diamond', 'Golden Ticket', 'Private Key'];
 
     /* ---------- the people in pixel art: original figures on a 48 x 48 grid, four views, four walking steps ----------
        pixelPerson(spec) returns runs of one colour, [x, y, width, color]: the same figure on any canvas. x, y may leave
@@ -1488,6 +1555,11 @@
           case 'cup': rect(x - 2, y - 5, 5, 5, '#ffffff'); rect(x - 2, y - 3, 5, 2, '#e2603a'); rect(x - 2, y - 5, 5, 1, '#6b3e1e'); break;
           case 'Iced Coffee': rect(x - 2, y - 6, 5, 7, '#d8f1ff'); rect(x - 2, y - 4, 5, 5, '#8a5a34'); rect(x - 1, y - 5, 2, 2, '#ffffff'); rect(x + 1, y - 9, 1, 4, '#2fbf71'); break;
           case 'Pastel de Nata': rect(x - 3, y - 3, 7, 3, '#b9772f'); rect(x - 2, y - 4, 5, 2, '#ffd05a'); put(x - 1, y - 4, '#7a3b12'); put(x + 1, y - 3, '#7a3b12'); break;
+          case 'Seed Phrase': {                                // a small cream paper with rows of ink dashes (no words)
+            rect(x - 3, y - 8, 7, 9, '#f6ecd0'); rect(x - 3, y - 8, 7, 1, '#fffaf0'); rect(x + 3, y - 7, 1, 8, '#d9c9a0'); rect(x - 3, y, 7, 1, '#d9c9a0');
+            for (let i = 0; i < 4; i++) { rect(x - 2, y - 6 + i * 2, 2, 1, '#3a2f4a'); rect(x + 1, y - 6 + i * 2, i % 2 ? 2 : 1, 1, '#3a2f4a'); }
+            break;
+          }
           case 'Pizza Slice': for (let i = 0; i < 6; i++) rect(x - 3 + Math.floor(i / 2), y - 6 + i, 7 - i, 1, i ? '#ffd05a' : '#b9772f'); put(x, y - 4, '#d6303b'); put(x - 1, y - 3, '#d6303b'); break;
           case 'Cold Wallet': rect(x - 2, y - 7, 5, 8, '#26262f'); rect(x - 1, y - 6, 3, 3, '#2fbf71'); put(x, y - 2, '#c0c4cf'); break;
           case 'Spray Can': {
@@ -1496,6 +1568,13 @@
             break;
           }
           case 'Diamond': { for (let i = 0; i < 3; i++) rect(x - 3 + i, y - 2 + i, 7 - 2 * i, 1, '#7fd0ff'); rect(x - 2, y - 4, 5, 1, '#e6f8ff'); rect(x - 3, y - 3, 7, 1, '#bdeaff'); if (Math.floor(phase * 8) % 2) put(x + 4, y - 5, '#ffffff'); break; }
+          case 'Private Key': {                                // a golden key: ring on top, shaft in the hand, two teeth
+            const G = '#ffc21a', Gh = '#ffe27a', Gl = '#c98a00';
+            rect(x - 2, y - 11, 5, 1, Gh); rect(x - 2, y - 8, 5, 1, Gl); rect(x - 2, y - 10, 1, 2, G); rect(x + 2, y - 10, 1, 2, Gl);
+            rect(x, y - 7, 1, 8, G); rect(x - 1, y - 7, 1, 8, Gh); rect(x + 1, y - 7, 1, 8, Gl);
+            rect(x + 2, y - 4, 2, 1, G); rect(x + 2, y - 2, 3, 1, G); put(x + 3, y - 3, Gl); put(x + 4, y - 1, Gl);
+            break;
+          }
           case 'Golden Ticket': rect(x - 4, y - 4, 9, 5, '#ffc21a'); rect(x - 4, y - 4, 9, 1, '#ffe27a'); put(x - 2, y - 2, '#a06a00'); put(x, y - 2, '#a06a00'); put(x + 2, y - 2, '#a06a00'); break;
           default: break;
         }
@@ -1511,6 +1590,39 @@
           rect(x - 2, y - 6, 5, 10, '#f4f4f4'); rect(x - 1, y - 8, 3, 2, '#e2603a'); rect(x - 1, y - 3, 3, 3, '#7fd0ff');
           rect(x - 3, y + 2, 2, 3, '#e2603a'); rect(x + 2, y + 2, 2, 3, '#e2603a');
           rect(x - 1, y + 4, 3, Math.floor(phase * 12) % 2 ? 2 : 3, '#ffc21a');
+        }
+        const candle = (c, wickUp, wickDown, bodyTop, bodyH) => {   // a chart candlestick: thin wick, solid body
+          const x = 6, y = 17 + f, R = pxRamp(c);
+          rect(x, y - wickUp, 1, wickUp + wickDown, R.base);
+          rect(x - 2, y + bodyTop, 5, bodyH, R.base); rect(x - 2, y + bodyTop, 5, 1, R.hi); rect(x - 2, y + bodyTop, 1, bodyH, R.hi); rect(x + 2, y + bodyTop + 1, 1, bodyH - 1, R.lo); rect(x - 2, y + bodyTop + bodyH - 1, 5, 1, R.lo);
+        };
+        if (name === 'Red Candle') candle('#e2403a', 7, 9, -2, 9);        // a red day: the wick runs down
+        if (name === 'Green Candle') candle('#2fbf71', 10, 5, -5, 9);     // a green day: the wick runs up
+        if (name === 'Gas Pump') {                             // a small terracotta pump with its hose
+          const x = 9, y = 17 + f, R = pxRamp('#c8553d'), hose = '#3a3145';
+          rect(x - 3, y - 9, 7, 14, R.base); rect(x - 3, y - 9, 7, 1, R.hi); rect(x - 3, y - 9, 1, 14, R.hi); rect(x + 3, y - 8, 1, 13, R.lo);
+          rect(x - 2, y - 7, 5, 4, '#bfe9d6'); put(x - 2, y - 7, '#ffffff'); rect(x - 2, y - 1, 5, 1, '#f2c14e'); rect(x - 2, y + 1, 5, 2, R.lo);
+          rect(x - 4, y + 5, 9, 2, '#6b3a2a');
+          rect(x - 6, y - 2, 3, 1, hose); rect(x - 6, y - 2, 1, 8, hose); rect(x - 7, y + 5, 3, 2, '#c0c4cf');
+        }
+        if (name === 'Genesis Block') {                        // a golden pixel cube, isometric
+          const cx = 8, y0 = 8 + f;
+          for (let dx = -6; dx <= 5; dx++) {
+            const m = dx < 0 ? -dx - 1 : dx, top = y0 + (m >> 1), bot = y0 + 5 - (m >> 1);
+            for (let y = top; y <= bot; y++) put(cx + dx, y, y === top ? '#fff4b0' : '#ffe27a');
+            for (let y = bot + 1; y <= bot + 7; y++) put(cx + dx, y, dx < 0 ? (dx === -6 ? '#ffd34a' : '#ffc21a') : (dx === 5 ? '#a86f00' : '#c98a00'));
+          }
+          for (let y = y0 + 6; y <= y0 + 12; y++) put(cx, y, '#8a5a00');
+          rect(cx - 4, y0 + 8, 2, 2, '#ffe27a'); rect(cx + 2, y0 + 8, 2, 2, '#e0a400');
+          if (Math.floor(phase * 8) % 2) { put(cx - 3, y0 + 1, '#ffffff'); put(cx - 4, y0 + 1, '#ffffff'); put(cx - 3, y0, '#ffffff'); put(cx - 3, y0 + 2, '#ffffff'); }
+        }
+        if (name === 'Laser Eyes' && view === 'front') {       // red beams from both eyes toward the sides, over the hair
+          const ey = HY + 1, len = 15 + (Math.floor(phase * 12) % 2) * 2;
+          for (const [x0, dir] of [[18, -1], [29, 1]]) {
+            for (let i = 0; i < len; i++) { const x = x0 + dir * i; put(x, ey, '#e2403a'); put(x, ey + 2, '#e2403a'); put(x, ey + 1, i % 5 === 4 ? '#ffd9cf' : '#ff8a7a'); }
+            put(x0 + dir * len, ey + 1, '#ffd9cf'); put(x0 + dir * len, ey, '#ff8a7a'); put(x0 + dir * len, ey + 2, '#ff8a7a');
+          }
+          for (const x of [19, 26]) { rect(x, ey, 3, 3, '#e2403a'); rect(x + 1, ey, 1, 3, '#ff8a7a'); put(x + 1, ey + 1, '#ffffff'); }
         }
         if (name === 'Holo 1/1') {                             // the genesis card floats by the head, its colours run
           const x = 6, y = 15 + f, cols = ['#ff4d4d', '#ffb23f', '#ffe53f', '#4ddb7a', '#4d96ff', '#a855f7'], run = Math.floor(phase * 12);
@@ -1571,11 +1683,11 @@
     }
 
     /* the figures already drawn: nine people at 60 fps ask for the same few again and again */
-    const pxCache = new Map();
+    const pxCache = new Map(), MOVES_WITH_TIME = /Spray Can|Diamond|Rocket|Holo|Cosmic Grin|Candle|Gas Pump|Genesis|Laser Eyes/;
     function pixelRuns(spec) {
       const key = spec.look + '|' + (spec.view || '') + '|' + (spec.step || 0) + '|' + (spec.b || 0) + '|' + (spec.face || '') + '|' + (spec.prop || '') + '|' +
         Math.round((spec.armL || 0) * 8) + '|' + Math.round((spec.armR || 0) * 8) + '|' + (spec.hold || '') + '|' + (spec.holdL || '') + '|' + (spec.flash ? 1 : 0) + '|' +
-        (spec.fx ? spec.fx.join() + Math.round((spec.k || 0) * 24) : '') + '|' + (spec.grey ? 1 : 0) + '|' + (spec.gaze ? (spec.gaze.x > 0.3 ? 1 : spec.gaze.x < -0.3 ? -1 : 0) : 0) + '|' + Math.floor((spec.phase || 0) * 48 + 1e-6);
+        (spec.fx ? spec.fx.join() + Math.round((spec.k || 0) * 24) : '') + '|' + (spec.grey ? 1 : 0) + '|' + (spec.gaze ? (spec.gaze.x > 0.3 ? 1 : spec.gaze.x < -0.3 ? -1 : 0) : 0) + '|' + (MOVES_WITH_TIME.test((spec.prop || '') + spec.face) ? Math.floor((spec.phase || 0) * 48 + 1e-6) : 0);
       let runs = pxCache.get(key);
       if (!runs) {
         if (pxCache.size > 1500) pxCache.clear();
@@ -1753,24 +1865,24 @@
       }
     }
 
-    /* Card background = the Backdrop trait (end screen, PNG, OpenSea viewer):
-       0 Azulejo Wall · 1 Tram 28 Ride · 2 Alfama Rooftops · 3 Tagus Golden Hour */
-    function drawRarityBackground(ctx, w, h, rarity, time) {
+    /* Card background = the Background trait. Common and Rare: ONE flat colour, nothing else (the person's soft shadow is drawn with the person).
+       Epic: Alfama Rooftops. Legendary: Tagus Golden Hour. The colour is chosen by the person's look, exactly as the engine's backdropOf and the
+       contract do it; the list is repeated here because this script runs without the engine (the tests compare the two). */
+    const BACKDROP_COLORS = ['#d9d3c7', '#fff1d6', '#aebdcc', '#b98a62', '#e8cf9f', '#c9d3dc',     // Common: Calcada, Nata, Sardine, Bica, Sand, Fog
+                             '#1f5fbf', '#ffcf1f', '#e2603a', '#2a9d8f', '#8f7ad6', '#5fae5b'];    // Rare: Azulejo, Tram, Terracotta, Tagus, Jacaranda, Manjerico
+    function backdropColor(rarity, look) {          // null for Epic and Legendary: they have a picture
+      if (rarity >= 2) return null;
+      look &= 0xffff;
+      if (((look >> 13) & 3) === 3 || ((look >> 7) & 7) === 7) look &= 0x9fff;     // the look that is drawn (engine's canonLook)
+      return BACKDROP_COLORS[rarity * 6 + ((look ^ (look >> 4) ^ (look >> 8) ^ (look >> 12)) & 0xffff) % 6];
+    }
+    function drawRarityBackground(ctx, w, h, rarity, time, look) {
       const s = w / 240, ground = h * 0.79;
-      if (rarity === 0) {
-        azulejos(ctx, 0, 0, w, h, 30 * s);
-        const v = ctx.createRadialGradient(w / 2, h * 0.5, w * 0.2, w / 2, h / 2, w * 0.75);
-        v.addColorStop(0, 'rgba(255,255,255,.55)'); v.addColorStop(1, 'rgba(31,95,191,.25)');
-        ctx.fillStyle = v; ctx.fillRect(0, 0, w, h);
-      } else if (rarity === 1) {
-        const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#8fd6ff'); g.addColorStop(1, '#e8f7ff');
-        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-        rooftops(ctx, w, ground, s, ['#ffd6a0', '#ffb3c7', '#bfe3ff', '#fff1b8'], '#e0643a');
-        ctx.fillStyle = '#b9b2c9'; ctx.fillRect(0, ground, w, h - ground);
-        ctx.fillStyle = '#7d7590'; ctx.fillRect(0, ground + 10 * s, w, 2 * s); ctx.fillRect(0, ground + 18 * s, w, 2 * s);   // rails
-        const tx = ((time / LOOP_S) % 1) * (w + 140 * s) - 100 * s;   // one crossing per loop
-        tram(ctx, tx, ground + 12 * s, 0.9 * s);
-      } else if (rarity === 2) {
+      if (rarity < 2) {
+        ctx.fillStyle = backdropColor(rarity, look || 0); ctx.fillRect(0, 0, w, h);
+        return;
+      }
+      if (rarity === 2) {
         const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#3b1380'); g.addColorStop(0.6, '#b14dff'); g.addColorStop(1, '#ff8fc7');
         ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
         rooftops(ctx, w, h * 0.66, s * 0.8, ['#7b4a8f', '#8f5a9f', '#6a3c80'], '#c0573a');
@@ -1786,7 +1898,7 @@
         for (let i = 0; i < 12; i++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, Math.max(w, h), i * TAU / 12, i * TAU / 12 + TAU / 30); ctx.closePath(); ctx.fill(); }
         ctx.restore();
       }
-      if (rarity >= 1) {   // twinkles
+      if (rarity >= 2) {   // twinkles
         for (let i = 0; i < 10 + rarity * 6; i++) {
           const x = ((i * 97) % 100) / 100 * w, y = ((i * 57 + 13) % 100) / 100 * h;
           const s = (Math.sin(time * 2 * W1 + i) + 1) / 2;
@@ -1840,7 +1952,8 @@
      * `time` only, so it loops forever like a GIF. The person never leaves the frame and no words are drawn.
      * Cycle (4.4 s): 0.0 idle bounce · 0.5 get ready · 0.9 the signature moment · 2.5 celebrate (two hops)
      *   · 3.7 land and settle back to the idle bounce.
-     * Around: seagulls cross the sky; Epic and Legendary get fireworks, Legendary golden confetti.
+     * Around: Common and Rare stand on one flat colour, nothing else; Epic and Legendary get seagulls crossing the sky and fireworks,
+     * Legendary golden confetti.
      */
     const MINT_CYCLE = LOOP_S, HERO_T = 1.62;   // HERO_T: mid-moment, for still images
     const ACT_END_ARMS = [[0.3, 2.55], [0.3, 1.6], [-0.86, -0.86], [0.3, 1.1], [-0.6, 1.3], [0.3, 2.5]];   // the 'action' arms at k = 1
@@ -1869,10 +1982,10 @@
       ctx.restore();
     }
     function drawMintedScene(ctx, w, h, d, time) {
-      drawRarityBackground(ctx, w, h, d.rarity, time);
+      drawRarityBackground(ctx, w, h, d.rarity, time, d.look);
       const u = ((time % MINT_CYCLE) + MINT_CYCLE) % MINT_CYCLE, r = Math.min(w, h) * 0.2, s = w / 240;
       const gx = -0.15 * w + (u / MINT_CYCLE) * 1.3 * w, gy = h * 0.16 + Math.sin(u * 3) * h * 0.02;
-      seagull(ctx, gx, gy, 12 * s, time);
+      if (d.rarity >= 2) seagull(ctx, gx, gy, 12 * s, time);       // Common and Rare are one flat colour: nothing in the sky
       if (d.rarity === 3) seagull(ctx, w - gx * 0.8, gy + h * 0.08, 9 * s, time + 0.3);
 
       // fireworks (Epic, Legendary)
@@ -1926,7 +2039,7 @@
       }
     }
 
-    root.AEArt = { INK, ROLE_STYLE, SKIN, HAIR_COLOR, BADGES, RARITY_COLORS, FONT_STACK, drawAvatar, drawMintedAvatar, drawRarityBackground, starShape, heartShape, pixelPerson,
+    root.AEArt = { INK, ROLE_STYLE, SKIN, HAIR_COLOR, BADGES, RARITY_COLORS, FONT_STACK, drawAvatar, drawMintedAvatar, drawRarityBackground, backdropColor, BACKDROP_COLORS, starShape, heartShape, pixelPerson,
                    decodeLook, makeLook, ell, circle, nftCard, seagull, firework, MINT_CYCLE, HERO_T,
                    azulejos, rooftops, bridge, tram, bunting };
   })(this);
@@ -1937,7 +2050,7 @@
        ========================================================== -->
   <script id="ae-runner">
   /*
-   * NOT FUNGIBLE MOMENTS — the first-person run, drawn in low-resolution pixels: a little raycaster for six places of
+   * NOT FUNGIBLE AVATARS — the first-person run, drawn in low-resolution pixels: a little raycaster for six places of
    * Lisbon, the people of the party as sprites (the very same pixelPerson figures as the NFT), the phone in your hand
    * with the photo on it, music and jokes. Used as it is by the standalone game and by the arcade (art/runner.js).
    * It only reads the engine's state and tells effects from the difference between two frames: it never changes a run.
@@ -2132,7 +2245,7 @@
       c.fillStyle = '#b3262e'; c.fillRect(0, 0, 1200, 14); c.fillStyle = '#e8b53a'; c.fillRect(0, 14, 1200, 5);
       const t2 = (s, x, y, size, col, weight, align) => { c.font = (weight || 800) + ' ' + size + 'px ' + FONT; c.textAlign = align || 'left'; c.textBaseline = 'middle'; c.fillStyle = col; c.fillText(s, x, y); };
       t2('INCIDENT REPORT', 56, 76, 28, '#e8b53a', 900);
-      t2(o.daily ? 'Not Fungible Moments · Daily #' + o.daily : 'Not Fungible Moments', 1144, 76, 26, '#b8c6ea', 800, 'right');
+      t2(o.daily ? 'Not Fungible Avatars · Daily #' + o.daily : 'Not Fungible Avatars', 1144, 76, 26, '#b8c6ea', 800, 'right');
       t2(sc.survived ? 'I caught the one who pulled the rug.' : causeOfDeath(sc) || 'The party ended before I caught them.', 56, 150, sc.survived ? 50 : 46, '#ffffff', 900);
       const colors = { '🟩': '#2fbf71', '🟨': '#ffcf1f', '🟥': '#e23a52', '⬛': '#2a2438' };
       Array.from(o.grid || '').forEach((sq, i) => { c.fillStyle = colors[sq] || '#2a2438'; c.fillRect(56 + i * 74, 200, 62, 62); });
@@ -2193,6 +2306,7 @@
       }
 
       /* ---------- the world, pixel by pixel ---------- */
+      let lite = false, liteRow = 0;
       function renderWorld(lvI, camX, camZ, hy, f, time, doorZ, rugShift) {
         const P = PLACES[lvI];
         placeTables(lvI);
@@ -2204,9 +2318,10 @@
           const dx = (x + 0.5 - cx) / f; dxs[x] = dx;
           tWall[x] = dx > 0.0001 ? (HW - camX) / dx : dx < -0.0001 ? (-HW - camX) / dx : 1e9;
         }
-        const RUG = 1.75, spots = P.spots, neon = P.neon;
-        let o = 0;
-        for (let y = 0; y < LOW_H; y++) {
+        const RUG = 1.75, spots = P.spots, neon = P.neon, rows = lite ? 2 : 1;
+        liteRow ^= 1;
+        for (let y = lite ? liteRow : 0; y < LOW_H; y += rows) {
+          let o = y * LOW_W;
           const dy = (hy - (y + 0.5)) / f;
           const isFloor = dy < 0, plane = isFloor ? (dy < -0.0005 ? EYE / -dy : 1e9) : (dy > 0.0005 ? CEIL / dy : 1e9);
           const by = (y & 3) << 2;
@@ -2331,10 +2446,14 @@
         if (!soundOn) return null;
         try {
           if (!ac) ac = new (root.AudioContext || root.webkitAudioContext || window.AudioContext || window.webkitAudioContext)();
-          if (ac.state === 'suspended') ac.resume();
+          if (ac.state !== 'running' && !document.hidden) ac.resume();
         } catch (e) { ac = null; }
         return ac;
       }
+      if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => {
+        if (!ac) return;
+        if (document.hidden) ac.suspend().catch(() => {}); else if (soundOn) ac.resume().catch(() => {});
+      });
       function tone(freq, dur, type, vol, slide, delay) {
         const a = soundOn ? ac : null; if (!a) return;
         const t0 = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
@@ -2861,7 +2980,7 @@
           const a = Math.min(1, (110 - p.tick) / 20);
           ctx.globalAlpha = a * (0.65 + 0.35 * Math.sin(time * 6));
           text(ctx, '◀', 38, H * 0.56, 44, '#ffffff', 'center', 900, 6); text(ctx, '▶', W - 38, H * 0.56, 44, '#ffffff', 'center', 900, 6);
-          text(ctx, 'TAP THE SIDES TO CHANGE LANE', W / 2 - 38, H - 34, 12, '#ffffff', 'center', 900, 4);
+          text(ctx, 'TAP OR SWIPE TO CHANGE LANE', W / 2 - 38, H - 34, 12, '#ffffff', 'center', 900, 4);
           ctx.globalAlpha = 1;
         }
       }
@@ -3074,6 +3193,7 @@
       }
       return {
         frame, reset, laneFromTap, drawShame, shameCount: () => shameRead().length,
+        setLite(on) { lite = !!on; },
         startAudio() { audio(); musicOn = true; },
         stopAudio() { musicOn = false; },
         setSound(on) { soundOn = !!on; if (on) audio(); },
@@ -3133,11 +3253,23 @@
       const stage = $('stage');
       const availW = stage.clientWidth - 16, availH = stage.clientHeight - 8;
       let cssW = Math.min(availW, availH * W / H), cssH = cssW * H / W;
-      cssW = Math.max(200, Math.floor(cssW)); cssH = Math.floor(cssW * H / W);
-      dpr = Math.min(3, root.devicePixelRatio || 1);
+      cssW = Math.max(120, Math.floor(cssW)); cssH = Math.floor(cssW * H / W);
+      dpr = Math.min(dprCap, root.devicePixelRatio || 1);
       canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
       canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
       scale = canvas.width / W;
+      const pause = $('btn-pause');
+      pause.style.left = Math.round(canvas.offsetLeft + cssW * 0.6) + 'px';
+      pause.style.top = Math.round(canvas.offsetTop + cssH * 0.025) + 'px';
+    }
+    /* A slow phone draws fewer pixels: the people stay the same, and the run stays smooth. */
+    let dprCap = 2, slowFrames = 0, countedFrames = 0;
+    function watchSpeed(dtMs) {
+      if (mode !== 'play' || paused) return;
+      countedFrames++; if (dtMs > 36) slowFrames++;
+      if (countedFrames < 60) return;
+      if (slowFrames > 30) { if (dprCap > 1) { dprCap = 1; layout(); } else runner.setLite(true); }
+      countedFrames = slowFrames = 0;
     }
 
     /* ---------- input: one lane at a time ---------- */
@@ -3153,12 +3285,21 @@
       if (mode !== 'play' || paused) return;
       e.preventDefault();
       const p = toLogical(e);
+      swipe = { id: e.pointerId, x: e.clientX, lane: run.lane };
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* the pointer is gone already */ }
       send({ action: 'move', lane: runner.laneFromTap(run, p.x, p.y) });
     });
+    let swipe = null;                         // a tap answers at once; a swipe then counts from the lane the finger started on
+    canvas.addEventListener('pointermove', (e) => {
+      if (!swipe || e.pointerId !== swipe.id || Math.abs(e.clientX - swipe.x) < 22) return;
+      send({ action: 'move', lane: Math.max(0, Math.min(E.LANES - 1, swipe.lane + (e.clientX > swipe.x ? 1 : -1))) });
+      swipe = null;
+    });
+    for (const end of ['pointerup', 'pointercancel']) canvas.addEventListener(end, () => { swipe = null; Sound.unlock(); });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     root.addEventListener('keydown', (e) => {
       if (e.key === 'm' || e.key === 'M') { setSound(Sound.toggle()); return; }
-      if (mode !== 'play') return;
+      if (mode !== 'play') { if (e.key === 'Escape' && root.parent !== root) root.parent.postMessage('nfa-close-game', root.location.origin); return; }
       if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { e.preventDefault(); setPaused(!paused); return; }
       if (paused || e.repeat) return;
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); send({ action: 'move', lane: Math.max(0, run.lane - 1) }); }
@@ -3283,18 +3424,21 @@
       session.role = E.ROLES[look & 15];
       session.badge = E.BADGES[E.BADGE_OF_ROLE[look & 15]];
       session.name = session.traits.expression.value + ' ' + session.role + ' · ' + session.traits.action.value;
+      session.traits.backdrop = E.backdropOf(session.traits.rarity, look);     // Common and Rare: the colour follows the person
       $('avatar-name').textContent = session.name;
       $('t-role').textContent = session.role + ' · ' + session.badge + ' pass';
+      $('t-backdrop').innerHTML = esc(session.traits.backdrop.value) + ' <span class="tag r' + session.traits.backdrop.tier + '">' + E.RARITIES[session.traits.backdrop.tier] + '</span>';
       updateMintUI();
       return true;
     }
     const NEW_FACE = 'That person is already in the collection, so your Not Fungible Avatar is this new face: no two Not Fungible Avatars are the same person.';
     function showEnd() {
       mode = 'end';
-      const sc = E.score(run), tr = E.traitsOf(sc, run.seed);
+      const sc = E.score(run), tr = E.traitsOf(sc, run.seed, null, session.paid && session.runId ? E.traitSeedOfRun(session.runId) : undefined);   // a paid run: the luck of its run id
       session.finished = true; session.score = sc; session.traits = tr;
       const newBest = LocalScores.add(sc.total, tr.rarity);
       const look = lookOf(session);
+      tr.backdrop = E.backdropOf(tr.rarity, look);
       endData = { rarity: tr.rarity, act: tr.action.act, expression: tr.expression.value, prop: tr.prop.value, look, dir: 'right', start: performance.now() };
       // The person is revealed at the end (from the run id, on-chain too, so the contract shows the same person).
       session.role = E.ROLES[look & 15];
@@ -3418,7 +3562,7 @@
     function shareText() {
       const sc = session.score;
       const url = CONFIG.gameUrl || (root.location.protocol.startsWith('http') ? root.location.origin + root.location.pathname : '');
-      const head = session.daily ? 'Not Fungible Moments · Daily #' + session.daily : 'Not Fungible Moments';
+      const head = session.daily ? 'Not Fungible Avatars · Daily #' + session.daily : 'Not Fungible Avatars';
       return head + '\n' + E.shareGrid(sc) + '\n' + (sc.survived ? 'I caught the one who pulled the rug. ' : (root.AERunner.causeOfDeath(sc) ? root.AERunner.causeOfDeath(sc) + '. ' : '') + 'Level ' + (sc.cleared + 1) + ' of 6. ') + 'Score ' + sc.total + '.\n' + worstBump(sc) + ' Wall of Shame ' + runner.shameCount() + '/16.' +
         '\nThey all look alike. Can you tell them apart? ' + CONFIG.creator + (url ? '\n' + url : '') + '\n#NotFungibleAvatars #NFCLisbon #TheWallArcade';
     }
@@ -3438,6 +3582,7 @@
     $('btn-play').addEventListener('click', () => { Sound.unlock(); if (TRIAL) startTrial(); else openConsent(); });
     $('btn-practice').addEventListener('click', startDaily);
     $('btn-mute').addEventListener('click', () => setSound(Sound.toggle()));
+    $('btn-pause').addEventListener('click', () => setPaused(true));
     $('btn-consent-no').addEventListener('click', goTitle);
     $('btn-add-demo').addEventListener('click', async () => { await Credits.addDemo(3); openConsent(); });
     $('btn-consent-yes').addEventListener('click', async () => {
@@ -3463,7 +3608,7 @@
       const c = document.createElement('canvas'), sc = session.score;
       root.AERunner.reportCard(c, sc, { daily: session.daily, grid: E.shareGrid(sc), shame: runner.shameCount() });
       const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
-      const file = new File([blob], 'not-fungible-moments-report.png', { type: 'image/png' });
+      const file = new File([blob], 'not-fungible-avatars-report.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try { await navigator.share({ files: [file], text: shareText() }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
       }
@@ -3520,6 +3665,9 @@
       const dtMs = Math.min(100, now - last); last = now;
       const dt = dtMs / 1000;
       clock += dt;
+      watchSpeed(dtMs);
+      const wantPause = mode === 'play' && !paused;
+      if (wantPause === $('btn-pause').classList.contains('hidden')) $('btn-pause').classList.toggle('hidden', !wantPause);
 
       if (mode === 'countdown') {
         countdownLeft -= dt;
@@ -3573,7 +3721,7 @@
     function startViewer(q) {
       document.body.classList.add('viewer');
       const int = (k, lo, hi, def) => { const v = parseInt(q.get(k), 10); return Number.isInteger(v) && v >= lo && v <= hi ? v : def; };
-      const a = int('a', 0, 23, 0), e = int('e', 0, 10, 3), p = int('p', 0, 10, 0), r = int('r', 0, 3, 0), l = int('l', 0, 65535, 0);
+      const a = int('a', 0, 23, 0), e = int('e', 0, 10, 3), p = int('p', 0, 17, 0), r = int('r', 0, 3, 0), l = int('l', 0, 65535, 0);
       const data = { rarity: r, act: Math.floor(a / 4), expression: E.EXPRESSIONS[e], prop: E.PROPS[p], look: l, dir: 'right' };
       const v = document.getElementById('viewer'), vc = v.getContext('2d');
       const t0 = performance.now();

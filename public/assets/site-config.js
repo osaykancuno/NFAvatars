@@ -6,7 +6,7 @@ window.NFA_SITE = {
   siteUrl: 'https://nfavatars.netlify.app/',
   arcadeUrl: 'https://thewallarcade.superrare.com',   // THE WALL ARCADE; later the game's own page in the arcade
   openseaUrl: '',             // e.g. https://opensea.io/collection/not-fungible-avatars
-  contract: '',               // the Ethereum contract, at launch (a SuperRare release)
+  contract: '',               // the Ethereum contract, at launch (sold through SuperRare's RareMinter)
   chainName: 'Ethereum',
   explorer: 'https://etherscan.io',
   rpcUrl: 'https://ethereum-rpc.publicnode.com',             // public RPC (CORS *): live "minted" counter before OpenSea has stats

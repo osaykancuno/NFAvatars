@@ -1,6 +1,6 @@
 # Not Fungible Avatars
 
-The official site of **Not Fungible Avatars** and the free trial of **Not Fungible Moments**, the Lisbon edition of THE WALL ARCADE on SuperRare.
+The official site of **Not Fungible Avatars** and the free trial of **Not Fungible Avatars**, the Lisbon edition of THE WALL ARCADE on SuperRare.
 
 > Somebody pulled the rug at the party. You have their photo. They all look alike. Nobody is fungible.
 

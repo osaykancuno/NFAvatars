@@ -1,26 +1,40 @@
 /*
- * /api/claim  the end screen's mint through SuperRare (claim-core.mjs).
- * GET   is the mint open, and on which release: what the arcade page passes to Connect's actions.mint.
- * POST  { to, seed, action, expression, prop, rarity, score, seal, tx }: bind that mint to that run.
- * Netlify environment: NFA_RELEASE_CONTRACT, NFA_CHAIN_ID (1, or 11155111 to test), NFA_SEAL_KEY, optional NFA_RELEASE_PRICE and NFA_RPC_URL.
+ * /api/claim  the end screen's mint (claim-core.mjs). Nothing is stored here: the chain holds runs, tickets and tokens, Studio holds the scores.
+ * GET  ?wallet=0x…          is the mint open, on which contract, how many runs this wallet has waiting and left.
+ * GET  ?tx=0x…&wallet=0x…   the token that transaction minted to that wallet.
+ * POST { runId, seed, startedAt }: find that run on Studio's public leaderboard and put it on chain as a ticket for the wallet that played
+ *      (202, ask again; 200, done, with the wallet). The page only names the run: wallet, score and tier come from Studio.
+ * Netlify environment: NFA_CONTRACT, NFA_CHAIN_ID (1, or 11155111 to test), NFA_SIGNER_SECRET (64 hex, only here, in no build),
+ * NFA_GAME_ID (the game's Studio app id), NFA_GAME_ORIGIN (https://….srstudio.dev, no path);
+ * optional NFA_RPC_URL, NFA_MAX_GWEI, NFA_MIN_RELAYER_WEI, NFA_PRICE_WEI, NFA_UNIT_PRICE.
+ * The site's wallet pays the tickets' gas: it is the signer derived from NFA_SIGNER_SECRET, GET /api/claim?relayer=1 names it.
  */
-import { blobStore, claim, releaseConfig, rpcReceipt } from './claim-core.mjs';
+import { grant, mintConfig, mintedInfo, mintStatus, rpcChain, studioBoard } from './claim-core.mjs';
 
 export default async (req) => {
   const headers = { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type', 'cache-control': 'no-store' };
   const json = (status, body) => new Response(JSON.stringify(body), { status, headers });
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
-  const cfg = releaseConfig(process.env);
-  if (req.method === 'GET') return json(200, cfg.open ? { open: true, chainId: cfg.chainId, contract: cfg.contract, currency: cfg.currency, unitPrice: cfg.unitPrice } : { open: false });
-  if (req.method !== 'POST') return json(405, { error: 'GET or POST' });
-  let body;
-  try { body = await req.json(); } catch { return json(400, { error: 'Expected JSON' }); }
+  const cfg = mintConfig(process.env), chain = rpcChain(cfg.rpcUrl), url = new URL(req.url);
   try {
-    const r = await claim(body, cfg, await blobStore(), (tx) => rpcReceipt(cfg.rpcUrl, tx));
+    if (req.method === 'GET') {
+      if (url.searchParams.has('relayer')) return json(200, { relayer: cfg.relayer });
+      const wallet = (url.searchParams.get('wallet') || '').toLowerCase();
+      const tx = url.searchParams.get('tx');
+      if (tx) { const r = await mintedInfo(tx, wallet, cfg, chain); return json(r.status, r.body); }
+      if (wallet && !/^0x[0-9a-f]{40}$/.test(wallet)) return json(400, { error: 'wallet: a 0x address' });
+      return json(200, await mintStatus(cfg, chain, wallet));
+    }
+    if (req.method !== 'POST') return json(405, { error: 'GET or POST' });
+    const text = await req.text();
+    if (text.length > 2048) return json(413, { error: 'Too large' });
+    let body;
+    try { body = JSON.parse(text); } catch { return json(400, { error: 'Expected JSON' }); }
+    const r = await grant(body, cfg, chain, studioBoard(cfg));
     return json(r.status, r.body);
   } catch (error) {
     console.error('claim', error);
-    return json(503, { error: 'The site could not check the chain right now. Try again.' });
+    return json(503, { error: 'The site could not reach the chain or the leaderboard right now. Try again.' });
   }
 };
 
