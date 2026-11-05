@@ -30,7 +30,9 @@ const addrWord = (a) => a.slice(2).toLowerCase().padStart(64, '0');
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ISO = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d{1,9})?(Z|[+-]\d\d:\d\d)$/;
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
-const BEFORE = 60_000, AFTER = 15 * 60_000, LEAF = 1000, BUDGET = 24;      // the search: a minute before startedAt, 15 minutes after; down to one second; requests per POST
+const BEFORE = 60_000, AFTER = 15 * 60_000, LEAF = 100, BUDGET = 24;       // the search: a minute before startedAt, 15 minutes after; down to 0.1 s; requests per POST
+const HINT_BEFORE = 10_000, HINT_AFTER = 2000, RUN_MS = 90_000;              // the first windows: around the run's first POST, then the 90 s a paid run can last
+const MISSING_ROUNDS = 3;                                                     // whole searches without the run: it is listed under missing/ for a person to look at
 const SEARCH_MS = 7000;                                                       // and at most 7 s of it, inside Netlify's 10 s
 const SENT_MS = 180_000;                                                      // a ticket just sent is not sent again for 3 minutes (it is on its way)
 
@@ -94,28 +96,62 @@ export function studioBoard(cfg) {
 }
 
 /**
- * Looks for a run on the leaderboard: `board(fromMs, toMs)` gives the entries of that window (injected, so a test can fake it).
- * The window is [startedAt - 60 s, min(startedAt + 15 min, now + 1 s)). One window shows only the top ten, each scorer's best run, so a run
- * can hide behind ten better scorers or behind its own player's better run: when the run is not in a window's entries, the window splits in
- * two (down to one second) and both halves are searched, breadth first. An empty window holds no run at all and is not split.
- * At most `budget` requests. startedAt is the page's word: a wrong one only means the run is not found. Returns { entry, requests } or { entry: null, requests }.
+ * The windows to search for a run, most likely first. All inside [startedAt - 60 s, min(startedAt + 15 min, now + 1 s)):
+ * a few seconds around `hint` (when the site first heard of the run: the end screen posts as the run ends), then the 90 s after startedAt
+ * (a paid run lasts about 65 s), then the whole range. The leaderboard is not an official API and shows only the top ten of a window,
+ * each scorer's best, so short windows are the ones that can be trusted to show a run.
  */
-export async function findRun(board, runId, startedAt, { now = Date.now(), budget = BUDGET, deadline = Date.now() + SEARCH_MS } = {}) {
-  const id = String(runId).toLowerCase();
+export function searchPlan(startedAt, now, hint) {
   const from = startedAt - BEFORE, to = Math.min(startedAt + AFTER, now + 1000);
+  if (!(to > from)) return [];
+  const clip = ([a, b]) => [Math.max(a, from), Math.min(b, to)];
+  const plan = [];
+  if (Number.isFinite(hint) && hint >= from && hint < to) plan.push(clip([hint - HINT_BEFORE, hint + HINT_AFTER]));
+  plan.push(clip([startedAt, startedAt + RUN_MS]), [from, to]);
+  return plan.filter(([a, b], i) => b > a && plan.findIndex(([x, y]) => x === a && y === b) === i);
+}
+
+/**
+ * Where a run missing from a window's entries can still be. Ten shown (a full page): anywhere, behind better scorers, so the two halves of
+ * the clock, down to 0.1 s. Fewer: only behind a better run of its own wallet (even one played at the same time in another tab), so the
+ * window without the instants of the shown runs: the pieces between them show what those runs hid, or nothing.
+ */
+function pieces(entries, a, b) {
+  const times = entries.length >= 10 ? [] : [...new Set(entries.map((e) => Date.parse(e?.achievedAt)))].sort((x, y) => x - y);
+  if (!times.length || !times.every((t) => Number.isFinite(t) && t >= a && t < b)) {
+    const mid = a + Math.floor((b - a) / 2);
+    return b - a > LEAF ? [[a, mid], [mid, b]] : [];
+  }
+  const out = [];
+  let at = a;
+  for (const t of times) { if (t > at) out.push([at, t]); at = t + 1; }
+  if (b > at) out.push([at, b]);
+  return out;
+}
+
+/**
+ * Looks for a run on the leaderboard: `board(fromMs, toMs)` gives the entries of that window (injected, so a test can fake it).
+ * Windows come from `queue` (searchPlan by default). When the run is not in a window's entries, the window's `pieces` are
+ * searched, level by level inside each window of the plan. An empty window holds no run at all and is not split. At most `budget` requests: the windows left come back as `queue`, so the next POST
+ * goes on from there instead of starting again. startedAt is the page's word: a wrong one only means the run is not found.
+ * Returns { entry, requests, queue }; entry is null when not found (yet).
+ */
+export async function findRun(board, runId, startedAt, { now = Date.now(), budget = BUDGET, deadline = Date.now() + SEARCH_MS, hint, queue } = {}) {
+  const id = String(runId).toLowerCase();
+  // [from, to, window of the plan it came from, depth]: the plan's first window is searched level by level before the next one
+  const todo = Array.isArray(queue) ? queue.map(([a, b, w = 0, d = 0]) => [a, b, w, d]) : searchPlan(startedAt, now, hint).map(([a, b], w) => [a, b, w, 0]);
   let requests = 0;
-  if (!(to > from)) return { entry: null, requests };
-  const queue = [[from, to]];
-  while (queue.length && requests < budget && Date.now() < deadline) {      // within the function's time limit: the page asks again
-    const [a, b] = queue.shift();
+  while (todo.length && requests < budget && Date.now() < deadline) {        // within the function's time limit: the page asks again
+    const next = todo.reduce((best, x, i) => (x[2] < todo[best][2] || (x[2] === todo[best][2] && x[3] < todo[best][3]) ? i : best), 0);
+    const [a, b, w, d] = todo.splice(next, 1)[0];
     requests++;
     const entries = await board(a, b);
     if (!Array.isArray(entries)) throw new Error('board: no entries');
     const hit = entries.find((e) => e && typeof e.scoreId === 'string' && e.scoreId.toLowerCase() === id);
-    if (hit) return { entry: hit, requests };
-    if (entries.length && b - a > LEAF) { const mid = a + Math.floor((b - a) / 2); queue.push([a, mid], [mid, b]); }
+    if (hit) return { entry: hit, requests, queue: [] };
+    if (entries.length) todo.push(...pieces(entries, a, b).map(([x, y]) => [x, y, w, d + 1]));
   }
-  return { entry: null, requests };
+  return { entry: null, requests, queue: todo };
 }
 
 const readers = {
@@ -211,8 +247,18 @@ export async function grant(body, cfg, chain, board, now = Date.now(), store = m
   const sentAt = await store.get('sent/' + key).catch(() => null);
   if (sentAt && now - sentAt < SENT_MS) return answer(202, { pending: true });
   if (!(await store.get('queue/' + key).catch(() => null))) {
-    const { entry } = await findRun(board, c.runId, c.startedAt, { now });
-    if (!entry) return answer(202, { pending: true });
+    // the search goes on across POSTs: where it stopped, and when the site first heard of the run (the end screen posts as it ends)
+    const s = (await store.get('search/' + key).catch(() => null)) || { hint: now, rounds: 0 };
+    const { entry, queue } = await findRun(board, c.runId, c.startedAt, { now, hint: s.hint, queue: s.queue?.length ? s.queue : undefined });
+    if (!entry) {
+      // a whole search without the run: the leaderboard may be late, so start again, but after a few rounds a person should look
+      const rounds = s.rounds + (queue.length ? 0 : 1);
+      if (rounds >= MISSING_ROUNDS) await store.set('missing/' + key, { runId: c.runId, seed: c.seed, startedAt: c.startedAt, firstSeen: s.hint, rounds }).catch(() => undefined);
+      await store.set('search/' + key, { hint: s.hint, rounds, queue }).catch(() => undefined);
+      return answer(202, { pending: true });
+    }
+    await store.del('search/' + key).catch(() => undefined);
+    await store.del('missing/' + key).catch(() => undefined);
     const run = entryToRun(entry, c.runId, c.seed, cfg.chainId);
     if (run instanceof Error) return answer(403, { error: run.message });
     const signature = signHash(cfg.signerKey, mintHash(cfg.chainId, cfg.contract, run.traits, runId));
