@@ -17,7 +17,7 @@ You run in first person through six places of Lisbon (the metro, the brunch, the
 
 - **10,000 people at most, on Ethereum**, minted through SuperRare. Never the same person twice.
 - 1 credit = 1 run = 1 Not Fungible Avatar. Every trait is earned by playing.
-- Tiers come from the levels you clear; Legendary only for catching the one who did it.
+- Tiers come from the levels you clear; Legendary only for catching the one who did it with the phone still full.
 - The NFT is an animated GIF of the same pixel person you chased in the game.
 
 ## This repository

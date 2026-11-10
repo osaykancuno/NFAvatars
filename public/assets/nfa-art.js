@@ -117,8 +117,9 @@
     var TIER_OF_PROP = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3];   // tier of each PROPS entry (the contract's _propTier)
     var PROP_START = [0, 5, 10, 15], PROP_COUNT = [5, 5, 5, 3];
 
-    /* Levels cleared for each tier; Legendary only for catching the one who did it. */
-    var RARE_LEVELS = 2, EPIC_LEVELS = 4;
+    /* Levels cleared for each tier. Catching the one who did it is an Epic; with the phone still full (LEGENDARY_BATTERY bars
+       at the catch) it is a Legendary. */
+    var RARE_LEVELS = 2, EPIC_LEVELS = 5, LEGENDARY_BATTERY = MAX_BATTERY;
 
     /* ---------- seeded RNG (mulberry32); its state lives in the run ---------- */
     function rnd(s) {
@@ -471,9 +472,10 @@
       };
     }
 
-    /* Legendary ONLY for catching the one who did it; otherwise the levels you cleared. */
+    /* Legendary ONLY for catching the one who did it with the phone still full; catching them with bars missing is an Epic;
+       otherwise the levels you cleared. */
     function rarityOf(sc) {
-      if (sc.survived) return 3;
+      if (sc.survived) return sc.battery >= LEGENDARY_BATTERY ? 3 : 2;
       if (sc.cleared >= EPIC_LEVELS) return 2;
       if (sc.cleared >= RARE_LEVELS) return 1;
       return 0;
@@ -500,7 +502,7 @@
       var h = 0x811c9dc5, str = String(runId).toLowerCase();
       for (var i = 0; i < str.length; i++) {
         var c = str.codePointAt(i), bytes;
-        if (c > 0xffff) i++;
+        if (c > 0xffff) i++; else if (c >= 0xd800 && c <= 0xdfff) c = 0xfffd;   // a lone surrogate: the replacement character, as UTF-8 encoders do
         bytes = c < 0x80 ? [c] : c < 0x800 ? [0xc0 | c >> 6, 0x80 | c & 63] : c < 0x10000 ? [0xe0 | c >> 12, 0x80 | c >> 6 & 63, 0x80 | c & 63]
           : [0xf0 | c >> 18, 0x80 | c >> 12 & 63, 0x80 | c >> 6 & 63, 0x80 | c & 63];
         for (var j = 0; j < bytes.length; j++) { h ^= bytes[j]; h = Math.imul(h, 0x01000193); }
@@ -519,7 +521,7 @@
     }
 
     /*
-     * Traits. The TIER is earned by playing (rarityOf: the levels you cleared, Legendary only for catching the one who did it).
+     * Traits. The TIER is earned by playing (rarityOf: the levels you cleared, Legendary only for catching the one who did it with a full phone).
      * Everything else is the luck of the run: moment, expression and item come from picksOf(rarity, traitSeed), where traitSeed is
      * traitSeedOfRun(runId) for a paid run and the run's seed for the free trial and practice (pass it as the 4th argument).
      * Indices are what the NFT stores: action = act*4+tier, expression 0..10, item 0..17, each capped by the tier.
@@ -561,7 +563,7 @@
       HAIRS: HAIRS, HAIR_COLORS: HAIR_COLORS, HIJAB_COLORS: HIJAB_COLORS, FACIAL_HAIR: FACIAL_HAIR,
       BACKDROPS: BACKDROPS, BACKDROP_COLORS: BACKDROP_COLORS, EVENT: EVENT,
       backdropOf: backdropOf, backdropIndex: backdropIndex,
-      TIER_OF_11: TIER_OF_11, TIER_OF_PROP: TIER_OF_PROP, PROP_START: PROP_START, PROP_COUNT: PROP_COUNT, TIER_STEP: TIER_STEP, RARE_LEVELS: RARE_LEVELS, EPIC_LEVELS: EPIC_LEVELS,
+      TIER_OF_11: TIER_OF_11, TIER_OF_PROP: TIER_OF_PROP, PROP_START: PROP_START, PROP_COUNT: PROP_COUNT, TIER_STEP: TIER_STEP, RARE_LEVELS: RARE_LEVELS, EPIC_LEVELS: EPIC_LEVELS, LEGENDARY_BATTERY: LEGENDARY_BATTERY,
       createRun: createRun, advance: advance, applyInput: applyInput, validateInput: validateInput,
       actorLane: actorLane, heatOf: heatOf, speedOf: speedOf, multOf: multOf,
       isFinished: isFinished, survived: survived, score: score, rarityOf: rarityOf, shareGrid: shareGrid,
