@@ -6,7 +6,8 @@
  *      (202, ask again; 200, done, with the wallet). The page only names the run: wallet, score and tier come from Studio.
  * Netlify environment: NFA_CONTRACT, NFA_CHAIN_ID (1, or 11155111 to test), NFA_SIGNER_SECRET (64 hex, only here, in no build),
  * NFA_GAME_ID (the game's Studio app id), NFA_GAME_ORIGIN (https://….srstudio.dev, no path);
- * optional NFA_RPC_URL, NFA_MAX_GWEI, NFA_MIN_RELAYER_WEI, NFA_PRICE_WEI, NFA_UNIT_PRICE.
+ * optional NFA_RPC_URL, NFA_MIN_RELAYER_WEI, NFA_PRICE_WEI, NFA_UNIT_PRICE, and the gas the site pays (claim-core.mjs bidOf):
+ * NFA_CHEAP_GWEI (0.5: sent at once), NFA_HARD_GWEI (2: the ceiling), NFA_PATIENCE_SEC (180: the bid doubles every such wait).
  * The site's wallet pays the tickets' gas: it is the signer derived from NFA_SIGNER_SECRET, GET /api/claim?relayer=1 names it.
  */
 import { grant, mintConfig, mintedInfo, mintStatus, rpcChain, studioBoard } from './claim-core.mjs';

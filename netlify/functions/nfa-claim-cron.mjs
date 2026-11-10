@@ -1,6 +1,7 @@
 /*
- * Every 5 minutes: the runs still waiting in the queue (the gas was above NFA_MAX_GWEI, or nobody asked since) go on chain as one group,
- * if the gas is cheap enough now. The same code as /api/claim (claim-core.mjs sendGroup), so a player who closed the page still gets the ticket.
+ * Every minute: the runs still waiting in the queue (the gas was not cheap, a group was slow, or nobody asked since) go on chain as one
+ * group, as soon as the oldest may pay the price of the moment (claim-core.mjs bidOf). The same code as /api/claim (sendGroup), so a
+ * player who closed the page still gets the ticket, within the same time.
  */
 import { mintConfig, rpcChain, sendGroup } from './claim-core.mjs';
 
@@ -22,4 +23,4 @@ export default async () => {
   return new Response(null, { status: 204 });
 };
 
-export const config = { schedule: '*/5 * * * *' };
+export const config = { schedule: '* * * * *' };
