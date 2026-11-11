@@ -10,10 +10,10 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="Not Fungible Avatars · Lisbon edition">
   <meta property="og:description" content="Somebody pulled the rug. They all look alike. Catch them, mint them. Nobody is fungible.">
-  <meta property="og:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png">
+  <meta property="og:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png?v=2">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png">
-  <link rel="icon" href="assets/logo.png">
+  <meta name="twitter:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png?v=2">
+  <link rel="icon" href="assets/logo.png?v=2">
   <link rel="stylesheet" href="assets/brand.css?v=3">
   <link rel="stylesheet" href="assets/site.css?v=12">
 </head>
@@ -23,7 +23,7 @@
   <div id="door-flash" aria-hidden="true"></div>
 
   <header class="bar">
-    <a class="brand" href="#home"><img src="assets/logo.png" alt="" width="38" height="38"><span>NOT FUNGIBLE <b>AVATARS</b></span></a>
+    <a class="brand" href="#home"><img src="assets/logo.png?v=2" alt="" width="38" height="38"><span>NOT FUNGIBLE <b>AVATARS</b></span></a>
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button class="tab" role="tab" id="tab-home" aria-controls="home" data-tab="home" type="button">Party</button>
       <button class="tab" role="tab" id="tab-game" aria-controls="game" data-tab="game" type="button">The Game</button>
@@ -137,7 +137,7 @@
           <div class="gallery" id="sales" hidden></div>
         </div>
         <div class="subpane col-wall" data-col-pane="wall" hidden>
-          <img src="assets/collection-wall.png" alt="A wall of 126 different Not Fungible Avatars, mostly on flat quiet or bright colours, a few on rooftops and at golden hour" width="1404" height="904" loading="lazy">
+          <img src="assets/collection-wall.png?v=2" alt="A wall of 126 different Not Fungible Avatars, mostly on flat quiet or bright colours, a few on rooftops and at golden hour" width="1404" height="904" loading="lazy">
           <p class="fine">Drawn by the contract's own art. Common: a quiet colour. Rare: a bright one. Epic: the Alfama rooftops. Legendary: golden hour over the Tagus.</p>
         </div>
         <div class="subpane acc" data-col-pane="facts" hidden>
@@ -262,7 +262,7 @@
 
   <!-- The game's own engine + art (generated from ../index.html by `npm run brand`). -->
   <script src="assets/site-config.js?v=3"></script>
-  <script src="assets/nfa-art.js?v=5"></script>
+  <script src="assets/nfa-art.js?v=6"></script>
   <script src="assets/nfa-runner.js?v=3"></script>
   <script>
   (function () {
@@ -405,16 +405,23 @@
 
     /* A performer: idles and looks at you, sometimes does its moment on its own, does it at once when poked. */
     function performer(p) { return Object.assign({ playAt: -1e9, next: 1 + Math.random() * 4 }, p); }
-    function drawPerformer(ctx, s, p, x, y, r, t, now) {
+    /* The performer is the NFT's own figure, the bust: drawn on its 96 x 96 grid, then scaled with hard pixels into the largest square
+       of the canvas, standing on its bottom edge like in the picture of the token. */
+    const bustLow = document.createElement('canvas'); bustLow.width = bustLow.height = 96;
+    const bustCtx = bustLow.getContext('2d');
+    function drawPerformer(ctx, s, p, w, h, t, now) {
       const since = (now - p.playAt) / 1000, dur = 1.4;
       if (!reduced && since > dur && t > p.next) { p.playAt = now; p.next = t + 3 + Math.random() * 5; }
       const acting = since < dur, k = acting ? since / dur : 0;
-      A.drawAvatar(ctx, {
-        x, y, r, look: p.look, pose: acting ? 'action' : 'idle', act: p.act, k, time: t + (p.seed || 0),
+      bustCtx.setTransform(1, 0, 0, 1, 0, 0); bustCtx.clearRect(0, 0, 96, 96);
+      A.drawAvatar(bustCtx, {
+        x: 48, y: 48, r: 19.2, look: p.look, pose: acting ? 'action' : 'idle', act: p.act, k, time: t + (p.seed || 0),
         face: acting ? null : p.face, prop: acting ? 'None' : p.prop, dir: 'right',
-        gaze: acting ? null : gazeFor(s, x, y - r * 0.4),
-        squash: acting && k < 0.1 ? [1.08, 0.92] : null
+        squash: acting && k < 0.1 ? [1.08, 0.92] : null,
+        bust: { w: 96, h: 96, tier: 0, det: p.det || (p.det = A.bustDetails(p.look, 0, 0, 0, 0)) }
       });
+      const size = Math.min(w, h);
+      A.blitPixels(ctx, bustLow, Math.round((w - size) / 2), h - size, size, size);
     }
     function poke(s, p, x, y) { p.playAt = performance.now(); s.hot = p.playAt + 1500; burst(s, x, y, 22); }
 
@@ -427,11 +434,7 @@
         (badgeIndex != null ? '<em class="badge b' + badgeIndex + '">' + E.BADGES[badgeIndex] + '</em>' : '');
       container.appendChild(el);
       const p = performer({ look, act, face, prop, seed: container.children.length });
-      const s = scene(el.querySelector('canvas'), (ctx, w, h, t, sc, now) => {
-        ctx.save(); ctx.beginPath(); ctx.ellipse(w / 2, h * 0.86, w * 0.4, h * 0.07, 0, 0, Math.PI * 2); ctx.clip();
-        A.azulejos(ctx, 0, h * 0.75, w, h * 0.25, w * 0.08); ctx.restore();
-        drawPerformer(ctx, sc, p, w / 2, h * 0.5, w * 0.25, t, now);
-      });
+      const s = scene(el.querySelector('canvas'), (ctx, w, h, t, sc, now) => drawPerformer(ctx, sc, p, w, h, t, now));
       el.addEventListener('click', () => {
         poke(s, p, s.canvas.width / 2, s.canvas.height * 0.3);
         if (reduced) { let n = 0; const step = () => { render(s, performance.now(), 0.016); if (++n < 90) requestAnimationFrame(step); }; step(); }
@@ -668,7 +671,7 @@
     R.LEVEL_TEXT.forEach((T, i) => {
       const b = document.createElement('button');
       b.type = 'button'; b.setAttribute('role', 'tab');
-      b.innerHTML = '<img src="assets/levels/level-' + (i + 1) + '.png" alt="" width="360" height="640" loading="lazy"><b>' + (i + 1) + '</b><span>' + E.LEVELS[i].name + '</span>';
+      b.innerHTML = '<img src="assets/levels/level-' + (i + 1) + '.png?v=2" alt="" width="360" height="640" loading="lazy"><b>' + (i + 1) + '</b><span>' + E.LEVELS[i].name + '</span>';
       b.addEventListener('click', () => showLevel(i));
       $('level-rail').appendChild(b);
     });
@@ -714,7 +717,7 @@
         b.setAttribute('aria-label', E.EXPRESSIONS[t.e] + ' ' + E.ROLES[t.l & 15]);
         b.innerHTML = '<canvas aria-hidden="true"></canvas>';
         const p = performer({ look: t.l, act: t.act, face: E.EXPRESSIONS[t.e], prop: 'None', seed: t.id });
-        scene(b.querySelector('canvas'), (ctx, w, h, time, sc, now) => drawPerformer(ctx, sc, p, w / 2, h * 0.52, w * 0.3, time, now));
+        scene(b.querySelector('canvas'), (ctx, w, h, time, sc, now) => drawPerformer(ctx, sc, p, w, h, time, now));
         b.addEventListener('click', () => { pick(t); p.playAt = performance.now(); });
         $('agent-picker').appendChild(b);
       });
