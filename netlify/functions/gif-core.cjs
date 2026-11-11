@@ -21,7 +21,8 @@ function loadArt(sources) {
 function traits(E, q) {
   const int = (v, lo, hi, def) => { const n = Number(v); return v !== '' && Number.isInteger(n) && n >= lo && n <= hi ? n : def; };
   const a = int(q.a, 0, 23, 0), e = int(q.e, 0, 10, 3), p = int(q.p, 0, 17, 0), r = int(q.r, 0, 3, 0), l = int(q.l, 0, 65535, 0);
-  return { rarity: r, act: Math.floor(a / 4), expression: E.EXPRESSIONS[e], prop: E.PROPS[p], look: E.canonLook(l), dir: 'right' };
+  // the score picks the pin and the necklace, as on chain
+  return { rarity: r, act: Math.floor(a / 4), expression: E.EXPRESSIONS[e], prop: E.PROPS[p], look: E.canonLook(l), score: int(q.s, 0, 0xffffffff, 0), dir: 'right' };
 }
 
 /* One full cycle of the show (MINT_CYCLE s), so the GIF loops on the person's own loop. */

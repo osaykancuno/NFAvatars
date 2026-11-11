@@ -26,7 +26,29 @@ export const NAMES = {
   /* Common: six quiet flat colours; Rare: six bright ones; the colour is the person's (see backdropIndex). Epic and Legendary: a picture. */
   backdrop: ['Calcada', 'Nata', 'Sardine', 'Bica', 'Sand', 'Fog', 'Azulejo', 'Tram', 'Terracotta', 'Tagus', 'Jacaranda', 'Manjerico', 'Alfama Rooftops', 'Tagus Golden Hour'],
   rarity: ['Common', 'Rare', 'Epic', 'Legendary'],
+  /* What the bust shows: from the person (Eyes, Face Mark, Earring) and from the mint (Pin, Necklace). See details() below. */
+  eyes: ['Brown', 'Hazel', 'Green', 'Blue', 'Grey', 'Amber'],
+  faceMark: ['None', 'Freckles', 'Beauty Mark'],
+  earring: ['None', 'Gold Hoop', 'Pearl', 'Diamond Stud'],
+  pin: ['None', 'GM Sun', 'Moon', 'Diamond Hands', 'Rocket', 'Bull', 'Bear', 'Green Candle', 'Keys', 'Block', 'WAGMI Heart'],
+  necklace: ['None', 'Gold Chain', 'Coin Pendant', 'Key Pendant', 'Cold Wallet Pendant'],
 };
+
+/* The same picks as the art's bustDetails (index.html) and the contract's _details: nothing is stored, all comes from the token's own numbers. */
+const EYES_PICK = [0, 0, 0, 1, 1, 2, 3, 3, 4, 5], MARK_PICK = [0, 0, 0, 0, 0, 1, 1, 2], EAR_FEM = [0, 0, 1, 1, 2, 2, 3, 3], EAR_MASC = [0, 0, 0, 0, 0, 0, 1, 3];
+const PIN_PICK = [0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], NECK_PICK = [0, 0, 0, 0, 1, 2, 3, 4];
+function mix32(v) {
+  let h = Math.imul((v ^ 0x5bd1) >>> 0, 0x9e3779b1) >>> 0;
+  h ^= h >>> 15; h = Math.imul(h, 0x85ebca77) >>> 0; h ^= h >>> 13;
+  return h >>> 0;
+}
+export function details(look, action, expression, prop, score) {
+  look &= 0xffff;
+  if (((look >> 13) & 3) === 3 || ((look >> 7) & 7) === 7) look &= 0x9fff;
+  const hijab = ((look >> 7) & 7) === 7, facial = (look >> 13) & 3, h = mix32(look), fem = facial ? 0 : h & 1;
+  const m = mix32((look + Math.imul(action, 65537) + Math.imul(expression, 2097169) + Math.imul(prop, 33554467) + Math.imul(score | 0, 7919)) >>> 0);
+  return { fem, eyes: EYES_PICK[(h >>> 1) % 10], mark: MARK_PICK[(h >>> 8) & 7], earring: hijab ? 0 : (fem ? EAR_FEM : EAR_MASC)[(h >>> 12) & 7], pin: PIN_PICK[m & 15], necklace: NECK_PICK[(m >>> 8) & 7] };
+}
 const tier = (i) => (i < 3 ? 0 : i < 6 ? 1 : i < 9 ? 2 : 3);                    // an Expression's tier
 const propTier = (i) => (i < 5 ? 0 : i < 10 ? 1 : i < 15 ? 2 : 3);                // an Item's tier: 5 Common, 5 Rare, 5 Epic, 3 Legendary
 
@@ -53,12 +75,13 @@ export function attributes(t) {
   const l = t.l, role = l & 15, hair = (l >> 7) & 7, color = (l >> 10) & 7;
   let facial = (l >> 13) & 3;
   if (facial === 3 || hair === 7) facial = 0;                  // what is drawn: facial hair 3 draws none, a hijab hides it
-  const a = (trait_type, value) => ({ trait_type, value });
+  const a = (trait_type, value) => ({ trait_type, value }), d = details(l, t.a, t.e, t.p, t.s);
   return [
     a('Background', backdropName(t.r, l)), a('Role', NAMES.role[role]), a('Pass', NAMES.pass[NAMES.passOfRole[role]]),
     a('Hair', NAMES.hair[hair]), a('Hair Color', hair === 7 ? NAMES.scarf[color] + ' Scarf' : NAMES.hairColor[color]),
     a('Facial Hair', NAMES.facial[facial]), a('Eyewear', l >> 15 === 1 ? 'Glasses' : 'None'),
-    a('Expression', NAMES.expression[t.e]), a('Item', NAMES.prop[t.p]), a('Moment', NAMES.action[t.a]), a('Tier', NAMES.rarity[t.r]),
+    a('Eyes', NAMES.eyes[d.eyes]), a('Face Mark', NAMES.faceMark[d.mark]), a('Earring', NAMES.earring[d.earring]),
+    a('Expression', NAMES.expression[t.e]), a('Item', NAMES.prop[t.p]), a('Pin', NAMES.pin[d.pin]), a('Necklace', NAMES.necklace[d.necklace]), a('Moment', NAMES.action[t.a]), a('Tier', NAMES.rarity[t.r]),
     { display_type: 'number', trait_type: 'Score', value: t.s },
   ];
 }

@@ -112,6 +112,12 @@
     var HAIR_COLORS = ['Black', 'Dark Brown', 'Brown', 'Auburn', 'Blonde', 'Silver', 'White', 'Copper'];
     var HIJAB_COLORS = ['Navy', 'Plum', 'Sage', 'Sand', 'Azulejo Blue', 'Terracotta', 'Violet', 'Midnight'];
     var FACIAL_HAIR = ['None', 'Beard', 'Moustache'];
+    /* What the NFT's bust shows and the walking figure is too small for (the art's bustDetails picks them; the contract and /api/nfa carry the same lists). */
+    var EYES = ['Brown', 'Hazel', 'Green', 'Blue', 'Grey', 'Amber'];
+    var FACE_MARKS = ['None', 'Freckles', 'Beauty Mark'];
+    var EARRINGS = ['None', 'Gold Hoop', 'Pearl', 'Diamond Stud'];
+    var PINS = ['None', 'GM Sun', 'Moon', 'Diamond Hands', 'Rocket', 'Bull', 'Bear', 'Green Candle', 'Keys', 'Block', 'WAGMI Heart'];
+    var NECKLACES = ['None', 'Gold Chain', 'Coin Pendant', 'Key Pendant', 'Cold Wallet Pendant'];
     var TIER_OF_11 = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3];   // tier of each EXPRESSIONS entry
     var TIER_START = [0, 3, 6, 9], TIER_COUNT = [3, 3, 3, 2];
     var TIER_OF_PROP = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3];   // tier of each PROPS entry (the contract's _propTier)
@@ -560,7 +566,7 @@
       MAX_BATTERY: MAX_BATTERY, PENALTY: PENALTY, EXIT_TICKS: EXIT_TICKS, STUN_TICKS: STUN_TICKS, PERFECT_TICKS: PERFECT_TICKS,
       MAX_ACTORS: MAX_ACTORS, BULL_EVERY: BULL_EVERY, BULL_TICKS: BULL_TICKS, KILLER: KILLER, FIRST_ROW: FIRST_ROW, DOOR_AHEAD: DOOR_AHEAD, LEVELS: LEVELS, ACTIONS: ACTIONS,
       RARITIES: RARITIES, ACTION_TRAITS: ACTION_TRAITS, EXPRESSIONS: EXPRESSIONS, PROPS: PROPS, ROLES: ROLES, BADGES: BADGES, BADGE_OF_ROLE: BADGE_OF_ROLE,
-      HAIRS: HAIRS, HAIR_COLORS: HAIR_COLORS, HIJAB_COLORS: HIJAB_COLORS, FACIAL_HAIR: FACIAL_HAIR,
+      HAIRS: HAIRS, HAIR_COLORS: HAIR_COLORS, HIJAB_COLORS: HIJAB_COLORS, FACIAL_HAIR: FACIAL_HAIR, EYES: EYES, FACE_MARKS: FACE_MARKS, EARRINGS: EARRINGS, PINS: PINS, NECKLACES: NECKLACES,
       BACKDROPS: BACKDROPS, BACKDROP_COLORS: BACKDROP_COLORS, EVENT: EVENT,
       backdropOf: backdropOf, backdropIndex: backdropIndex,
       TIER_OF_11: TIER_OF_11, TIER_OF_PROP: TIER_OF_PROP, PROP_START: PROP_START, PROP_COUNT: PROP_COUNT, TIER_STEP: TIER_STEP, RARE_LEVELS: RARE_LEVELS, EPIC_LEVELS: EPIC_LEVELS, LEGENDARY_BATTERY: LEGENDARY_BATTERY,
@@ -689,6 +695,97 @@
       return pxMix('#3a3548', '#ddd8e6', l);
     }
     const AFRO = [[0, -6, 10], [-7, -5, 7], [7, -5, 7], [-9, 0, 5.5], [9, 0, 5.5]];
+
+    /* what the hands hold in a moment (the Item trait goes in the same hand): shared by the walking figure and the bust */
+    function heldObject(put, rect, spec, phase, name, x, y) {
+      switch (name) {
+        case 'phone': rect(x - 2, y - 8, 5, 8, '#26262f'); rect(x - 1, y - 7, 3, 5, spec.flash ? '#ffffff' : '#7fd0ff'); break;
+        case 'flute': rect(x - 1, y - 8, 3, 5, '#ffb23f'); rect(x - 1, y - 8, 3, 1, '#fff6c8'); rect(x, y - 3, 1, 3, '#e6f8ff'); rect(x - 1, y, 3, 1, '#e6f8ff'); break;
+        case 'pot': rect(x - 3, y - 7, 7, 7, '#c9c4d4'); rect(x - 3, y - 7, 7, 1, '#f4f4f4'); rect(x + 4, y - 6, 3, 2, '#c9c4d4'); rect(x - 5, y - 6, 2, 4, '#26262f'); break;
+        case 'cup': rect(x - 2, y - 5, 5, 5, '#ffffff'); rect(x - 2, y - 3, 5, 2, '#e2603a'); rect(x - 2, y - 5, 5, 1, '#6b3e1e'); break;
+        case 'Iced Coffee': rect(x - 2, y - 6, 5, 7, '#d8f1ff'); rect(x - 2, y - 4, 5, 5, '#8a5a34'); rect(x - 1, y - 5, 2, 2, '#ffffff'); rect(x + 1, y - 9, 1, 4, '#2fbf71'); break;
+        case 'Pastel de Nata': rect(x - 3, y - 3, 7, 3, '#b9772f'); rect(x - 2, y - 4, 5, 2, '#ffd05a'); put(x - 1, y - 4, '#7a3b12'); put(x + 1, y - 3, '#7a3b12'); break;
+        case 'Seed Phrase': {                                // a small cream paper with rows of ink dashes (no words)
+          rect(x - 3, y - 8, 7, 9, '#f6ecd0'); rect(x - 3, y - 8, 7, 1, '#fffaf0'); rect(x + 3, y - 7, 1, 8, '#d9c9a0'); rect(x - 3, y, 7, 1, '#d9c9a0');
+          for (let i = 0; i < 4; i++) { rect(x - 2, y - 6 + i * 2, 2, 1, '#3a2f4a'); rect(x + 1, y - 6 + i * 2, i % 2 ? 2 : 1, 1, '#3a2f4a'); }
+          break;
+        }
+        case 'Pizza Slice': for (let i = 0; i < 6; i++) rect(x - 3 + Math.floor(i / 2), y - 6 + i, 7 - i, 1, i ? '#ffd05a' : '#b9772f'); put(x, y - 4, '#d6303b'); put(x - 1, y - 3, '#d6303b'); break;
+        case 'Cold Wallet': rect(x - 2, y - 7, 5, 8, '#26262f'); rect(x - 1, y - 6, 3, 3, '#2fbf71'); put(x, y - 2, '#c0c4cf'); break;
+        case 'Spray Can': {
+          rect(x - 2, y - 7, 4, 8, '#e2603a'); rect(x - 2, y - 7, 1, 8, '#ff8f6c'); rect(x - 2, y - 4, 4, 2, '#1f5fbf'); rect(x - 1, y - 9, 2, 2, '#c9c4d4');
+          for (let i = 0; i < 5; i++) { const q = (phase * 6 + i * 0.2) % 1; put(x + 3 + q * 12, y - 9 + Math.sin(i * 2.3) * q * 5, ['#e2603a', '#1f5fbf', '#2fbf71', '#ffcf1f'][i % 4]); }
+          break;
+        }
+        case 'Diamond': { for (let i = 0; i < 3; i++) rect(x - 3 + i, y - 2 + i, 7 - 2 * i, 1, '#7fd0ff'); rect(x - 2, y - 4, 5, 1, '#e6f8ff'); rect(x - 3, y - 3, 7, 1, '#bdeaff'); if (Math.floor(phase * 8) % 2) put(x + 4, y - 5, '#ffffff'); break; }
+        case 'Private Key': {                                // a golden key: ring on top, shaft in the hand, two teeth
+          const G = '#ffc21a', Gh = '#ffe27a', Gl = '#c98a00';
+          rect(x - 2, y - 11, 5, 1, Gh); rect(x - 2, y - 8, 5, 1, Gl); rect(x - 2, y - 10, 1, 2, G); rect(x + 2, y - 10, 1, 2, Gl);
+          rect(x, y - 7, 1, 8, G); rect(x - 1, y - 7, 1, 8, Gh); rect(x + 1, y - 7, 1, 8, Gl);
+          rect(x + 2, y - 4, 2, 1, G); rect(x + 2, y - 2, 3, 1, G); put(x + 3, y - 3, Gl); put(x + 4, y - 1, Gl);
+          break;
+        }
+        case 'Golden Ticket': rect(x - 4, y - 4, 9, 5, '#ffc21a'); rect(x - 4, y - 4, 9, 1, '#ffe27a'); put(x - 2, y - 2, '#a06a00'); put(x, y - 2, '#a06a00'); put(x + 2, y - 2, '#a06a00'); break;
+        default: break;
+      }
+    }
+    /* the Items that float beside the head (the Crown and Laser Eyes belong to each figure) */
+    function floatingItem(put, rect, phase, name) {
+      const f = Math.round(Math.sin(phase * TAU * 2));
+      if (name === 'Rocket') {                               // to the moon: a little rocket next to the head
+        const x = 6, y = 16 + f;
+        rect(x - 2, y - 6, 5, 10, '#f4f4f4'); rect(x - 1, y - 8, 3, 2, '#e2603a'); rect(x - 1, y - 3, 3, 3, '#7fd0ff');
+        rect(x - 3, y + 2, 2, 3, '#e2603a'); rect(x + 2, y + 2, 2, 3, '#e2603a');
+        rect(x - 1, y + 4, 3, Math.floor(phase * 12) % 2 ? 2 : 3, '#ffc21a');
+      }
+      const candle = (c, wickUp, wickDown, bodyTop, bodyH) => {   // a chart candlestick: thin wick, solid body
+        const x = 6, y = 17 + f, R = pxRamp(c);
+        rect(x, y - wickUp, 1, wickUp + wickDown, R.base);
+        rect(x - 2, y + bodyTop, 5, bodyH, R.base); rect(x - 2, y + bodyTop, 5, 1, R.hi); rect(x - 2, y + bodyTop, 1, bodyH, R.hi); rect(x + 2, y + bodyTop + 1, 1, bodyH - 1, R.lo); rect(x - 2, y + bodyTop + bodyH - 1, 5, 1, R.lo);
+      };
+      if (name === 'Red Candle') candle('#e2403a', 7, 9, -2, 9);        // a red day: the wick runs down
+      if (name === 'Green Candle') candle('#2fbf71', 10, 5, -5, 9);     // a green day: the wick runs up
+      if (name === 'Gas Pump') {                             // a small terracotta pump with its hose
+        const x = 9, y = 17 + f, R = pxRamp('#c8553d'), hose = '#3a3145';
+        rect(x - 3, y - 9, 7, 14, R.base); rect(x - 3, y - 9, 7, 1, R.hi); rect(x - 3, y - 9, 1, 14, R.hi); rect(x + 3, y - 8, 1, 13, R.lo);
+        rect(x - 2, y - 7, 5, 4, '#bfe9d6'); put(x - 2, y - 7, '#ffffff'); rect(x - 2, y - 1, 5, 1, '#f2c14e'); rect(x - 2, y + 1, 5, 2, R.lo);
+        rect(x - 4, y + 5, 9, 2, '#6b3a2a');
+        rect(x - 6, y - 2, 3, 1, hose); rect(x - 6, y - 2, 1, 8, hose); rect(x - 7, y + 5, 3, 2, '#c0c4cf');
+      }
+      if (name === 'Genesis Block') {                        // a golden pixel cube, isometric
+        const cx = 8, y0 = 8 + f;
+        for (let dx = -6; dx <= 5; dx++) {
+          const m = dx < 0 ? -dx - 1 : dx, top = y0 + (m >> 1), bot = y0 + 5 - (m >> 1);
+          for (let y = top; y <= bot; y++) put(cx + dx, y, y === top ? '#fff4b0' : '#ffe27a');
+          for (let y = bot + 1; y <= bot + 7; y++) put(cx + dx, y, dx < 0 ? (dx === -6 ? '#ffd34a' : '#ffc21a') : (dx === 5 ? '#a86f00' : '#c98a00'));
+        }
+        for (let y = y0 + 6; y <= y0 + 12; y++) put(cx, y, '#8a5a00');
+        rect(cx - 4, y0 + 8, 2, 2, '#ffe27a'); rect(cx + 2, y0 + 8, 2, 2, '#e0a400');
+        if (Math.floor(phase * 8) % 2) { put(cx - 3, y0 + 1, '#ffffff'); put(cx - 4, y0 + 1, '#ffffff'); put(cx - 3, y0, '#ffffff'); put(cx - 3, y0 + 2, '#ffffff'); }
+      }
+      if (name === 'Holo 1/1') {                             // the genesis card floats by the head, its colours run
+        const x = 6, y = 15 + f, cols = ['#ff4d4d', '#ffb23f', '#ffe53f', '#4ddb7a', '#4d96ff', '#a855f7'], run = Math.floor(phase * 12);
+        for (let i = 0; i < 6; i++) rect(x - 4, y - 6 + i * 2, 9, 2, cols[(i + run) % 6]);
+        put(x - 2, y - 2, '#ffffff'); put(x + 2, y + 2, '#ffffff');
+      }
+    }
+    /* the sparks of a moment */
+    function momentEffects(put, rect, spec, k, hands) {
+      const sparkle = (x, y, c) => { put(x, y, c); put(x + 1, y, c); put(x - 1, y, c); put(x, y + 1, c); put(x, y - 1, c); };
+      const hr = hands[1], hl = hands[-1];
+        for (const e of spec.fx || []) {
+          if (e === 'flash' && hr) { const x = hr[0], y = hr[1] - 11; rect(x - 4, y, 9, 1, '#ffffff'); rect(x, y - 4, 1, 9, '#ffffff'); rect(x - 2, y - 2, 5, 5, '#ffffff'); }
+          if (e === 'clink' && hr) { sparkle(hr[0] - 5, hr[1] - 11, '#ffe53f'); sparkle(hr[0] + 5, hr[1] - 10, '#ffe53f'); for (let i = 0; i < 3; i++) { const q = (k * 2 + i * 0.33) % 1; put(hr[0], hr[1] - 9 - q * 8, '#ffffff'); } }
+          if (e === 'clap' && hr && hl) { const x = Math.round((hr[0] + hl[0]) / 2), y = Math.round((hr[1] + hl[1]) / 2); for (const sd of [-1, 1]) { rect(x + sd * 6, y - 5, 1, 3, '#ffcf1f'); rect(x + sd * 8, y, 2, 1, '#ffcf1f'); } rect(x, y - 7, 1, 3, '#ffcf1f'); }
+          if (e === 'mint' && hr) {                            // the NFT pops out of the phone
+            const q = clamp01((k - 0.3) / 0.5), up = Math.round(easeOut(q) * 15), x = hr[0], y = hr[1] - 10 - up, w = 2 + Math.round(easeOut(q) * 2);
+            rect(x - w - 1, y - w * 2, w * 2 + 3, w * 2 + 2, '#fff6e5'); rect(x - w, y - w * 2 + 1, w * 2 + 1, w * 2 - 1, '#b14dff'); rect(x - w, y, w * 2 + 1, 1, '#ffcf1f');
+          }
+          if (e === 'pour' && hr && hl) { const x0 = hr[0] - 6, y0 = hr[1] - 5, x1 = hl[0], y1 = hl[1] - 6, n = Math.max(1, Math.abs(x1 - x0)); for (let i = 0; i <= n; i++) put(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * (i / n) * (i / n), '#6b3e1e'); }
+          if (e === 'heart' && hl) { const q = clamp01((k - 0.6) / 0.4), x = hl[0], y = hl[1] - 11 - Math.round(q * 6), c = '#ff9db4'; put(x - 1, y, c); put(x + 1, y, c); rect(x - 2, y + 1, 5, 1, c); rect(x - 1, y + 2, 3, 1, c); put(x, y + 3, c); }
+          if (e === 'five' && hr) for (const [dx, dy] of [[-6, -5], [6, -5], [0, -8], [-8, 1], [8, 1]]) sparkle(hr[0] + dx, hr[1] + dy, '#ffcf1f');
+        }
+    }
 
     function pixelPerson(spec) {
       const L = decodeLook(spec.look), role = L.role, hairStyle = L.hair, hairIdx = L.hairColor, S = ROLE_STYLE[role];
@@ -936,75 +1033,11 @@
         else if (view === 'front') { rect(HX - 12, HY - 2, 3, 6, '#26262f'); rect(HX + 10, HY - 2, 3, 6, '#26262f'); rect(HX + 8, HY + 4, 3, 1, '#26262f'); rect(HX + 6, HY + 5, 3, 1, '#26262f'); put(HX + 5, HY + 5, '#e2603a'); }
       };
 
-      /* what the hands hold in a moment (the Item trait goes in the same hand) */
-      const object = (name, x, y) => {
-        switch (name) {
-          case 'phone': rect(x - 2, y - 8, 5, 8, '#26262f'); rect(x - 1, y - 7, 3, 5, spec.flash ? '#ffffff' : '#7fd0ff'); break;
-          case 'flute': rect(x - 1, y - 8, 3, 5, '#ffb23f'); rect(x - 1, y - 8, 3, 1, '#fff6c8'); rect(x, y - 3, 1, 3, '#e6f8ff'); rect(x - 1, y, 3, 1, '#e6f8ff'); break;
-          case 'pot': rect(x - 3, y - 7, 7, 7, '#c9c4d4'); rect(x - 3, y - 7, 7, 1, '#f4f4f4'); rect(x + 4, y - 6, 3, 2, '#c9c4d4'); rect(x - 5, y - 6, 2, 4, '#26262f'); break;
-          case 'cup': rect(x - 2, y - 5, 5, 5, '#ffffff'); rect(x - 2, y - 3, 5, 2, '#e2603a'); rect(x - 2, y - 5, 5, 1, '#6b3e1e'); break;
-          case 'Iced Coffee': rect(x - 2, y - 6, 5, 7, '#d8f1ff'); rect(x - 2, y - 4, 5, 5, '#8a5a34'); rect(x - 1, y - 5, 2, 2, '#ffffff'); rect(x + 1, y - 9, 1, 4, '#2fbf71'); break;
-          case 'Pastel de Nata': rect(x - 3, y - 3, 7, 3, '#b9772f'); rect(x - 2, y - 4, 5, 2, '#ffd05a'); put(x - 1, y - 4, '#7a3b12'); put(x + 1, y - 3, '#7a3b12'); break;
-          case 'Seed Phrase': {                                // a small cream paper with rows of ink dashes (no words)
-            rect(x - 3, y - 8, 7, 9, '#f6ecd0'); rect(x - 3, y - 8, 7, 1, '#fffaf0'); rect(x + 3, y - 7, 1, 8, '#d9c9a0'); rect(x - 3, y, 7, 1, '#d9c9a0');
-            for (let i = 0; i < 4; i++) { rect(x - 2, y - 6 + i * 2, 2, 1, '#3a2f4a'); rect(x + 1, y - 6 + i * 2, i % 2 ? 2 : 1, 1, '#3a2f4a'); }
-            break;
-          }
-          case 'Pizza Slice': for (let i = 0; i < 6; i++) rect(x - 3 + Math.floor(i / 2), y - 6 + i, 7 - i, 1, i ? '#ffd05a' : '#b9772f'); put(x, y - 4, '#d6303b'); put(x - 1, y - 3, '#d6303b'); break;
-          case 'Cold Wallet': rect(x - 2, y - 7, 5, 8, '#26262f'); rect(x - 1, y - 6, 3, 3, '#2fbf71'); put(x, y - 2, '#c0c4cf'); break;
-          case 'Spray Can': {
-            rect(x - 2, y - 7, 4, 8, '#e2603a'); rect(x - 2, y - 7, 1, 8, '#ff8f6c'); rect(x - 2, y - 4, 4, 2, '#1f5fbf'); rect(x - 1, y - 9, 2, 2, '#c9c4d4');
-            for (let i = 0; i < 5; i++) { const q = (phase * 6 + i * 0.2) % 1; put(x + 3 + q * 12, y - 9 + Math.sin(i * 2.3) * q * 5, ['#e2603a', '#1f5fbf', '#2fbf71', '#ffcf1f'][i % 4]); }
-            break;
-          }
-          case 'Diamond': { for (let i = 0; i < 3; i++) rect(x - 3 + i, y - 2 + i, 7 - 2 * i, 1, '#7fd0ff'); rect(x - 2, y - 4, 5, 1, '#e6f8ff'); rect(x - 3, y - 3, 7, 1, '#bdeaff'); if (Math.floor(phase * 8) % 2) put(x + 4, y - 5, '#ffffff'); break; }
-          case 'Private Key': {                                // a golden key: ring on top, shaft in the hand, two teeth
-            const G = '#ffc21a', Gh = '#ffe27a', Gl = '#c98a00';
-            rect(x - 2, y - 11, 5, 1, Gh); rect(x - 2, y - 8, 5, 1, Gl); rect(x - 2, y - 10, 1, 2, G); rect(x + 2, y - 10, 1, 2, Gl);
-            rect(x, y - 7, 1, 8, G); rect(x - 1, y - 7, 1, 8, Gh); rect(x + 1, y - 7, 1, 8, Gl);
-            rect(x + 2, y - 4, 2, 1, G); rect(x + 2, y - 2, 3, 1, G); put(x + 3, y - 3, Gl); put(x + 4, y - 1, Gl);
-            break;
-          }
-          case 'Golden Ticket': rect(x - 4, y - 4, 9, 5, '#ffc21a'); rect(x - 4, y - 4, 9, 1, '#ffe27a'); put(x - 2, y - 2, '#a06a00'); put(x, y - 2, '#a06a00'); put(x + 2, y - 2, '#a06a00'); break;
-          default: break;
-        }
-      };
+      const object = (name, x, y) => heldObject(put, rect, spec, phase, name, x, y);
       const floating = (name) => {
-        const f = Math.round(Math.sin(phase * TAU * 2));
         if (name === 'Crown') {                                // on the head, above the role hat if there is one
           const y = HY - (hasHat && S.hat === 'toque' ? 26 : hasHat ? 19 : hairStyle === 1 ? 20 : 15);
           rect(HX - 6, y + 3, 13, 3, '#ffc21a'); for (const x of [-6, 0, 6]) { rect(HX + x, y, 1, 3, '#ffc21a'); put(HX + x, y - 1, '#ff3d6e'); } rect(HX - 6, y + 3, 13, 1, '#ffe27a');
-        }
-        if (name === 'Rocket') {                               // to the moon: a little rocket next to the head
-          const x = 6, y = 16 + f;
-          rect(x - 2, y - 6, 5, 10, '#f4f4f4'); rect(x - 1, y - 8, 3, 2, '#e2603a'); rect(x - 1, y - 3, 3, 3, '#7fd0ff');
-          rect(x - 3, y + 2, 2, 3, '#e2603a'); rect(x + 2, y + 2, 2, 3, '#e2603a');
-          rect(x - 1, y + 4, 3, Math.floor(phase * 12) % 2 ? 2 : 3, '#ffc21a');
-        }
-        const candle = (c, wickUp, wickDown, bodyTop, bodyH) => {   // a chart candlestick: thin wick, solid body
-          const x = 6, y = 17 + f, R = pxRamp(c);
-          rect(x, y - wickUp, 1, wickUp + wickDown, R.base);
-          rect(x - 2, y + bodyTop, 5, bodyH, R.base); rect(x - 2, y + bodyTop, 5, 1, R.hi); rect(x - 2, y + bodyTop, 1, bodyH, R.hi); rect(x + 2, y + bodyTop + 1, 1, bodyH - 1, R.lo); rect(x - 2, y + bodyTop + bodyH - 1, 5, 1, R.lo);
-        };
-        if (name === 'Red Candle') candle('#e2403a', 7, 9, -2, 9);        // a red day: the wick runs down
-        if (name === 'Green Candle') candle('#2fbf71', 10, 5, -5, 9);     // a green day: the wick runs up
-        if (name === 'Gas Pump') {                             // a small terracotta pump with its hose
-          const x = 9, y = 17 + f, R = pxRamp('#c8553d'), hose = '#3a3145';
-          rect(x - 3, y - 9, 7, 14, R.base); rect(x - 3, y - 9, 7, 1, R.hi); rect(x - 3, y - 9, 1, 14, R.hi); rect(x + 3, y - 8, 1, 13, R.lo);
-          rect(x - 2, y - 7, 5, 4, '#bfe9d6'); put(x - 2, y - 7, '#ffffff'); rect(x - 2, y - 1, 5, 1, '#f2c14e'); rect(x - 2, y + 1, 5, 2, R.lo);
-          rect(x - 4, y + 5, 9, 2, '#6b3a2a');
-          rect(x - 6, y - 2, 3, 1, hose); rect(x - 6, y - 2, 1, 8, hose); rect(x - 7, y + 5, 3, 2, '#c0c4cf');
-        }
-        if (name === 'Genesis Block') {                        // a golden pixel cube, isometric
-          const cx = 8, y0 = 8 + f;
-          for (let dx = -6; dx <= 5; dx++) {
-            const m = dx < 0 ? -dx - 1 : dx, top = y0 + (m >> 1), bot = y0 + 5 - (m >> 1);
-            for (let y = top; y <= bot; y++) put(cx + dx, y, y === top ? '#fff4b0' : '#ffe27a');
-            for (let y = bot + 1; y <= bot + 7; y++) put(cx + dx, y, dx < 0 ? (dx === -6 ? '#ffd34a' : '#ffc21a') : (dx === 5 ? '#a86f00' : '#c98a00'));
-          }
-          for (let y = y0 + 6; y <= y0 + 12; y++) put(cx, y, '#8a5a00');
-          rect(cx - 4, y0 + 8, 2, 2, '#ffe27a'); rect(cx + 2, y0 + 8, 2, 2, '#e0a400');
-          if (Math.floor(phase * 8) % 2) { put(cx - 3, y0 + 1, '#ffffff'); put(cx - 4, y0 + 1, '#ffffff'); put(cx - 3, y0, '#ffffff'); put(cx - 3, y0 + 2, '#ffffff'); }
         }
         if (name === 'Laser Eyes' && view === 'front') {       // red beams from both eyes toward the sides, over the hair
           const ey = HY + 1, len = 15 + (Math.floor(phase * 12) % 2) * 2;
@@ -1014,30 +1047,10 @@
           }
           for (const x of [19, 26]) { rect(x, ey, 3, 3, '#e2403a'); rect(x + 1, ey, 1, 3, '#ff8a7a'); put(x + 1, ey + 1, '#ffffff'); }
         }
-        if (name === 'Holo 1/1') {                             // the genesis card floats by the head, its colours run
-          const x = 6, y = 15 + f, cols = ['#ff4d4d', '#ffb23f', '#ffe53f', '#4ddb7a', '#4d96ff', '#a855f7'], run = Math.floor(phase * 12);
-          for (let i = 0; i < 6; i++) rect(x - 4, y - 6 + i * 2, 9, 2, cols[(i + run) % 6]);
-          put(x - 2, y - 2, '#ffffff'); put(x + 2, y + 2, '#ffffff');
-        }
+        floatingItem(put, rect, phase, name);
       };
 
-      /* the sparks of a moment */
-      const sparkle = (x, y, c) => { put(x, y, c); put(x + 1, y, c); put(x - 1, y, c); put(x, y + 1, c); put(x, y - 1, c); };
-      const effects = () => {
-        const hr = hands[1], hl = hands[-1];
-        for (const e of spec.fx || []) {
-          if (e === 'flash' && hr) { const x = hr[0], y = hr[1] - 11; rect(x - 4, y, 9, 1, '#ffffff'); rect(x, y - 4, 1, 9, '#ffffff'); rect(x - 2, y - 2, 5, 5, '#ffffff'); }
-          if (e === 'clink' && hr) { sparkle(hr[0] - 5, hr[1] - 11, '#ffe53f'); sparkle(hr[0] + 5, hr[1] - 10, '#ffe53f'); for (let i = 0; i < 3; i++) { const q = (k * 2 + i * 0.33) % 1; put(hr[0], hr[1] - 9 - q * 8, '#ffffff'); } }
-          if (e === 'clap' && hr && hl) { const x = Math.round((hr[0] + hl[0]) / 2), y = Math.round((hr[1] + hl[1]) / 2); for (const sd of [-1, 1]) { rect(x + sd * 6, y - 5, 1, 3, '#ffcf1f'); rect(x + sd * 8, y, 2, 1, '#ffcf1f'); } rect(x, y - 7, 1, 3, '#ffcf1f'); }
-          if (e === 'mint' && hr) {                            // the NFT pops out of the phone
-            const q = clamp01((k - 0.3) / 0.5), up = Math.round(easeOut(q) * 15), x = hr[0], y = hr[1] - 10 - up, w = 2 + Math.round(easeOut(q) * 2);
-            rect(x - w - 1, y - w * 2, w * 2 + 3, w * 2 + 2, '#fff6e5'); rect(x - w, y - w * 2 + 1, w * 2 + 1, w * 2 - 1, '#b14dff'); rect(x - w, y, w * 2 + 1, 1, '#ffcf1f');
-          }
-          if (e === 'pour' && hr && hl) { const x0 = hr[0] - 6, y0 = hr[1] - 5, x1 = hl[0], y1 = hl[1] - 6, n = Math.max(1, Math.abs(x1 - x0)); for (let i = 0; i <= n; i++) put(x0 + (x1 - x0) * i / n, y0 + (y1 - y0) * (i / n) * (i / n), '#6b3e1e'); }
-          if (e === 'heart' && hl) { const q = clamp01((k - 0.6) / 0.4), x = hl[0], y = hl[1] - 11 - Math.round(q * 6), c = '#ff9db4'; put(x - 1, y, c); put(x + 1, y, c); rect(x - 2, y + 1, 5, 1, c); rect(x - 1, y + 2, 3, 1, c); put(x, y + 3, c); }
-          if (e === 'five' && hr) for (const [dx, dy] of [[-6, -5], [6, -5], [0, -8], [-8, 1], [8, 1]]) sparkle(hr[0] + dx, hr[1] + dy, '#ffcf1f');
-        }
-      };
+      const effects = () => momentEffects(put, rect, spec, k, hands);
 
       /* composition */
       const armL = spec.armL || 0, armR = spec.armR || 0;
@@ -1072,6 +1085,347 @@
       return runs;
     }
 
+    /* ---------- the NFT's own figure: a kawaii half bust on the picture's 96 x 96 grid ----------
+       A very large head, a small body, small arms and hands, anchored to the bottom edge (it never floats mid-frame). Same person as
+       the walking figure: same look bits, roles, colours, faces, moments and items. What the 48 grid could not show is new here, and
+       all of it is computed from what the token already stores, so the chain draws the same picture with nothing more to keep:
+         from the person (a hash of the look)             man or woman, Eyes, Face Mark, Earring
+         from the mint (look, moment, face, item, score)  a crypto Pin on the outfit, a Necklace
+       Every part is laid down with its own dark edge, like the stitched border of a patch. root.__bustTap lets
+       tools/make-onchain-art.cjs record the parts for the contract. */
+    const EYE_COLOR = ['#3a2a22', '#6b4423', '#2f7d4f', '#2b6cb0', '#7a8a99', '#b0782a'];
+    const EYES_PICK = [0, 0, 0, 1, 1, 2, 3, 3, 4, 5], MARK_PICK = [0, 0, 0, 0, 0, 1, 1, 2];
+    const EAR_FEM = [0, 0, 1, 1, 2, 2, 3, 3], EAR_MASC = [0, 0, 0, 0, 0, 0, 1, 3];
+    const PIN_PICK = [0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], NECK_PICK = [0, 0, 0, 0, 1, 2, 3, 4];
+    const FEM_NECK = 0x7ce1;                     // the roles whose top leaves a neckline (bit = role)
+    const SEQUIN = { '1,0': '#ffffff', '5,3': '#ffffff', '2,6': '#ffffff', '6,7': '#bfe3ff' };   // an 8 x 8 tile, Epic and Legendary
+    function mix32(v) {
+      let h = Math.imul((v ^ 0x5bd1) >>> 0, 0x9e3779b1) >>> 0;
+      h ^= h >>> 15; h = Math.imul(h, 0x85ebca77) >>> 0; h ^= h >>> 13;
+      return h >>> 0;
+    }
+    /* look: canonical. action, expression, prop: the token's numbers. The contract computes the same (NotFungibleAvatarsRenderer._details). */
+    function bustDetails(look, action, expression, prop, score) {
+      look &= 0xffff;
+      if (((look >> 13) & 3) === 3 || ((look >> 7) & 7) === 7) look &= 0x9fff;      // the person that is drawn (the engine's canonLook)
+      const L = decodeLook(look), hijab = L.hair === 7, facial = L.facial, h = mix32(look);
+      const fem = facial ? 0 : h & 1;
+      const m = mix32((look + Math.imul(action | 0, 65537) + Math.imul(expression | 0, 2097169) + Math.imul(prop | 0, 33554467) + Math.imul(score | 0, 7919)) >>> 0);
+      return { fem, eyes: EYES_PICK[(h >>> 1) % 10], mark: MARK_PICK[(h >>> 8) & 7], earring: hijab ? 0 : (fem ? EAR_FEM : EAR_MASC)[(h >>> 12) & 7],
+        pin: PIN_PICK[m & 15], necklace: NECK_PICK[(m >>> 8) & 7] };
+    }
+
+    function pixelBust(spec) {
+      const L = decodeLook(spec.look), role = L.role, hair = L.hair, hairI = L.hairColor, S = ROLE_STYLE[role];
+      const hijab = hair === 7, facial = L.facial === 3 || hijab ? 0 : L.facial, glasses = L.glasses;
+      const D = spec.det || bustDetails(spec.look, 0, 0, 0, 0), fem = D.fem, tier = spec.tier || 0;
+      const skinC = SKIN[L.skin], skin = pxRamp(skinC), top = pxRamp(S.top);
+      const H = pxRamp(hijab ? SCARF_COLOR[hairI] : HAIR_COLOR[hairI]), Bd = pxRamp(HAIR_COLOR[hairI]);
+      const phase = spec.phase || 0, k = spec.k || 0;
+      const tap = root.__bustTap || null, out = new Map();
+      let g = null, sub = null;
+      const put = (x, y, c) => { const key = Math.round(x) + ',' + Math.round(y); g.set(key, c); if (sub) sub.set(key, c); };
+      const rect = (x, y, w, h, c) => { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) put(x + i, y + j, c); };
+      const flat = (c) => ({ hi: c, base: c, lo: c });
+      const ball = (cx, cy, rx, ry, R, only, shine) => {     // flat like embroidery: a thin darker rim bottom right, a small light on hair and hats
+        for (let y = Math.floor(cy - ry); y <= cy + ry; y++) for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+          const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry, d = dx * dx + dy * dy;
+          if (d > 1 || (only && !only(x, y))) continue;
+          const l = dx * 0.5 + dy * 0.7;
+          put(x, y, d > 0.8 && l > 0.42 ? R.lo : shine && l < -0.52 && d < 0.8 && d > 0.5 ? R.hi : R.base);
+        }
+      };
+      const arc = (cx, cy, rx, ry, c, w) => { for (let a = 0; a <= 90; a++) { const t = Math.PI + a / 90 * Math.PI; rect(Math.round(cx + Math.cos(t) * rx - w / 2), Math.round(cy + Math.sin(t) * ry - w / 2), w, w, c); } };
+      const layer = (name) => { sub = tap ? tap('layer', name) : null; };
+      const part = (name, fn, sequins) => {
+        g = new Map(); sub = null; if (tap) tap('group', name, !!sequins);
+        fn(); sub = null;
+        if (sequins) for (const key of g.keys()) { const c = key.indexOf(','), x = +key.slice(0, c), y = +key.slice(c + 1), q = SEQUIN[(x & 7) + ',' + (y & 7)]; if (q) g.set(key, q); }
+        for (const key of g.keys()) {
+          const c = key.indexOf(','), x = +key.slice(0, c), y = +key.slice(c + 1);
+          if (!g.has((x + 1) + ',' + y)) out.set((x + 1) + ',' + y, OUTLINE);
+          if (!g.has((x - 1) + ',' + y)) out.set((x - 1) + ',' + y, OUTLINE);
+          if (!g.has(x + ',' + (y + 1))) out.set(x + ',' + (y + 1), OUTLINE);
+          if (!g.has(x + ',' + (y - 1))) out.set(x + ',' + (y - 1), OUTLINE);
+        }
+        for (const [key, c] of g) out.set(key, c);
+      };
+
+      /* the head is the picture; the body is small under it and runs past the bottom edge, so a hop never shows a gap */
+      const CX = 48, HY = 46 + (spec.b || 0), RX = 29, RY = 24, TOP = HY - RY, ey = HY + 6, eL = CX - 14, eR = CX + 14, my = HY + 14, BY = 69, END = 102;
+      const hasHat = S.hat && !(hijab && S.hat !== 'headphones');
+      const dxc = (x) => Math.abs(x + 0.5 - CX);
+
+      part('hairBack', () => {
+        layer('hairBack');
+        if (hair === 1) { ball(CX, HY - 10, RX + 9, RY + 6, H, null, true); ball(CX - RX - 3, HY + 4, 8, 12, H); ball(CX + RX + 3, HY + 4, 8, 12, H); }
+        if (hair === 2) { ball(CX, HY - 2, RX + 4, RY + 4, H, null, true); rect(CX - RX - 4, HY, RX * 2 + 8, END - HY, H.base); rect(CX - RX - 4, HY, 2, END - HY, H.hi); rect(CX + RX + 1, HY + 4, 3, END - HY - 4, H.lo); }
+        if (hair === 6) { ball(CX, HY - 1, RX + 5, RY + 4, H, null, true); ball(CX, HY + 11, RX + 5, 14, H); }
+        if (hair === 3) ball(CX, TOP - 5, 11, 9, H, null, true);
+        if (hair === 4) ball(CX, HY - 2, RX + 3, RY + 3, H, null, true);
+        if (hair === 7) { ball(CX, HY + 1, RX + 5, RY + 6, H, null, true); rect(CX - 24, HY + 16, 48, END - HY - 16, H.base); rect(CX + 21, HY + 18, 3, END - HY - 18, H.lo); }
+      });
+
+      const sparkBody = tier === 3 || (tier === 2 && !hasHat);
+      part('body', () => {
+        layer('body');
+        for (let y = BY; y < END; y++) { const hw = Math.min(16, 10 + (y - BY) * 1.4); for (let x = Math.round(CX - hw); x < Math.round(CX + hw); x++) put(x, y, x > CX + hw - 3 ? top.lo : top.base); }
+        layer('torso');
+        const Y = BY, P = BADGES[BADGE_OF_ROLE[role]].color;
+        const vee = (n, c) => { for (let i = 0; i < n; i++) rect(CX - Math.ceil((n - i) / 2), Y + i, n - i, 1, c); };
+        const lapel = (n) => { for (let i = 0; i < n; i++) { rect(CX - 7 + Math.floor(i / 2), Y + i, 2, 1, top.deep); rect(CX + 5 - Math.floor(i / 2), Y + i, 2, 1, top.deep); } };
+        switch (role) {
+          case 0: [[38, 9, '#e2603a'], [42, 15, '#1f5fbf'], [56, 10, '#2fbf71'], [59, 17, '#ffcf1f'], [50, 19, '#1f5fbf'], [37, 20, '#e2603a']].forEach(([x, dy, c]) => ball(x, Y + dy, 2, 2, flat(c))); break;
+          case 1: case 8:
+            vee(11, '#ffffff'); lapel(12);
+            if (role === 1) rect(57, Y + 13, 4, 3, '#f6a5b8');
+            if (role === 8) for (let a = 0; a <= 8; a++) ball(CX - 6 + a * 1.5, Y + 4 + Math.sin(a / 8 * Math.PI) * 6, 1.1, 1.1, flat('#ffc21a'));
+            break;
+          case 2: rect(CX - 8, Y, 16, 4, top.lo); rect(CX - 3, Y + 4, 2, 7, '#ffffff'); rect(CX + 2, Y + 4, 2, 7, '#ffffff'); rect(CX - 9, Y + 16, 18, 7, top.lo); break;
+          case 3: rect(CX - 4, Y, 8, END - Y, '#ffffff'); rect(CX - 6, Y, 2, END - Y, top.deep); rect(CX + 4, Y, 2, END - Y, top.deep); for (const dy of [8, 13, 18, 23]) { rect(CX - 16, Y + dy, 10, 1, top.lo); rect(CX + 6, Y + dy, 10, 1, top.lo); } break;
+          case 4: rect(CX - 9, Y - 2, 18, 5, pxMix(S.top, '#ffffff', 0.16)); rect(CX - 9, Y + 2, 18, 1, top.deep); break;
+          case 5: rect(CX - 10, Y + 13, 20, 3, top.hi); break;
+          case 6: [[37, 17, 4, '#e2603a'], [41, 13, 8, '#ffffff'], [45, 15, 6, '#e2603a'], [49, 10, 11, '#ffffff'], [53, 7, 14, '#ffffff'], [57, 5, 16, '#ffffff']].forEach(([x, dy, h, c]) => rect(x, Y + dy, 3, h, c)); break;
+          case 7: ball(CX, Y + 16, 6.5, 6.5, flat('#101018')); ball(CX, Y + 16, 2.4, 2.4, flat('#e2603a')); break;
+          case 9: vee(8, '#ffffff'); rect(CX - 1, Y + 2, 3, 12, '#101018'); lapel(10); break;
+          case 10: rect(CX - 11, Y + 8, 22, END - Y - 8, S.apron); rect(CX - 11, Y + 8, 22, 2, '#94603a'); rect(CX - 9, Y + 1, 2, 7, S.apron); rect(CX + 7, Y + 1, 2, 7, S.apron); rect(CX - 5, Y + 16, 10, 6, '#5f3a20'); break;
+          case 11: rect(CX - 9, Y + 12, 18, 8, '#9aa3b8'); rect(CX - 7, Y + 15, 5, 2, OUTLINE); rect(CX - 6, Y + 14, 2, 4, OUTLINE); ball(CX + 4, Y + 15, 1.4, 1.4, flat('#e2603a')); ball(CX + 7, Y + 17, 1.4, 1.4, flat('#2fbf71')); break;
+          case 12: ball(CX, Y + 16, 6.5, 6.5, flat('#ffd23f')); rect(CX - 4, Y + 14, 3, 1, OUTLINE); rect(CX + 2, Y + 14, 3, 1, OUTLINE); rect(CX - 3, Y + 17, 7, 3, '#5a1630'); rect(CX - 6, Y + 15, 2, 4, '#4d96ff'); rect(CX + 5, Y + 15, 2, 4, '#4d96ff'); break;
+          case 13: for (let i = 0; i < 16; i++) rect(34 + i, Y + 3 + i, 3, 2, '#26262f'); rect(CX + 1, Y + 12, 13, 10, '#26262f'); rect(CX + 1, Y + 12, 13, 2, '#4a4a58'); ball(CX + 7.5, Y + 18, 3, 3, flat('#7fd0ff')); break;
+          case 14: for (const dy of [8, 14, 20, 26]) rect(CX - 16, Y + dy, 32, 2, '#ffffff'); for (const dy of [11, 17, 23]) rect(CX - 16, Y + dy, 32, 2, '#1f5fbf'); break;
+          case 15: rect(CX + 3, Y, 1, END - Y, '#d9d3c7'); for (const dy of [6, 12, 18, 24]) { ball(CX - 3, Y + dy, 1.3, 1.3, flat(OUTLINE)); ball(CX + 9, Y + dy, 1.3, 1.3, flat(OUTLINE)); } vee(5, '#d9d3c7'); break;
+          default: break;
+        }
+        // the Pass: a lanyard and a card that carries a colour, no words
+        const bx = role === 13 ? 35 : role === 10 ? 53 : 43, by = Y + 10;
+        if (role !== 13 && role !== 10) for (let i = 0; i < 10; i++) { put(bx - 1 + Math.floor(i / 3), Y + i, P); put(bx + 10 - Math.floor(i / 3), Y + i, P); }
+        rect(bx, by, 10, 11, OUTLINE); rect(bx + 1, by + 1, 8, 9, '#ffffff'); rect(bx + 1, by + 1, 8, 3, P); rect(bx + 3, by + 6, 4, 1, '#c9c4d4'); rect(bx + 3, by + 8, 4, 1, '#c9c4d4');
+        if (fem && (FEM_NECK >> role) & 1) { layer('neckline'); ball(CX, BY - 1, 6.5, 4.6, flat(skin.lo), (x, y) => y >= BY); }
+        if (D.necklace) {
+          layer('necklace');
+          const G = '#ffc21a', chain = (c) => { for (let a = 0; a <= 12; a++) put(CX - 6 + a, Y + Math.round(Math.sin(a / 12 * Math.PI) * 5), c); };
+          if (D.necklace === 1) { for (let a = 0; a <= 6; a++) ball(CX - 6 + a * 2, Y + 1 + Math.sin(a / 6 * Math.PI) * 5, 1.2, 1.2, flat(G)); }
+          if (D.necklace === 2) { chain('#c9c4d4'); ball(CX + 0.5, Y + 7, 2.8, 2.8, flat(G)); rect(CX, Y + 6, 1, 3, '#a06a00'); }
+          if (D.necklace === 3) { chain('#c9c4d4'); rect(CX - 1, Y + 5, 3, 3, G); put(CX, Y + 6, '#a06a00'); rect(CX, Y + 8, 1, 4, G); put(CX + 1, Y + 10, G); put(CX + 1, Y + 11, G); }
+          if (D.necklace === 4) { chain('#c9c4d4'); rect(CX - 2, Y + 5, 5, 6, '#26262f'); rect(CX - 1, Y + 6, 3, 2, '#2fbf71'); put(CX, Y + 9, '#c0c4cf'); }
+        }
+        if (D.pin) {
+          layer('pin');
+          const px = CX + 8, py = BY + 5, cx = px + 3.5, cy = py + 3.5;
+          ball(cx, cy, 5.4, 5.4, flat(OUTLINE)); ball(cx, cy, 4.4, 4.4, flat('#ffffff'));
+          switch (D.pin) {
+            case 1: ball(cx, cy, 2.2, 2.2, flat('#ffc21a')); for (const [dx, dy] of [[0, -3], [0, 3], [-3, 0], [3, 0]]) put(px + 3 + dx, py + 3 + dy, '#ffc21a'); break;                      // GM Sun
+            case 2: ball(cx, cy, 2.8, 2.8, flat('#c9c4d4')); ball(cx + 1.4, cy - 1, 2, 2, flat('#ffffff')); break;                                                                   // Moon
+            case 3: for (let i = 0; i < 3; i++) rect(px + 1 + i, py + 3 + i, 5 - 2 * i, 1, '#5ad1ff'); rect(px + 2, py + 2, 3, 1, '#bdf0ff'); break;                               // Diamond Hands
+            case 4: rect(px + 3, py + 1, 2, 4, '#e2603a'); put(px + 2, py + 4, '#e2603a'); put(px + 5, py + 4, '#e2603a'); rect(px + 3, py + 5, 2, 1, '#ffc21a'); break;              // Rocket
+            case 5: for (let i = 0; i < 3; i++) rect(px + 3 - i, py + 1 + i, 1 + 2 * i, 1, '#2fbf71'); rect(px + 3, py + 4, 1, 2, '#2fbf71'); break;                                 // Bull
+            case 6: for (let i = 0; i < 3; i++) rect(px + 1 + i, py + 3 + i, 5 - 2 * i, 1, '#e2403a'); rect(px + 3, py + 1, 1, 2, '#e2403a'); break;                                 // Bear
+            case 7: rect(px + 3, py + 1, 1, 6, '#2fbf71'); rect(px + 2, py + 2, 3, 3, '#2fbf71'); break;                                                                             // Green Candle
+            case 8: rect(px + 1, py + 1, 3, 3, '#ffc21a'); put(px + 2, py + 2, '#ffffff'); rect(px + 3, py + 3, 1, 3, '#ffc21a'); put(px + 4, py + 5, '#ffc21a'); break;            // Keys
+            case 9: rect(px + 2, py + 2, 4, 4, '#ffc21a'); rect(px + 2, py + 2, 4, 1, '#ffe27a'); rect(px + 5, py + 3, 1, 3, '#c98a00'); break;                                      // Block
+            default: put(px + 2, py + 2, '#ff3d6e'); put(px + 4, py + 2, '#ff3d6e'); rect(px + 1, py + 3, 5, 1, '#ff3d6e'); rect(px + 2, py + 4, 3, 1, '#ff3d6e'); put(px + 3, py + 5, '#ff3d6e'); break;   // WAGMI Heart
+          }
+        }
+      }, sparkBody);
+
+      const lashes = [];
+      part('head', () => {
+        layer('head');
+        rect(CX - 5, HY + RY - 3, 10, BY - HY - RY + 4, skin.lo);
+        if (!hijab) for (const s of [-1, 1]) { const x = CX + s * (RX + 1); ball(x, HY + 6, 4, 5.5, skin); rect(x - 1, HY + 5, 2, 3, skin.lo); }
+        ball(CX, HY, RX, RY, skin);
+        const cheek = pxMix(skinC, '#ff6f91', 0.55), lip = L.skin >= 5 ? '#f2a0ad' : '#7a2b3a', white = '#ffffff', iris = EYE_COLOR[D.eyes];
+        if (glasses) { layer('lens'); for (const x of [eL, eR]) ball(x, ey, 8, 7, flat(pxMix(skinC, '#ffffff', 0.4))); }
+        layer('face');
+        const sideOf = (x) => (x < CX ? -1 : 1);
+        const open = (x, wide) => {                       // a big eye: the iris shows, two lights
+          const ry = wide ? 5.4 : 4.4;
+          ball(x, ey, 3.5, ry, flat(OUTLINE)); ball(x, ey + 1.3, 2.6, ry - 2.2, flat(iris)); ball(x, ey + 0.8, 1.4, 1.8, flat(OUTLINE));
+          rect(x - 3, ey - 3, 2, 2, white); put(x + 1, ey + 2, white);
+          lashes.push([x, sideOf(x), 0]);
+        };
+        const happy = (x) => { for (let i = -5; i <= 5; i++) rect(x + i, ey + Math.round(i * i * 0.15) - 2, 1, 2, OUTLINE); lashes.push([x, sideOf(x), 1]); };
+        const closed = (x) => { rect(x - 4, ey + 1, 9, 2, OUTLINE); lashes.push([x, sideOf(x), 2]); };
+        const lid = (x) => { open(x); rect(x - 4, ey - 6, 9, 5, skin.base); rect(x - 4, ey - 1, 9, 1, OUTLINE); };
+        const star = (x, c) => { for (let i = -6; i <= 6; i++) { const w = Math.max(2, Math.round(6 - Math.abs(i) * 1.6)); rect(x - (w >> 1), ey + i, w, 1, c); rect(x + i, ey - (w >> 1), 1, w, c); } rect(x - 1, ey - 1, 2, 2, white); };
+        const heart = (x) => { ball(x - 2.5, ey - 2, 3.2, 3.2, flat('#ff3d6e')); ball(x + 2.5, ey - 2, 3.2, 3.2, flat('#ff3d6e')); for (let i = 0; i < 6; i++) rect(x - 5 + i, ey + i, 11 - i * 2, 1, '#ff3d6e'); rect(x - 4, ey - 4, 2, 2, '#ffb3c6'); };
+        const cross = (x) => { for (let i = -3; i <= 3; i++) { rect(x + i, ey + i, 2, 1, OUTLINE); rect(x + i, ey - i, 2, 1, OUTLINE); } };
+        const both = (f, a) => { f(eL, a); f(eR, a); };
+        const mouth = {
+          smile: () => { rect(CX - 3, my + 1, 7, 2, lip); rect(CX - 5, my, 2, 2, lip); rect(CX + 4, my, 2, 2, lip); },
+          open: () => { ball(CX + 0.5, my + 1, 4.2, 3.6, flat('#5a1630')); rect(CX - 5, my - 3, 11, 3, skin.base); rect(CX - 2, my + 2, 5, 2, '#ff6f91'); },
+          big: () => { ball(CX + 0.5, my, 7, 5.2, flat('#5a1630')); rect(CX - 8, my - 6, 17, 5, skin.base); rect(CX - 6, my - 1, 13, 2, white); rect(CX - 3, my + 2, 7, 2, '#ff6f91'); },
+          o: () => ball(CX + 0.5, my + 1, 2.4, 3, flat('#5a1630')),
+          wavy: () => { for (let i = -6; i <= 6; i++) rect(CX + i, my + (Math.floor((i + 6) / 3) % 2), 1, 2, lip); },
+          smirk: () => { rect(CX - 3, my + 1, 7, 2, lip); rect(CX + 4, my - 1, 2, 2, lip); },
+          frown: () => { rect(CX - 3, my, 7, 2, lip); rect(CX - 5, my + 1, 2, 2, lip); rect(CX + 4, my + 1, 2, 2, lip); }
+        };
+        const blush = () => { for (const x of [CX - 26, CX + 17]) { rect(x + 1, ey + 5, 7, 4, cheek); rect(x, ey + 6, 9, 2, cheek); } };
+        const browC = hijab ? Bd.deep : pxMix(HAIR_COLOR[hairI], OUTLINE, 0.35), brows = [];
+        let showBrows = !fem;
+        const f = spec.face || 'Smiley';
+        switch (f) {
+          case 'Sleepy': both(closed); mouth.o(); rect(CX + RX - 2, TOP + 1, 5, 2, white); rect(CX + RX, TOP + 3, 2, 2, white); rect(CX + RX - 2, TOP + 5, 5, 2, white); break;
+          case 'Confused': open(eL, true); open(eR); brows.push([eL, -3], [eR, 1]); showBrows = true; mouth.wavy(); break;
+          case 'Nervous': both(open, true); mouth.wavy(); ball(CX - RX + 5, HY - 8, 2.6, 4, flat('#7fd0ff')); rect(CX - RX + 4, HY - 11, 2, 2, white); break;
+          case 'Smug': both(lid); mouth.smirk(); blush(); showBrows = true; break;
+          case 'Winking': open(eL); happy(eR); mouth.open(); blush(); showBrows = true; break;
+          case 'Starstruck': both((x) => star(x, '#ffd23f')); mouth.open(); blush(); showBrows = false; break;
+          case 'Belly Laugh': both(happy); mouth.big(); blush(); rect(eL - 7, ey + 2, 2, 7, '#7fd0ff'); rect(eR + 6, ey + 2, 2, 7, '#7fd0ff'); break;
+          case 'Heart Eyes': both(heart); mouth.smile(); blush(); showBrows = false; break;
+          case 'Cosmic Grin': { const on = Math.floor(phase * 6) % 2; star(eL, on ? '#b14dff' : '#3da5ff'); star(eR, on ? '#3da5ff' : '#b14dff'); mouth.big(); blush(); showBrows = false; break; }
+          case 'Rainbow Tears': both(happy); ['#ff4d4d', '#ffb23f', '#4ddb7a', '#4d96ff'].forEach((c, i) => { rect(eL - 2, ey + 3 + i * 2, 5, 2, c); rect(eR - 2, ey + 3 + i * 2, 5, 2, c); }); mouth.open(); break;
+          case 'wide': both(open, true); mouth.o(); break;
+          case 'joy': both(happy); mouth.open(); blush(); break;
+          case 'sad': both(open); mouth.frown(); brows.push([eL, 0], [eR, 0]); showBrows = true; break;
+          case 'grumpy': both(lid); mouth.frown(); showBrows = true; break;
+          case 'x': both(cross); mouth.wavy(); showBrows = false; break;
+          case 'blink': both(closed); mouth.smile(); blush(); break;
+          default: both(happy); mouth.open(); blush(); break;       // Smiley = Good Vibes: the smiling eyes of the reference
+        }
+        if (showBrows) { layer('brow'); for (const [x, dy] of brows.length ? brows : [[eL, 0], [eR, 0]]) rect(x - 4, ey - 9 + dy, 9, 2, browC); }
+        if (fem && lashes.length) {
+          layer('lash');
+          for (const [x, s, kind] of lashes) {                 // two bold lashes at the outer corner
+            const y = kind === 1 ? ey + 1 : kind === 2 ? ey + 2 : ey - 3, o = kind === 1 ? 6 : kind === 2 ? 5 : 4, at = (i, j) => rect(x + s * (o + i) - (s < 0 ? 1 : 0), y + j, 2, 1, OUTLINE);
+            at(0, 0); at(1, -1); at(2, -2); at(1, 2); at(2, 2);
+          }
+          rect(CX - 2, my + (f === 'Sleepy' || f === 'wide' ? 5 : 4) + (/Belly Laugh|Cosmic Grin/.test(f) ? 2 : 0), 5, 1, '#e0506e');   // a touch of lipstick
+        }
+        if (D.mark) {
+          layer('mark');
+          if (D.mark === 1) for (const s of [-1, 1]) for (const [x, y] of [[17, 3], [20, 5], [23, 3], [14, 5]]) put(CX + s * x - (s < 0 ? 0 : 1), ey + y, pxMix(skinC, '#7a3b1d', 0.5));
+          else rect(CX + 11, my + 1, 2, 2, pxMix(skinC, OUTLINE, 0.7));
+        }
+        layer('beard');
+        if (facial === 1) for (let y = my - 5; y <= HY + RY; y++) for (let x = CX - RX; x < CX + RX; x++) {
+          const dx = (x + 0.5 - CX) / RX, dy = (y + 0.5 - HY) / RY, d = dx * dx + dy * dy;
+          if (d > 1 || d < 0.42 || (dxc(x) < 10 && y < my + 5)) continue;
+          put(x, y, (x + y) % 4 ? Bd.base : Bd.lo);
+        }
+        if (facial === 2) { rect(CX - 8, my - 4, 17, 2, Bd.base); rect(CX - 10, my - 3, 4, 3, Bd.base); rect(CX + 7, my - 3, 4, 3, Bd.base); }
+        if (glasses) {
+          layer('glasses');
+          for (const x of [eL, eR]) for (let a = 0; a < 56; a++) { const t = a / 56 * TAU; rect(Math.round(x + Math.cos(t) * 8 - 0.5), Math.round(ey + Math.sin(t) * 7 - 0.5), 2, 2, OUTLINE); }
+          rect(eL + 8, ey - 1, eR - eL - 16, 2, OUTLINE);
+        }
+        if (D.earring) {
+          layer('earring');
+          for (const s of [-1, 1]) {
+            const x = CX + s * (RX + 2);
+            if (D.earring === 1) { for (let a = 0; a < 16; a++) { const t = a / 16 * TAU; put(x + Math.cos(t) * 2.4, HY + 14 + Math.sin(t) * 2.8, '#ffc21a'); } }
+            if (D.earring === 2) { ball(x + 0.5, HY + 13.5, 2.2, 2.2, flat('#ffffff')); put(x + 1, HY + 14, '#c9c4d4'); }
+            if (D.earring === 3) rect(x, HY + 11, 2, 2, '#5ad1ff');
+          }
+        }
+        if (role === 9 && !hijab) { layer('earpiece'); for (let i = 0; i < 12; i++) rect(CX + RX + 1 + (Math.floor(i / 2) % 2), HY + 12 + i, 2, 1, '#c0c4cf'); }
+      });
+
+      part('front', () => {
+        layer('front');
+        const cap = (line) => ball(CX, HY - 1, RX + 1.5, RY + 1.5, H, (x, y) => y <= line(dxc(x)), true);
+        // short and shaved hair comes down in front of the ears, so a hat low on the forehead never hides whose hair it is
+        const sideburns = (n, c) => { rect(CX - RX + 2, TOP + 15, 3, n, c); rect(CX + RX - 5, TOP + 15, 3, n, c); };
+        switch (hair) {
+          case 0: cap((d) => TOP + 12 + d * 0.2); rect(CX - 21, TOP + 12, 7, 5, H.base); rect(CX - 7, TOP + 11, 12, 5, H.base); rect(CX + 11, TOP + 12, 9, 3, H.base); sideburns(10, H.base); break;
+          case 1: ball(CX, HY - 10, RX + 9, RY + 6, H, (x, y) => y <= TOP + 10 + dxc(x) * 0.3, true); break;
+          case 2: cap((d) => TOP + 8 + d * 0.58); rect(CX - RX - 3, HY - 4, 6, END - HY + 4, H.base); rect(CX - RX - 3, HY - 4, 2, END - HY + 4, H.hi); rect(CX + RX - 3, HY - 4, 6, END - HY + 4, H.lo); break;
+          case 3: cap((d) => TOP + 11 + d * 0.3); break;
+          case 4: cap((d) => TOP + 9 + d * 0.5); for (let i = 0; i < 10; i++) for (const s of [-1, 1]) ball(CX + s * (RX + 2), HY + 2 + i * 5, 4.2, 3.2, i % 2 ? flat(H.lo) : H); break;
+          case 5: ball(CX, HY, RX, RY, pxRamp(pxMix(skinC, HAIR_COLOR[hairI], 0.45)), (x, y) => y <= TOP + 8 + dxc(x) * 0.25); sideburns(6, pxMix(skinC, HAIR_COLOR[hairI], 0.45)); break;
+          case 6: cap((d) => TOP + 14 + (d > 21 ? (d - 21) * 3.6 : 0)); for (let x = CX - 16; x <= CX + 16; x += 8) rect(x, TOP + 12, 1, 3, H.lo); break;
+          case 7: ball(CX, HY + 1, RX + 5, RY + 6, H, (x, y) => { const dx = (x + 0.5 - CX) / 23, dy = (y + 0.5 - HY - 4) / 18.5; return dx * dx + dy * dy > 1; }, true); rect(CX - 18, HY + 22, 36, 6, H.base); rect(CX - 18, HY + 22, 36, 2, H.hi); break;
+          default: break;
+        }
+      });
+
+      /* the role's hat: very large and low on the forehead; it carries the sequins of the high tiers */
+      if (hasHat) part('hat', () => {
+        layer('hat');
+        switch (S.hat) {
+          case 'beret': { const R = pxRamp('#d6303b'); ball(CX - 4, TOP + 4, 34, 13, R, null, true); rect(CX - 2, TOP - 13, 4, 5, R.lo); break; }
+          case 'cap': case 'capBack': {
+            const R = pxRamp(S.hat === 'cap' ? '#1f5fbf' : '#6b4f8f');
+            ball(CX, HY - 5, RX + 3, RY + 8, R, (x, y) => y <= TOP + 13, true); rect(CX - 3, TOP - 10, 6, 3, R.deep);
+            if (S.hat === 'cap') ball(CX, TOP + 14, RX + 8, 6, flat(R.lo), (x, y) => y >= TOP + 13);
+            else { rect(CX - 9, TOP + 6, 18, 8, R.deep); rect(CX - 6, TOP + 9, 12, 5, skin.base); }
+            break;
+          }
+          case 'bucket': { const R = pxRamp('#c9b48a'), band = '#fff6e5', W = { hi: band, base: band, lo: '#e6d9bd' };
+            ball(CX, TOP + 11, 27, 25, R, (x, y) => y <= TOP + 8, true);
+            rect(CX - 26, TOP + 1, 52, 7, band);                        // the band and its polka-dot bow
+            ball(CX, TOP + 11, 40, 7, R, (x, y) => y >= TOP + 8);
+            ball(CX + 9, TOP + 5, 9, 7, W); ball(CX + 26, TOP + 5, 9, 7, W); rect(CX + 15, TOP + 1, 5, 8, '#1f5fbf');
+            for (const [x, y] of [[3, 1], [8, 6], [11, 1], [6, 9], [23, 1], [28, 6], [31, 2], [25, 9]]) rect(CX + x, TOP + y, 2, 2, '#1f5fbf');
+            break; }
+          case 'toque': { const R = pxRamp('#ffffff'); rect(CX - 22, TOP - 3, 44, 15, R.base); rect(CX - 22, TOP + 9, 44, 3, R.lo); ball(CX - 16, TOP - 5, 12, 8, R); ball(CX, TOP - 7, 15, 8, R); ball(CX + 16, TOP - 5, 12, 8, R); break; }
+          case 'beanie': { const R = pxRamp('#1f5fbf'), Y2 = pxRamp('#ffcf1f'); ball(CX, HY - 4, RX + 3, RY + 9, R, (x, y) => y <= TOP + 12, true); rect(CX - 31, TOP + 6, 62, 8, Y2.base); rect(CX - 31, TOP + 6, 62, 2, Y2.hi); for (let x = CX - 28; x < CX + 30; x += 6) rect(x, TOP + 8, 1, 6, Y2.lo); ball(CX, TOP - 14, 5.5, 5.5, Y2, null, true); break; }
+          case 'headphones': { arc(CX, HY + 2, RX + 3, RY + 5, '#26262f', 3); const R = pxRamp('#e2603a'); ball(CX - RX - 2, HY + 5, 6, 10, R, null, true); ball(CX + RX + 2, HY + 5, 6, 10, R, null, true); break; }
+          default: break;
+        }
+      }, tier >= 2);
+      if (role === 5 && !hijab) part('headset', () => {            // the Streamer's headset and microphone
+        layer('headset');
+        arc(CX, HY + 2, RX + 3, RY + 5, '#26262f', 3); ball(CX - RX - 2, HY + 5, 6, 10, pxRamp('#26262f')); ball(CX + RX + 2, HY + 5, 6, 10, pxRamp('#26262f'));
+        for (let i = 0; i < 15; i++) rect(CX + RX - i, HY + 16 + Math.round(i * 0.3), 2, 2, '#26262f'); ball(CX + RX - 16, HY + 21, 2.6, 2.6, flat('#e2603a'));
+      });
+
+      /* small arms and hands, the walking figure's angles: 0 = down, PI/2 = sideways, PI = straight up, negative = across the body */
+      const sleeve = S.vest ? pxRamp(S.inner) : top, hands = {};
+      part('arms', () => {
+        layer('arms');
+        for (const [side, angle] of [[-1, spec.armL || 0], [1, spec.armR || 0]]) {
+          const sx = CX + side * 13, sy = BY + 7, len = 11, ux = side * Math.sin(angle), uy = Math.cos(angle);
+          for (let t = 0; t <= len; t++) ball(sx + ux * t, sy + uy * t, 3, 3, flat(sleeve.base));
+          const hx = Math.round(sx + ux * (len + 4)), hy = Math.round(sy + uy * (len + 4));
+          ball(hx + 0.5, hy + 0.5, 4.2, 4.2, skin); ball(hx + 0.5 - side * 3.5, hy - 2.5, 1.8, 2.2, skin);
+          hands[side] = [hx, hy];
+        }
+      });
+
+      /* what the hands hold and the sparks of the moment: the walking figure's own drawings, two pixels for one */
+      const put2 = (x, y, c) => rect(Math.round(x * 2), Math.round(y * 2), 2, 2, c);
+      const rect2 = (x, y, w, h, c) => rect(Math.round(x * 2), Math.round(y * 2), w * 2, h * 2, c);
+      const half = { 1: [hands[1][0] / 2, hands[1][1] / 2], '-1': [hands[-1][0] / 2, hands[-1][1] / 2] };
+      part('held', () => {
+        layer('held');
+        if (spec.holdL) heldObject(put2, rect2, spec, phase, spec.holdL, half[-1][0], half[-1][1]);
+        if (spec.hold) heldObject(put2, rect2, spec, phase, spec.hold, half[1][0], half[1][1]);
+        else if (spec.prop && HAND_PROPS.indexOf(spec.prop) >= 0) heldObject(put2, rect2, spec, phase, spec.prop, half[1][0], half[1][1]);
+        momentEffects(put2, rect2, spec, k, half);
+      });
+
+      if (spec.prop) part('float', () => {
+        layer('float');
+        const name = spec.prop;
+        if (name === 'Crown') {                                // on the head, above what it wears
+          const y = TOP - (hasHat && S.hat === 'toque' ? 21 : hasHat ? 14 : hair === 1 ? 15 : hair === 3 ? 13 : 8), G = '#ffc21a';
+          rect(CX - 12, y + 6, 25, 6, G); rect(CX - 12, y + 6, 25, 1, '#ffe27a'); rect(CX - 12, y + 11, 25, 1, '#c98a00');
+          for (const x of [-12, -1, 10]) for (let i = 0; i < 6; i++) rect(CX + x + (i >> 1), y + i, 3 - (i >> 1) + (i > 3 ? 1 : 0), 1, G);
+          for (const x of [-11, 0, 11]) put(CX + x, y - 1, '#ff3d6e');
+          ball(CX + 0.5, y + 9, 1.8, 1.8, flat('#e2603a')); ball(CX - 7.5, y + 9, 1.4, 1.4, flat('#3da5ff')); ball(CX + 8.5, y + 9, 1.4, 1.4, flat('#3da5ff'));
+        } else if (name === 'Laser Eyes') {                    // red beams from both eyes to the edges of the picture
+          const flick = Math.floor(phase * 12) % 2;
+          for (const [x0, dir] of [[eL, -1], [eR, 1]]) {
+            for (let i = 3; i < 44 + flick * 2; i++) { const x = x0 + dir * i; rect(x, ey - 2, 1, 5, '#e2403a'); rect(x, ey - 1, 1, 3, i % 7 === 6 ? '#ffd9cf' : '#ff8a7a'); }
+            ball(x0 + 0.5, ey + 0.5, 4, 4, flat('#e2403a')); ball(x0 + 0.5, ey + 0.5, 2, 2, flat('#ff8a7a')); put(x0, ey, '#ffffff');
+          }
+        } else floatingItem((x, y, c) => rect(Math.round(x) * 2 - 4, Math.round(y) * 2 - 14, 2, 2, c), (x, y, w, h, c) => rect(Math.round(x) * 2 - 4, Math.round(y) * 2 - 14, w * 2, h * 2, c), phase, name);
+      });
+
+      /* runs of one colour per row */
+      const px = [];
+      for (const [key, col] of out) { const c = key.indexOf(','); px.push([+key.slice(0, c), +key.slice(c + 1), col]); }
+      px.sort((a, b2) => a[1] - b2[1] || a[0] - b2[0]);
+      const runs = [];
+      for (const p of px) {
+        const last = runs[runs.length - 1];
+        if (last && last[1] === p[1] && last[0] + last[2] === p[0] && last[3] === p[2]) last[2]++;
+        else runs.push([p[0], p[1], 1, p[2]]);
+      }
+      return runs;
+    }
+
     /* the figures already drawn: nine people at 60 fps ask for the same few again and again */
     const pxCache = new Map(), MOVES_WITH_TIME = /Spray Can|Diamond|Rocket|Holo|Cosmic Grin|Candle|Gas Pump|Genesis|Laser Eyes/;
     function pixelRuns(spec) {
@@ -1083,6 +1437,20 @@
         if (pxCache.size > 1500) pxCache.clear();
         runs = pixelPerson(Object.assign({}, spec, { armL: Math.round((spec.armL || 0) * 8) / 8, armR: Math.round((spec.armR || 0) * 8) / 8, phase: Math.floor((spec.phase || 0) * 48 + 1e-6) / 48 }));
         pxCache.set(key, runs);
+      }
+      return runs;
+    }
+
+    const bustCache = new Map();
+    function bustRuns(spec) {
+      const d = spec.det, key = spec.look + '|' + (spec.b || 0) + '|' + (spec.face || '') + '|' + (spec.prop || '') + '|' + Math.round((spec.armL || 0) * 8) + '|' + Math.round((spec.armR || 0) * 8) + '|' +
+        (spec.hold || '') + '|' + (spec.holdL || '') + '|' + (spec.flash ? 1 : 0) + '|' + (spec.fx ? spec.fx.join() + Math.round((spec.k || 0) * 24) : '') + '|' + (spec.tier || 0) + '|' +
+        (d ? '' + d.fem + d.eyes + d.mark + d.earring + '.' + d.pin + '.' + d.necklace : '') + '|' + (MOVES_WITH_TIME.test((spec.prop || '') + spec.face) ? Math.floor((spec.phase || 0) * 48 + 1e-6) : 0);
+      let runs = root.__bustTap ? null : bustCache.get(key);
+      if (!runs) {
+        if (bustCache.size > 600) bustCache.clear();
+        runs = pixelBust(Object.assign({}, spec, { armL: Math.round((spec.armL || 0) * 8) / 8, armR: Math.round((spec.armR || 0) * 8) / 8, phase: Math.floor((spec.phase || 0) * 48 + 1e-6) / 48 }));
+        bustCache.set(key, runs);
       }
       return runs;
     }
@@ -1171,6 +1539,22 @@
       if (o.armsFrom) {                    // smooth hand-over between two poses (the minted show)
         const m = clamp01(o.armsMix);
         armL = o.armsFrom[0] + (armL - o.armsFrom[0]) * m; armR = o.armsFrom[1] + (armR - o.armsFrom[1]) * m;
+      }
+      if (o.bust) {                        // the NFT's half bust: the picture's own 96 grid, whole pixels, standing on the bottom edge
+        const B = o.bust, runs = bustRuns({ look: o.look, b: sy < 0.97 ? 1 : 0, face, prop: prop === 'None' ? '' : prop, armL, armR, hold, holdL,
+          flash: fx.indexOf('flash') >= 0, fx: fx.length ? fx : null, k, phase: ((t % LOOP_S) + LOOP_S) % LOOP_S / LOOP_S, tier: B.tier, det: B.det });
+        const s = Math.max(1, Math.floor(Math.min(B.w, B.h) / 96)), hop = Math.max(-6, Math.min(0, Math.round(dy / (r * 0.0556))));
+        const ox = Math.round((B.w - 96 * s) / 2), oy = B.h - 96 * s + hop * s;
+        if (root.__bustPos) root.__bustPos({ ox, oy, hop });
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        let last = null;
+        for (const run of runs) {
+          if (run[3] !== last) { ctx.fillStyle = run[3]; last = run[3]; }
+          ctx.fillRect(ox + run[0] * s, oy + run[1] * s, run[2] * s, s);
+        }
+        ctx.restore();
+        return;
       }
       const walking = o.view === 'left' || o.view === 'right';
       const runs = pixelRuns({
@@ -1359,9 +1743,9 @@
       lowCanvases.set(key, c);
       return c;
     }
-    /* The show is drawn at about 96 x 96 and scaled up by a whole number, every pixel square. */
+    /* The show is drawn at 96 x 96, the bust's own grid, and scaled up with hard pixels. */
     function drawMintedAvatar(ctx, w, h, d, time) {
-      const f = Math.max(1, Math.round(w / 96)), lw = Math.round(w / f), lh = Math.round(h / f), low = lowCanvas(ctx, lw, lh);
+      const lw = 96, lh = Math.max(96, Math.round(96 * h / w)), low = lowCanvas(ctx, lw, lh);
       if (!low) { drawMintedScene(ctx, w, h, d, time); return; }
       const lc = low.getContext('2d');
       lc.setTransform(1, 0, 0, 1, 0, 0); lc.globalAlpha = 1;
@@ -1412,9 +1796,13 @@
         squash = [1 + 0.18 * amt, 1 - 0.18 * amt];
         armsFrom = [0.3, 2.4 + 0.3 * Math.sin(3.7 * 8 * W1)]; armsMix = easeOut(clamp01(p / 0.4));   // the 'dodged' wave at 3.7 s
       }
-      drawAvatar(ctx, {
+      const EN = root.AEEngine, xi = EN ? Math.max(0, EN.EXPRESSIONS.indexOf(d.expression)) : 0, pi = EN ? Math.max(0, EN.PROPS.indexOf(d.prop)) : 0;
+      if (root.__scene === 'bg') return;                   // tools/make-onchain-art.cjs: the background alone, then what goes over the person
+      if (root.__scene === 'fg') ctx.clearRect(0, 0, w, h);
+      else drawAvatar(ctx, {
         x: w / 2, y: h * 0.5, r, look: d.look, pose, act: d.act, k, q, time, face: d.expression, prop: d.prop,
-        dir: d.dir || 'right', squash, lift, gaze, armsFrom, armsMix
+        dir: d.dir || 'right', squash, lift, gaze, armsFrom, armsMix,
+        bust: { w, h, tier: d.rarity, det: root.__bustDet || bustDetails(d.look, d.act * 4 + d.rarity, xi, pi, d.score || 0) }
       });
 
       // Legendary: golden confetti rain
@@ -1429,7 +1817,7 @@
       }
     }
 
-    root.AEArt = { INK, ROLE_STYLE, SKIN, HAIR_COLOR, BADGES, RARITY_COLORS, FONT_STACK, drawAvatar, drawMintedAvatar, drawRarityBackground, backdropColor, BACKDROP_COLORS, starShape, heartShape, pixelPerson,
+    root.AEArt = { INK, ROLE_STYLE, SKIN, HAIR_COLOR, BADGES, RARITY_COLORS, FONT_STACK, drawAvatar, drawMintedAvatar, drawRarityBackground, backdropColor, BACKDROP_COLORS, starShape, heartShape, pixelPerson, pixelBust, bustDetails, EYE_COLOR, SEQUIN, SCARF_COLOR, OUTLINE, HAND_PROPS, pxRamp, pxMix, drawMintedScene,
                    decodeLook, makeLook, ell, circle, nftCard, seagull, firework, MINT_CYCLE, HERO_T,
                    azulejos, rooftops, bridge, tram, bunting };
   })(this);

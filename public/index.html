@@ -262,7 +262,7 @@
 
   <!-- The game's own engine + art (generated from ../index.html by `npm run brand`). -->
   <script src="assets/site-config.js?v=3"></script>
-  <script src="assets/nfa-art.js?v=4"></script>
+  <script src="assets/nfa-art.js?v=5"></script>
   <script src="assets/nfa-runner.js?v=3"></script>
   <script>
   (function () {
@@ -689,7 +689,7 @@
         { id: 6, act: 2, r: 2, e: 6, p: 7, l: L(7, 4, 2, 7, 0, 0), s: 21900 }
       ].map((t) => Object.assign(t, { a: t.act * 4 + t.r }));
       let cur = null, curPersona = null;
-      const data = () => ({ rarity: cur.r, act: cur.act, expression: E.EXPRESSIONS[cur.e], prop: E.PROPS[cur.p], look: cur.l, dir: 'right' });
+      const data = () => ({ rarity: cur.r, act: cur.act, expression: E.EXPRESSIONS[cur.e], prop: E.PROPS[cur.p], look: cur.l, score: cur.s, dir: 'right' });
       scene($('agent-canvas'), (ctx, w, h, t) => { if (cur) A.drawMintedAvatar(ctx, w, h, data(), reduced ? A.HERO_T : t); });
       const bubble = (who, text) => {
         const p = document.createElement('p');
