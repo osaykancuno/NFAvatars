@@ -11,7 +11,8 @@
   const addr = (a) => a.slice(2).toLowerCase().padStart(64, '0');
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const getJson = async (url) => { const res = await fetch(url, { cache: 'no-store' }); return { status: res.status, body: await res.json().catch(() => ({})) }; };
-  let wallet = null;
+  const short = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+  let wallet = null, waiting = 0;
 
   async function refresh() {
     const { status, body } = await getJson(`${API}${wallet ? `?wallet=${wallet}` : ''}`);
@@ -20,19 +21,32 @@
       say(status === 200 ? 'The mint opens with the collection.' : 'The mint cannot be checked right now. Try again in a minute.');
       return null;
     }
-    if (!wallet) { $('mint-go').textContent = 'Connect your wallet'; say('See the runs waiting for your wallet.'); return body; }
-    const n = body.waiting || 0;
-    $('mint-go').textContent = n ? `Mint · ${n} waiting` : 'Nothing waiting';
-    $('mint-go').disabled = !n;
-    say(n ? 'You pay only the network fee.' : `No run waiting for this wallet. It can still play ${body.left} more.`);
+    if (!wallet) { waiting = 0; $('mint-go').disabled = false; $('mint-go').textContent = 'Connect your wallet'; say('See the runs waiting for your wallet.'); return body; }
+    waiting = body.waiting || 0;
+    // Always name the wallet: a run waits on the wallet that played it, and many people keep more than one account.
+    $('mint-go').textContent = waiting ? `Mint · ${waiting} waiting` : 'Use another wallet';
+    $('mint-go').disabled = false;
+    say(waiting ? `${short(wallet)}: ${waiting} ${waiting === 1 ? 'run' : 'runs'} waiting. You pay only the network fee.`
+      : `No run waiting for ${short(wallet)}. A run waits on the wallet that played it: the end screen of the game shows which one.`);
     return body;
   }
 
+  const follow = async (accounts) => { wallet = accounts && accounts[0] ? String(accounts[0]).toLowerCase() : null; await refresh(); };
+
   async function connect() {
     if (!window.ethereum) { say('No wallet in this browser. Open this page in your wallet app, or mint from the end screen of THE WALL ARCADE.'); return; }
-    [wallet] = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    wallet = wallet.toLowerCase();
-    await refresh();
+    await follow(await window.ethereum.request({ method: 'eth_requestAccounts' }));
+  }
+
+  // Lets the wallet show its account picker again; a wallet without it is simply followed when its account changes.
+  async function switchWallet() {
+    try { await window.ethereum.request({ method: 'wallet_requestPermissions', params: [{ eth_accounts: {} }] }); }
+    catch (e) {
+      if (e && e.code === 4001) throw e;
+      say(`Switch to the wallet that played in your wallet app: this page follows it.`);
+      return;
+    }
+    await follow(await window.ethereum.request({ method: 'eth_accounts' }));
   }
 
   async function mint() {
@@ -63,9 +77,12 @@
 
   $('mint-go').addEventListener('click', () => {
     $('mint-go').disabled = true;
-    (wallet ? mint() : connect())
+    (!wallet ? connect() : waiting ? mint() : switchWallet())
       .catch((e) => { say(e && e.code === 4001 ? 'You declined in the wallet: nothing was sent. Your runs stay safe.' : (e && e.message) || 'Something went wrong. Your runs stay safe.'); })
-      .finally(() => { $('mint-go').disabled = false; if (wallet) refresh().catch(() => undefined); });
+      .finally(() => { $('mint-go').disabled = false; });
   });
-  refresh().catch(() => say('The mint cannot be checked right now. Try again in a minute.'));
+  if (window.ethereum && window.ethereum.on) window.ethereum.on('accountsChanged', (a) => { follow(a).catch(() => undefined); });
+  // A wallet this page may already see is shown at once, without a prompt.
+  (window.ethereum ? window.ethereum.request({ method: 'eth_accounts' }).then(follow) : refresh())
+    .catch(() => refresh()).catch(() => say('The mint cannot be checked right now. Try again in a minute.'));
 })();
