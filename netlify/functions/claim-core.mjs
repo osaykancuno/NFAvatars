@@ -81,7 +81,7 @@ export function mintConfig(env) {
     priceWei: BigInt((env.NFA_PRICE_WEI || '1').trim()),                                                          // Connect does not take price 0 yet: 1 wei for now
     unitPrice: (env.NFA_UNIT_PRICE || '0.000000000000000001').trim(),                                             // the same price, as Connect's actions.mint wants it
     explorer: chainId === 1 ? 'https://etherscan.io' : 'https://sepolia.etherscan.io',
-    openseaAsset: chainId === 1 ? 'https://opensea.io/assets/ethereum' : 'https://testnets.opensea.io/assets/sepolia',
+    openseaAsset: chainId === 1 ? 'https://opensea.io/assets/ethereum' : 'https://sepolia.etherscan.io/nft',   // OpenSea has no testnets since 2025-07
   };
 }
 
