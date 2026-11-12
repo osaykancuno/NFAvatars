@@ -1579,6 +1579,7 @@
         ctx.restore();
         return;
       }
+      /*show-skip: the walking figure. tools/make-onchain-art.cjs leaves this out of the code stored on chain, where only the bust is drawn*/
       const walking = o.view === 'left' || o.view === 'right';
       const runs = pixelRuns({
         look: o.look, view: o.view, step: walking ? Math.floor(t / 0.13) % 4 : 0, b: sy < 0.97 ? 1 : sy > 1.03 ? -1 : 0,
@@ -1604,6 +1605,7 @@
         ctx.fillRect(ox + run[0] * s, oy + run[1] * s, run[2] * s, s);
       }
       ctx.restore();
+      /*end-show-skip*/
     }
 
     /* ---------- Lisbon (NFC Summit 2027): azulejos, rooftops, the red bridge, the yellow tram ---------- */

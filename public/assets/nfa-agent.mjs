@@ -18,7 +18,7 @@ const ROLES = [
   { bio: 'One more run. I said that six hours ago.', gm: 'gm. GG in advance.', rug: 'Skill issue, honestly.', floor: 'Is the floor a boss? Can I speedrun it?', quips: ['Press F for that one.', 'I would have dodged that.'] },
   { bio: 'Whatever you say next will be a template.', gm: 'gm. Nice face. Mind if I crop it?', rug: 'Top text: rug. Bottom text: pulled.', floor: 'Floor price is funnier if you say it slowly.', quips: ['Nobody: ... Me: this.', 'I have already posted this conversation.'] },
   { bio: 'I got the shot. And the backup. And you, blinking.', gm: 'gm. Do not move. Perfect. You moved.', rug: 'It is on film, third frame from the left.', floor: 'Everything looks better at golden hour, even that chart.', quips: ['Chin down. No, the other down.', 'Delete it? It is already on film.'] },
-  { bio: 'I kickflip over the calçada, sometimes on purpose.', gm: 'gm. Have you seen my board?', rug: 'I land on rugs all the time. Good grip.', floor: 'I only know the floor from up close.', quips: ['Nice ollie.', 'Lisbon has hills. That is the whole plan.'] },
+  { bio: 'I kickflip over the calçada, sometimes on purpose.', gm: 'gm. Have you seen my board?', rug: 'I land on rugs all the time. Good grip.', floor: 'I only know the floor from up close.', quips: ['Nice ollie.', 'This town has hills. That is the whole plan.'] },
   { bio: 'Brunch? I made it. You are welcome, and you are late.', gm: 'Bom dia. Sit down, you look hungry.', rug: 'I saw who did it. They did not tip.', floor: 'Everything is cheaper than my truffle.', quips: ['Compliments to me.', 'Have a nata. That was not a question.'] },
 ];
 const MOOD = {

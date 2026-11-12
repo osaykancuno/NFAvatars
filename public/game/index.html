@@ -4,11 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Not Fungible Avatars</title>
-  <meta name="description" content="Somebody pulled the rug at the party. You have their photo. Run through six places of Lisbon and pick them out of a crowd of look-alikes, in first-person pixels, then mint the one you caught.">
+  <meta name="description" content="Somebody pulled the rug at the party. You have their photo. Run through six places and pick them out of a crowd of look-alikes, in first-person pixels, then mint the one you caught.">
   <meta name="theme-color" content="#1a0f2e">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Not Fungible Avatars">
   <meta property="og:title" content="Not Fungible Avatars">
   <meta property="og:description" content="Somebody pulled the rug. They all look alike. Catch them, mint them. Nobody is fungible.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a0f2e'/%3E%3Cellipse cx='16' cy='18' rx='10' ry='11' fill='%23ff77b7' stroke='%231d1233' stroke-width='2'/%3E%3Ccircle cx='12' cy='15' r='3' fill='%23fff'/%3E%3Ccircle cx='20' cy='15' r='3' fill='%23fff'/%3E%3Ccircle cx='12.5' cy='15.5' r='1.5' fill='%231d1233'/%3E%3Ccircle cx='20.5' cy='15.5' r='1.5' fill='%231d1233'/%3E%3Cpath d='M12 21 q4 4 8 0' stroke='%231d1233' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <meta property="og:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png?v=3">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Not Fungible Avatars: pixel people of a party, each one different">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://nfavatars.netlify.app/assets/og-1200x630.png?v=3">
+  <link rel="icon" type="image/png" href="data:image/png;base64,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">
   <style>
     /* ============================================================
        NOT FUNGIBLE AVATARS — page styles (the game itself is drawn on canvas)
@@ -221,7 +229,7 @@
         <div class="panel">
           <canvas id="logo-canvas" class="logo-canvas" width="280" height="120" aria-hidden="true"></canvas>
           <h1 id="title-heading" class="title">NOT FUNGIBLE <span>AVATARS</span></h1>
-          <p class="tagline">Lisbon edition · catch them · up to 3 min · mint the person</p>
+          <p class="tagline">Catch them · up to 3 min · mint the person</p>
           <ol class="how">
             <li>Somebody at the party <b>pulled the rug</b>. Their photo is on your phone.</li>
             <li><b>Tap left or right</b> to change lane. Run <b>into</b> the person on the photo, around everybody else.</li>
@@ -2191,6 +2199,7 @@
         ctx.restore();
         return;
       }
+      /*show-skip: the walking figure. tools/make-onchain-art.cjs leaves this out of the code stored on chain, where only the bust is drawn*/
       const walking = o.view === 'left' || o.view === 'right';
       const runs = pixelRuns({
         look: o.look, view: o.view, step: walking ? Math.floor(t / 0.13) % 4 : 0, b: sy < 0.97 ? 1 : sy > 1.03 ? -1 : 0,
@@ -2216,6 +2225,7 @@
         ctx.fillRect(ox + run[0] * s, oy + run[1] * s, run[2] * s, s);
       }
       ctx.restore();
+      /*end-show-skip*/
     }
 
     /* ---------- Lisbon (NFC Summit 2027): azulejos, rooftops, the red bridge, the yellow tram ---------- */
@@ -3809,7 +3819,7 @@
       const sec = CONFIG.trial.seconds;
       $('credits-chip').style.display = 'none'; $('wallet-chip').style.display = 'none';   // the chips' CSS beats [hidden]
       $('btn-play').textContent = 'PLAY FREE · ' + sec + ' S';
-      document.querySelector('#title-screen .tagline').textContent = 'Lisbon edition · free trial · ' + sec + ' s · can you tell them apart?';
+      document.querySelector('#title-screen .tagline').textContent = 'Free trial · ' + sec + ' s · can you tell them apart?';
       document.querySelector('#title-screen .how li:last-child').innerHTML =
         'The <b>six levels</b>, the one who did it and the <b>mint</b> are on <b>THE WALL ARCADE</b>.';
     }

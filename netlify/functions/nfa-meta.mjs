@@ -6,7 +6,7 @@
  * visual traits first. A query the contract would never produce (out of range, inconsistent tiers) gets 400.
  * The answer never changes for a query, so the CDN keeps it for good (bump v= in the contract's baseURI to refresh).
  */
-const DESCRIPTION = 'Not Fungible Avatars are the people of Lisbon, picked out of a crowd of look-alikes in a game at THE WALL ARCADE. The tier is earned by playing, the rest is the luck of the run. Nobody is fungible.';
+const DESCRIPTION = 'Not Fungible Avatars are the people of the party, picked out of a crowd of look-alikes in a game at THE WALL ARCADE. The tier is earned by playing, the rest is the luck of the run. A tribute to NFC Lisbon. Nobody is fungible.';
 
 /* The same lists as the game engine and the v1 contract (tests/nfa-meta-function.test.mjs checks both). */
 export const NAMES = {
