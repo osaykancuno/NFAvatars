@@ -52,10 +52,10 @@ export function reply(persona, message) {
   if (/\b(gm|hi|hello|hey|hiya|ciao|salve|bom dia|buongiorno)\b/.test(text)) out = R.gm;
   else if (/\b(rug|rugs|rugged|scam|culprit|who did|colpevole)\b/.test(text)) out = R.rug;
   else if (MONEY.test(text)) out = R.floor + ' Not financial advice, I am a pixel.';
-  else if (/\b(wallet|agent|agents|agente|8004|6551|identity|autonomous|onchain|on-chain)\b/.test(text)) out = 'I am built to have my own on-chain identity and my own wallet once minted. For now I talk, and I run the Daily for you.';
+  else if (/\b(wallet|agent|agents|agente|8004|6551|identity|autonomous|onchain|on-chain)\b/.test(text)) out = 'Once minted, I can have my own on-chain identity and my own wallet. For now I talk. Next, I testify in The Case Files.';
   else if (/\b(item|hold|holding|carry|carrying|hand|hands)\b/.test(text)) out = persona.item;
   else if (/\b(moment|famous|best|loop)\b/.test(text)) out = persona.moment;
-  else if (/\b(play|game|run|daily|score|level|gioca|gioco)\b/.test(text)) out = 'Send me on today\'s run. I bump fewer people than you do.';
+  else if (/\b(play|game|run|daily|score|level|gioca|gioco)\b/.test(text)) out = 'The game is yours to play. I am training my eye for The Case Files: a witness has to notice everything.';
   else if (/\b(who are you|your name|what are you|about you|chi sei|ti chiami)\b/.test(text)) out = 'I am ' + persona.name + '. ' + R.bio;
   else out = pick(R.quips);
   if (hash(text) % 3 === 0) out += ' ' + (MOOD[persona.traits.expression] || '');

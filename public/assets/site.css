@@ -520,7 +520,7 @@ html.app .foot { padding-right: 130px; justify-content: flex-start; }
 #agents .agent-json { font-size: .8em; }
 #agents .agent-picker { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .4em; margin: 0; }
 #agents .agent-picker button { border-radius: 8px; }
-#agents .subtabs { display: grid; grid-template-columns: .8fr 1.25fr 1.1fr; gap: 3px; margin: 0; padding: 3px; background: rgba(255,255,255,.07); border-radius: 10px; }
+#agents .subtabs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 0; padding: 3px; background: rgba(255,255,255,.07); border-radius: 10px; }
 #agents .sub { padding: .62em .3em; font-size: .86em; border-radius: 8px; border-width: 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #agents .sub[aria-selected="false"] { background: transparent; border-color: transparent; }
 #agents .subpane:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: thin; }
@@ -529,7 +529,7 @@ html.app .foot { padding-right: 130px; justify-content: flex-start; }
 #agents .chat-log p { font-size: .98em; padding: .45em .75em; }
 #agents .chat-form { flex: none; gap: .45em; margin-top: .5em; }
 #agents .chat-form input { min-height: 2.9em; padding: 0 .7em; font-size: 1em; border-width: 2px; border-radius: 10px; }
-#agents .chat-form .nfa-btn, #agents #agent-run { min-height: 2.9em; padding: 0 1em; font-size: 1em; }
+#agents .chat-form .nfa-btn { min-height: 2.9em; padding: 0 1em; font-size: 1em; }
 #agents #chat-note, #agents .subpane .fine { flex: none; margin: .45em 0 0; font-size: .74em; line-height: 1.3; }
 #agents .agent-how { gap: .4em; }
 #agents .agent-how li { padding: .5em .7em; font-size: .9em; line-height: 1.3; border-radius: 8px; }

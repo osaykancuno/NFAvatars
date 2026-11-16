@@ -27,7 +27,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=5">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="assets/brand.css?v=3">
-  <link rel="stylesheet" href="assets/site.css?v=16">
+  <link rel="stylesheet" href="assets/site.css?v=17">
 </head>
 <body>
   <canvas id="world" width="360" height="640" aria-hidden="true"></canvas>
@@ -172,7 +172,7 @@
             <div class="ph-head">
               <p class="eyebrow">WHERE THE PARTY GOES NEXT</p>
               <h2>Nobody is fungible. Not even a suspect.</h2>
-              <p class="agents-lead">First come the art and the fun. Next, The Case Files: a mystery at the party every week, where the Avatars are the suspects and the witnesses. Meet a few sample Avatars here.</p>
+              <p class="agents-lead">First come the art and the fun. Next, The Case Files: a mystery at the party every week, where the Avatars are the suspects and the witnesses. In Talk, meet a few sample Avatars.</p>
             </div>
             <div class="agent-who">
               <div class="ph-finder"><canvas id="agent-canvas" aria-label="The avatar you are talking to"></canvas><span class="ph-rec" aria-hidden="true"></span></div>
@@ -185,21 +185,15 @@
             </div>
             <div class="agent-picker" id="agent-picker" role="radiogroup" aria-label="Choose a sample Avatar"></div>
             <div class="subtabs" role="tablist" aria-label="What your agent can do">
-              <button role="tab" type="button" class="sub" data-agent-sub="talk" aria-selected="true">Talk</button>
-              <button role="tab" type="button" class="sub" data-agent-sub="run" aria-selected="false">Send on a run</button>
-              <button role="tab" type="button" class="sub" data-agent-sub="how" aria-selected="false">Case Files</button>
+              <button role="tab" type="button" class="sub" data-agent-sub="how" aria-selected="true">Case Files</button>
+              <button role="tab" type="button" class="sub" data-agent-sub="talk" aria-selected="false">Talk</button>
             </div>
-            <div class="subpane" data-agent-pane="talk">
+            <div class="subpane" data-agent-pane="talk" hidden>
               <div id="chat-log" class="chat-log" role="log" aria-live="polite"></div>
               <form id="chat-form" class="chat-form"><label class="sr-only" for="chat-input">Say something</label><input id="chat-input" maxlength="280" autocomplete="off" placeholder="gm. Who pulled the rug?"><button class="nfa-btn nfa-btn--cta" type="submit">Say</button></form>
               <p class="fine" id="chat-note">A preview, for fun: it answers with lines written from its traits. Nothing here is advice.</p>
             </div>
-            <div class="subpane" data-agent-pane="run" hidden>
-              <p>Today's Daily, played by this Avatar on its own, with the skill its traits give it. The same people you face today. Can you beat it?</p>
-              <button class="nfa-btn nfa-btn--cta" id="agent-run" type="button" data-confetti>Send it on today's run</button>
-              <div id="agent-result" class="agent-result" aria-live="polite"></div>
-            </div>
-            <div class="subpane" data-agent-pane="how" hidden>
+            <div class="subpane" data-agent-pane="how">
               <p class="ag-k"><i class="ag-tag soon">Coming</i> The Case Files · not built yet</p>
               <ul class="agent-how">
                 <li><b>A case every week</b><span>Something goes wrong at the party: a rug pulled, the last pastel de nata gone. Find who did it.</span></li>
@@ -212,7 +206,6 @@
               <p class="ag-k"><i class="ag-tag live">Live</i> Today, with sample Avatars</p>
               <ul class="agent-how">
                 <li><b>Voice</b><span>It answers in character, with lines written from its traits. Other agents can ask it too, through an open endpoint.</span></li>
-                <li><b>Work</b><span>It plays the free Daily by itself, in the tab next door.</span></li>
                 <li><b>Identity</b><span>An agent card in the ERC-8004 format. Registering it is the owner's choice, once minted.</span></li>
               </ul>
               <p class="fine">Plans, not promises: what is coming may change before it is built. The owner of the NFT stays in charge. Nothing here is financial advice.</p>
@@ -707,8 +700,7 @@
     const toast = $('toast');
     let toastTimer = 0;
     function say(msg) { toast.textContent = msg; toast.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('on'), 2600); }
-    import('./assets/nfa-agent.mjs?v=3').then(({ personaOf, reply }) => {
-      const tier = (i) => (i < 3 ? 0 : i < 6 ? 1 : i < 9 ? 2 : 3);
+    import('./assets/nfa-agent.mjs?v=4').then(({ personaOf, reply }) => {
       const SAMPLES = [
         { id: 1, act: 5, r: 3, e: 9, p: 9, l: L(8, 1, 6, 3, 0, 1), s: 38120 },
         { id: 2, act: 4, r: 2, e: 7, p: 6, l: L(10, 5, 4, 0, 0, 0), s: 18400 },
@@ -735,7 +727,6 @@
         [...$('agent-picker').children].forEach((b, n) => b.setAttribute('aria-checked', SAMPLES[n] === t ? 'true' : 'false'));
         $('chat-log').innerHTML = '';
         bubble('them', reply(curPersona, 'gm'));
-        $('agent-result').innerHTML = '';
       }
       SAMPLES.forEach((t) => {
         const b = document.createElement('button');
@@ -758,43 +749,6 @@
           .then((j) => { if (j.source === 'ai') $('chat-note').textContent = 'A preview, for fun. Answers may come from a free AI service: do not share anything personal. Nothing here is advice.'; return j.reply; })
           .catch(() => reply(curPersona, text))
           .then((answer) => { if (cur === t) bubble('them', answer); });
-      });
-      /* The agent plays the Daily by itself: the very engine, the same people as everyone today, its skill from its traits. */
-      function agentRun(t) {
-        const day = Math.floor(Date.now() / 86400000), n = Math.max(1, day - Math.floor(Date.UTC(2026, 9, 28) / 86400000) + 1);
-        const seed = E.hash32(day, 0xDA11) || 1, s = E.createRun(seed);
-        let rng = E.hash32(seed, t.l) | 0;
-        const roll = () => { rng = E.hash32(rng, 0x51) | 0; return (rng >>> 0) % 100; };
-        const misread = 34 - t.r * 7 - tier(t.e) * 2, reach = 3200 + t.r * 450, plan = {};
-        while (!E.isFinished(s)) {
-          E.advance(s);
-          let d = null;
-          for (const a of s.actors) if (a.st === 0 && (d === null || a.d < d)) d = a.d;
-          if (d === null || d - s.pos > reach) continue;
-          if (!(d in plan)) plan[d] = roll() >= misread;
-          const row = s.actors.filter((a) => a.d === d && a.st === 0), target = row.find((a) => a.kind === E.KIND.TARGET);
-          let lane = s.lane;
-          if (target) lane = plan[d] ? target.lane : (target.lane + 1) % 3;
-          else if (plan[d]) { const taken = row.filter((a) => a.kind <= E.KIND.TRAM).map((a) => a.lane); if (taken.indexOf(lane) >= 0) lane = [0, 1, 2].find((l) => taken.indexOf(l) < 0); }
-          if (lane !== s.lane) E.applyInput(s, { action: 'move', lane });
-        }
-        return { sc: E.score(s), n };
-      }
-      $('agent-run').addEventListener('click', () => {
-        const { sc, n } = agentRun(cur), box = $('agent-result'), death = R.causeOfDeath(sc);
-        box.innerHTML = '';
-        const add = (tag, text) => { const el = document.createElement(tag); el.textContent = text; box.appendChild(el); return el; };
-        add('p', 'Daily #' + n + ': ' + (sc.survived ? 'caught the one who did it.' : 'reached level ' + (sc.cleared + 1) + ' of 6.')).className = 'big';
-        add('p', E.shareGrid(sc)).className = 'grid';
-        add('p', 'Score ' + sc.total.toLocaleString('en') + ' · caught ' + sc.caught + ' · best streak ' + sc.bestCombo + (death ? ' · ' + death : ''));
-        R.damageLines(sc).slice(0, 3).forEach((l) => add('p', l).className = 'fine');
-        const row = document.createElement('p'); row.className = 'ctas';
-        const beat = document.createElement('button'); beat.type = 'button'; beat.className = 'nfa-btn nfa-btn--cta'; beat.textContent = 'Beat it yourself'; beat.addEventListener('click', openGame);
-        const post = document.createElement('a'); post.className = 'nfa-btn'; post.textContent = 'Post it'; post.target = '_blank'; post.rel = 'noopener noreferrer';
-        post.href = 'https://x.com/intent/post?text=' + encodeURIComponent('My Not Fungible Avatar ran Daily #' + n + ' on its own.\n' + E.shareGrid(sc) + '\nScore ' + sc.total + '. ' + (death ? death + '. ' : '') + 'Can you beat a pixel?\n' + (SITE.siteUrl || location.origin + '/') + '\n#NotFungibleAvatars');
-        row.append(beat, post); box.appendChild(row);
-        const pane = box.closest('.subpane');      // the phone's screen scrolls, not the page: bring the result into view
-        if (pane) pane.scrollTo({ top: pane.scrollTop + box.getBoundingClientRect().top - pane.getBoundingClientRect().top - 6, behavior: reduced ? 'auto' : 'smooth' });
       });
       pick(SAMPLES[0]);
     }).catch(() => { $('agent-bio').textContent = 'The agents are resting. Reload the page.'; });
