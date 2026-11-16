@@ -27,7 +27,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=5">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="assets/brand.css?v=3">
-  <link rel="stylesheet" href="assets/site.css?v=19">
+  <link rel="stylesheet" href="assets/site.css?v=29">
 </head>
 <body>
   <canvas id="world" width="360" height="640" aria-hidden="true"></canvas>
@@ -53,7 +53,7 @@
     <section class="panel" id="home" role="tabpanel" aria-labelledby="tab-home" tabindex="-1">
       <div class="glass hero-card">
         <div class="hero-main">
-        <span class="chip">THE WALL ARCADE <span aria-hidden="true">•</span> A TRIBUTE TO NFC LISBON</span>
+        <span class="chip"><span class="nw">THE WALL ARCADE</span> <span class="chip-dot" aria-hidden="true">•</span> <span class="nw">A TRIBUTE TO NFC LISBON</span></span>
         <h1 class="nfa-headline" data-hop>NOT FUNGIBLE <span class="accent">AVATARS</span></h1>
         <p class="lead">Somebody pulled the rug at the party. You have their photo. They all look alike. <b>Nobody is fungible.</b></p>
         <div class="ctas">
@@ -83,7 +83,7 @@
     <section class="panel" id="game" role="tabpanel" aria-labelledby="tab-game" tabindex="-1" hidden>
       <div class="glass">
         <p class="eyebrow">THE GAME</p>
-        <h2>Six places. One face.</h2>
+        <h2><span class="nw">Six places.</span> <span class="nw">One face.</span></h2>
         <p class="section-lead">One photo on your phone. Run <b>into</b> that face, around everybody else.</p>
         <div class="subtabs" role="tablist" aria-label="About the game">
           <button role="tab" type="button" class="sub" data-game-sub="levels" aria-selected="true">The six places</button>
@@ -106,7 +106,7 @@
     <section class="panel" id="people" role="tabpanel" aria-labelledby="tab-people" tabindex="-1" hidden>
       <div class="glass">
         <p class="eyebrow">NOBODY IS FUNGIBLE</p>
-        <h2>Tap anyone. They will react.</h2>
+        <h2><span class="nw">Tap anyone.</span> <span class="nw">They will react.</span></h2>
         <div class="subtabs" role="tablist" aria-label="The collection">
           <button role="tab" type="button" class="sub" data-sub="roles" aria-selected="true">16 Roles</button>
           <button role="tab" type="button" class="sub" data-sub="moments" aria-selected="false">6 Moments</button>
@@ -124,7 +124,7 @@
     <section class="panel" id="collection" role="tabpanel" aria-labelledby="tab-collection" tabindex="-1" hidden>
       <div class="glass">
         <p class="eyebrow">THE COLLECTION <span aria-hidden="true">•</span> <span id="chain-chip">ETHEREUM</span></p>
-        <h2>Earned in a run. Drawn once.</h2>
+        <h2><span class="nw">Earned in a run.</span> <span class="nw">Drawn once.</span></h2>
         <div class="subtabs" role="tablist" aria-label="The collection">
           <button role="tab" type="button" class="sub" data-col-sub="numbers" aria-selected="true">The numbers</button>
           <button role="tab" type="button" class="sub" data-col-sub="minted" aria-selected="false">Just minted</button>
@@ -169,7 +169,7 @@
           <div class="ph-screen">
             <div class="ph-head">
               <p class="eyebrow">WHERE THE PARTY GOES NEXT</p>
-              <h2>Nobody is fungible. Not even a suspect.</h2>
+              <h2><span class="nw">Nobody is fungible.</span> <span class="nw">Not even a suspect.</span></h2>
               <p class="agents-lead">The Case Files: a whodunit at the party every week. The Avatars are the suspects and the witnesses.</p>
             </div>
             <div class="agent-who">
@@ -211,7 +211,7 @@
     <section class="panel" id="mint" role="tabpanel" aria-labelledby="tab-mint" tabindex="-1" hidden>
       <div class="glass">
         <p class="eyebrow">HOW TO MINT</p>
-        <h2>1 credit = 1 run = 1 Not Fungible Avatar.</h2>
+        <h2><span class="nw">1 credit = 1 run</span> <span class="nw">= 1 Not Fungible Avatar.</span></h2>
         <p class="section-lead">No open mint: every Avatar is earned in a real run on THE WALL ARCADE. 10,000 at most.</p>
         <div class="subtabs" role="tablist" aria-label="Minting">
           <button role="tab" type="button" class="sub" data-mint-sub="steps" aria-selected="true">Five steps</button>
@@ -317,6 +317,32 @@
       }).catch(() => { /* keep the dash */ });
     }
 
+    /* ---------- names stay whole: "Not Fungible / Avatars" on two lines reads as two things ---------- */
+    const KEEP = /([A-Za-z]+(?:-[A-Za-z0-9]+)+|Not Fungible Avatars?|THE WALL ARCADE|NFC Summit 2027|NFC Lisbon|Tram 28|Bull Run|Wall of Shame|The Case Files|Case Files|pastel de nata|Pastel de Nata|Golden Hour|SuperRare's server|\d[\d,.]* (?:credits?|runs?|levels?|bars?|seconds|minutes|wei|ETH|gwei|people|roles|traits|items|places|ways|per wallet|at most))/g;
+    const KEEP1 = new RegExp(KEEP.source);      // no /g: test() must not move lastIndex
+    function keepWhole(root) {
+      const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (n) => (n.parentElement && !n.parentElement.closest('script, style, .nw, .nfa-headline, #chat-log, input, textarea, .nfa-btn, .tab, .sub, .bar-play') && KEEP1.test(n.textContent) ? 1 : 2) });
+      const list = []; let n;
+      while ((n = tw.nextNode())) list.push(n);
+      list.forEach((t) => {
+        KEEP.lastIndex = 0;
+        const frag = document.createDocumentFragment(), s = t.textContent; let at = 0, m;
+        while ((m = KEEP.exec(s))) {
+          if (m.index > at) frag.appendChild(document.createTextNode(s.slice(at, m.index)));
+          const k = document.createElement('nfa-w'); k.className = 'nw'; k.textContent = m[0]; frag.appendChild(k);      // its own element: no span style of the box it sits in applies to it
+          at = m.index + m[0].length;
+        }
+        if (at < s.length) frag.appendChild(document.createTextNode(s.slice(at)));
+        const d = getComputedStyle(t.parentNode).display;
+        if (/flex|grid/.test(d)) {      // in a row or a grid every piece would become its own item: keep the sentence as one (an FAQ question)
+          const run = document.createElement('nfa-t'); run.appendChild(frag); t.parentNode.replaceChild(run, t);
+        } else t.parentNode.replaceChild(frag, t);
+      });
+      KEEP.lastIndex = 0;
+    }
+    keepWhole(document.body);
+    new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((a) => { if (a.nodeType === 1) keepWhole(a); else if (a.nodeType === 3 && a.parentElement) keepWhole(a.parentElement); }))).observe($('panels'), { childList: true, subtree: true });
+
     /* ---------- little joys: hopping headline, ticker, pop-in, button confetti ---------- */
     document.querySelectorAll('[data-hop]').forEach((h) => {
       let i = 0;
@@ -324,11 +350,16 @@
         [...node.childNodes].forEach((n) => {
           if (n.nodeType === 3) {
             const frag = document.createDocumentFragment();
-            for (const ch of n.textContent) {
-              if (ch === ' ') { frag.appendChild(document.createTextNode(' ')); continue; }
-              const s = document.createElement('span'); s.className = 'l'; s.textContent = ch; s.style.animationDelay = (i++ * 0.04) + 's';
-              s.setAttribute('aria-hidden', 'true'); frag.appendChild(s);
-            }
+            n.textContent.split(/( +)/).forEach((part) => {      // each word in one unbreakable box: the line may break between words, never inside one
+              if (!part) return;
+              if (part.trim() === '') { frag.appendChild(document.createTextNode(' ')); return; }
+              const w = document.createElement('span'); w.className = 'w'; w.setAttribute('aria-hidden', 'true');
+              for (const ch of part) {
+                const s = document.createElement('span'); s.className = 'l'; s.textContent = ch; s.style.animationDelay = (i++ * 0.04) + 's';
+                w.appendChild(s);
+              }
+              frag.appendChild(w);
+            });
             node.replaceChild(frag, n);
           } else wrapLetters(n);
         });
@@ -495,7 +526,7 @@
       const el = document.createElement('figure');
       el.className = 'rar reveal';
       el.innerHTML = '<canvas aria-hidden="true"></canvas><div><b class="r' + i + '">' + E.RARITIES[i].toUpperCase() + '</b><small>' +
-        E.backdropOf(i, d.look).value + ' · ' + d.how + '</small></div>';
+        '<span class="nw">' + E.backdropOf(i, d.look).value + '</span><br>' + d.how + '</small></div>';
       $('rarity-grid').appendChild(el);
       scene(el.querySelector('canvas'), (ctx, w, h, t) => {
         A.drawMintedAvatar(ctx, w, h, Object.assign({ rarity: i, dir: 'right' }, d), reduced ? A.HERO_T : t + i * 1.1);
@@ -534,45 +565,25 @@
     const OLD = { how: 'mint', traits: 'mint', levels: 'game', moments: 'people', lisbon: 'faq', top: 'home' };   // links from before the tabs
     const tabButtons = [...document.querySelectorAll('[data-tab]')];
     let levelSel = 0;
-    /* One screen, like an app: a tab never scrolls. When its content is taller than the screen it shrinks in proportion.
-       Only what is under the title shrinks (the open subtab, or the FAQ), so every card keeps the same width and the same header. */
-    function fitPanel() {      // measured with no scrollbar: its 15px would make the tiles smaller, the tab fit, and the scrollbar stay
-      const box = $('panels');
-      box.style.overflowY = 'hidden';
-      try { fitInner(); } finally { box.style.overflowY = ''; }
-    }
-    function fitInner() {
+    /* One screen, like an app: the page never scrolls, and text never changes size (not between tabs, not when a detail opens).
+       When a tab is taller than the screen, only what is under its title scrolls (the open subtab, or the FAQ): the card keeps
+       its width, its header and the size of every letter. */
+    function fitPanel() {
       const box = $('panels'), id = TABS.find((t) => !$(t).hidden), p = id && $(id);
       if (!p) return;
-      [p, ...p.querySelectorAll('.glass > .subpane, .glass > .acc')].forEach((el) => Object.assign(el.style, { zoom: '', transform: '', marginTop: '', marginBottom: '' }));
+      const panes = [...p.querySelectorAll('.glass > .subpane, .glass > .acc')];
+      panes.forEach((el) => { el.style.maxHeight = ''; el.classList.remove('fit-scroll'); });
       const cs = getComputedStyle(box), avail = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-      const over = () => p.getBoundingClientRect().height - avail;      // the panel's own box: the enter animation and hops are on its children and do not count
-      if (over() <= 0) return;
       const inner = p.querySelector('.glass > .subpane:not([hidden]), .glass > .acc:not([hidden])');
-      const q = inner && inner.offsetHeight > 160 ? inner : p;
-      const apply = (z, s, h) => Object.assign(q.style, s < 1 ? { transformOrigin: '50% 0', transform: 'scale(' + s + ')', marginTop: '0', marginBottom: (h * s - h) / (z || 1) + 'px' } : { transform: '', marginTop: '', marginBottom: '' });
-      // Two ways to shrink: zoom re-wraps text (it helps text, not grids of squares, which only get wider in their own pixels),
-      // a scale shrinks everything in proportion. Try a few zooms, scale whatever is left, keep what leaves the text biggest.
-      let best = { size: 0, z: 1, s: 1 };
-      for (let z = 1; z >= 0.6; z = +(z - 0.1).toFixed(1)) {      // five layouts at most
-        q.style.zoom = z === 1 ? '' : String(z);
-        const h = q.getBoundingClientRect().height, s = Math.min(1, Math.max(0.3, (h - Math.max(0, over() + 3)) / h));      // 3px for rounding
-        if (z * s > best.size + 0.004) best = { size: z * s, z, s };
-      }
-      q.style.zoom = best.z === 1 ? '' : String(best.z);
-      const h = q.getBoundingClientRect().height;
-      let s = best.s;
-      apply(best.z, s, h);
-      // collapsing margins and half pixels: correct on what is measured. After the enter animation (settled) the real scroll height counts too.
-      const left = () => Math.max(over() + 3, settled ? box.scrollHeight - box.clientHeight + 1 : 0);      // +1: a fraction of a pixel already shows a scrollbar
-      for (let i = 0; i < 4 && left() > 0; i++) { s -= (left() + 1) / h; apply(best.z, s, h); }
+      if (!inner) return;
+      const head = p.offsetHeight - inner.offsetHeight;      // the title, the subtabs, the card's padding: they never move
+      const room = Math.floor(avail - head - 2);
+      // one height for every subtab of a tab, so switching subtabs or opening a detail never resizes the card's frame
+      panes.forEach((el) => { el.style.maxHeight = room + 'px'; });
+      if (inner.scrollHeight > room + 1) inner.classList.add('fit-scroll');
     }
-    let fitQueued = 0, settleQueued = 0, settled = false;
-    const refit = () => {      // timers, not rAF: they also run in a background tab
-      clearTimeout(fitQueued); clearTimeout(settleQueued); settled = false;
-      fitQueued = setTimeout(fitPanel, 30);
-      settleQueued = setTimeout(() => { settled = true; fitPanel(); }, 420);      // the enter animation lasts .34s
-    };
+    let fitQueued = 0;
+    const refit = () => { clearTimeout(fitQueued); fitQueued = setTimeout(fitPanel, 30); };   // a timer, not rAF: it also runs in a background tab
     window.addEventListener('resize', refit);
     document.addEventListener('toggle', refit, true);
     window.addEventListener('load', refit);
