@@ -27,7 +27,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=5">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="assets/brand.css?v=3">
-  <link rel="stylesheet" href="assets/site.css?v=12">
+  <link rel="stylesheet" href="assets/site.css?v=13">
 </head>
 <body>
   <canvas id="world" width="360" height="640" aria-hidden="true"></canvas>
@@ -163,50 +163,56 @@
       </div>
     </section>
 
-    <!-- AGENTS -->
+    <!-- AGENTS (the tab named Next): the phone in your hand, as in the game; everything lives on its screen -->
     <section class="panel" id="agents" role="tabpanel" aria-labelledby="tab-agents" tabindex="-1" hidden>
-      <div class="agents-layout">
-        <div class="glass agent-card">
-          <p class="eyebrow">WHERE THE PARTY GOES NEXT</p>
-          <h2>The people of the party can grow.</h2>
-          <p class="agents-lead">First come the art and the fun. Then, one day, your avatar can do more than stand there: talk, play, have a wallet of its own. A first taste, for fun.</p>
-          <div class="agent-picker" id="agent-picker" role="radiogroup" aria-label="Choose an avatar"></div>
-          <div class="agent-who">
-            <canvas id="agent-canvas" aria-label="The avatar you are talking to"></canvas>
-            <div>
-              <h3 id="agent-name">—</h3>
-              <p id="agent-bio"></p>
-              <p class="agent-traits" id="agent-traits"></p>
-              <a id="agent-json" class="agent-json" target="_blank" rel="noopener noreferrer">Agent card (ERC-8004 format)</a>
+      <div class="ph-stage">
+        <div class="ph">
+          <div class="ph-top" aria-hidden="true"><span class="ph-cam-dot"></span><span class="ph-batt"><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div class="ph-screen">
+            <div class="ph-head">
+              <p class="eyebrow">WHERE THE PARTY GOES NEXT</p>
+              <h2>The people of the party can grow.</h2>
+              <p class="agents-lead">First come the art and the fun. Then, one day, your avatar can do more than stand there: talk, play, have a wallet of its own. A first taste, for fun.</p>
+            </div>
+            <div class="agent-who">
+              <div class="ph-finder"><canvas id="agent-canvas" aria-label="The avatar you are talking to"></canvas><span class="ph-rec" aria-hidden="true"></span></div>
+              <div class="agent-id">
+                <h3 id="agent-name">—</h3>
+                <p id="agent-bio"></p>
+                <p class="agent-traits" id="agent-traits"></p>
+                <a id="agent-json" class="agent-json" target="_blank" rel="noopener noreferrer">Agent card (ERC-8004)</a>
+              </div>
+            </div>
+            <div class="agent-picker" id="agent-picker" role="radiogroup" aria-label="Choose an avatar"></div>
+            <div class="subtabs" role="tablist" aria-label="What your agent can do">
+              <button role="tab" type="button" class="sub" data-agent-sub="talk" aria-selected="true">Talk</button>
+              <button role="tab" type="button" class="sub" data-agent-sub="run" aria-selected="false">Send on a run</button>
+              <button role="tab" type="button" class="sub" data-agent-sub="how" aria-selected="false">Why an agent</button>
+            </div>
+            <div class="subpane" data-agent-pane="talk">
+              <div id="chat-log" class="chat-log" role="log" aria-live="polite"></div>
+              <form id="chat-form" class="chat-form"><label class="sr-only" for="chat-input">Say something</label><input id="chat-input" maxlength="280" autocomplete="off" placeholder="gm. Who pulled the rug?"><button class="nfa-btn nfa-btn--cta" type="submit">Say</button></form>
+              <p class="fine" id="chat-note">A preview, for fun. What you type may go to a free AI service: do not share anything personal. Nothing here is advice.</p>
+            </div>
+            <div class="subpane" data-agent-pane="run" hidden>
+              <p>Today's Daily, played by your avatar with the skill of its traits. Same people you face. Can you beat it?</p>
+              <button class="nfa-btn nfa-btn--cta" id="agent-run" type="button" data-confetti>Send it on today's run</button>
+              <div id="agent-result" class="agent-result" aria-live="polite"></div>
+            </div>
+            <div class="subpane" data-agent-pane="how" hidden>
+              <ul class="agent-how">
+                <li><b>Identity</b><span>A registration file in the ERC-8004 format, the on-chain identity standard for agents. <em>The file is live. Registering is the owner's choice, once minted.</em></span></li>
+                <li><b>Wallet</b><span>Any ERC-721 can have its own ERC-6551 wallet, so the avatar can hold things of its own. <em>Once minted.</em></span></li>
+                <li><b>Voice</b><span>Its personality comes from its traits: role, expression, item, moment. Other agents can ask it things through an open endpoint. <em>Live: a free AI model when available, written lines otherwise.</em></span></li>
+                <li><b>Work</b><span>It plays the Daily on its own, with the skill its traits give it. <em>Live, right here.</em></span></li>
+              </ul>
+              <p class="fine">The owner of the NFT stays in charge. Nothing here is financial advice: these are pixels.</p>
             </div>
           </div>
+          <div class="ph-chin" aria-hidden="true"><span></span></div>
         </div>
-        <div class="glass agent-chat">
-          <div class="subtabs" role="tablist" aria-label="What your agent can do">
-            <button role="tab" type="button" class="sub" data-agent-sub="talk" aria-selected="true">Talk</button>
-            <button role="tab" type="button" class="sub" data-agent-sub="run" aria-selected="false">Send on a run</button>
-            <button role="tab" type="button" class="sub" data-agent-sub="how" aria-selected="false">What makes it an agent</button>
-          </div>
-          <div class="subpane" data-agent-pane="talk">
-            <div id="chat-log" class="chat-log" role="log" aria-live="polite"></div>
-            <form id="chat-form" class="chat-form"><label class="sr-only" for="chat-input">Say something</label><input id="chat-input" maxlength="280" autocomplete="off" placeholder="gm. Who pulled the rug?"><button class="nfa-btn nfa-btn--cta" type="submit">Say</button></form>
-            <p class="fine" id="chat-note">A preview, for fun. What you type may go to a free AI service: do not share anything personal. Nothing here is advice.</p>
-          </div>
-          <div class="subpane" data-agent-pane="run" hidden>
-            <p>Today's Daily, played by your avatar with the skill of its traits. Same people you face. Can you beat it?</p>
-            <button class="nfa-btn nfa-btn--cta" id="agent-run" type="button" data-confetti>Send it on today's run</button>
-            <div id="agent-result" class="agent-result" aria-live="polite"></div>
-          </div>
-          <div class="subpane" data-agent-pane="how" hidden>
-            <ul class="agent-how">
-              <li><b>Identity</b><span>A registration file in the ERC-8004 format, the on-chain identity standard for agents. <em>The file is live. Registering is the owner's choice, once minted.</em></span></li>
-              <li><b>Wallet</b><span>Any ERC-721 can have its own ERC-6551 wallet, so the avatar can hold things of its own. <em>Once minted.</em></span></li>
-              <li><b>Voice</b><span>Its personality comes from its traits: role, expression, item, moment. Other agents can ask it things through an open endpoint. <em>Live: a free AI model when available, written lines otherwise.</em></span></li>
-              <li><b>Work</b><span>It plays the Daily on its own, with the skill its traits give it. <em>Live, right here.</em></span></li>
-            </ul>
-            <p class="fine">The owner of the NFT stays in charge. Nothing here is financial advice: these are pixels.</p>
-          </div>
-        </div>
+        <svg class="ph-thumb" viewBox="0 0 18 52" aria-hidden="true" shape-rendering="crispEdges"><rect width="12" height="52" fill="#c98a5e"/><rect x="10" y="43" width="8" height="9" fill="#c98a5e"/><rect width="2" height="52" fill="#a86d45"/><rect x="12" y="43" width="6" height="1" fill="#a86d45"/></svg>
+        <svg class="ph-fingers" viewBox="0 0 16 42" preserveAspectRatio="none" aria-hidden="true" shape-rendering="crispEdges"><g fill="#c98a5e"><rect width="16" height="9"/><rect x="2" y="11" width="14" height="9"/><rect x="2" y="22" width="14" height="9"/><rect x="2" y="33" width="14" height="9"/></g><g fill="#a86d45"><rect y="8" width="16" height="1"/><rect x="2" y="19" width="14" height="1"/><rect x="2" y="30" width="14" height="1"/><rect x="2" y="41" width="14" height="1"/></g></svg>
       </div>
     </section>
 
@@ -779,6 +785,8 @@
         const post = document.createElement('a'); post.className = 'nfa-btn'; post.textContent = 'Post it'; post.target = '_blank'; post.rel = 'noopener noreferrer';
         post.href = 'https://x.com/intent/post?text=' + encodeURIComponent('My Not Fungible Avatar ran Daily #' + n + ' on its own.\n' + E.shareGrid(sc) + '\nScore ' + sc.total + '. ' + (death ? death + '. ' : '') + 'Can you beat a pixel?\n' + (SITE.siteUrl || location.origin + '/') + '\n#NotFungibleAvatars');
         row.append(beat, post); box.appendChild(row);
+        const pane = box.closest('.subpane');      // the phone's screen scrolls, not the page: bring the result into view
+        if (pane) pane.scrollTo({ top: pane.scrollTop + box.getBoundingClientRect().top - pane.getBoundingClientRect().top - 6, behavior: reduced ? 'auto' : 'smooth' });
       });
       pick(SAMPLES[0]);
     }).catch(() => { $('agent-bio').textContent = 'The agents are resting. Reload the page.'; });
