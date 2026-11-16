@@ -27,7 +27,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=5">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="assets/brand.css?v=3">
-  <link rel="stylesheet" href="assets/site.css?v=15">
+  <link rel="stylesheet" href="assets/site.css?v=16">
 </head>
 <body>
   <canvas id="world" width="360" height="640" aria-hidden="true"></canvas>
@@ -171,8 +171,8 @@
           <div class="ph-screen">
             <div class="ph-head">
               <p class="eyebrow">WHERE THE PARTY GOES NEXT</p>
-              <h2>The people of the party can grow.</h2>
-              <p class="agents-lead">First come the art and the fun. Then, one day, your avatar can do more than stand there: talk, play, have a wallet of its own. A first taste, for fun.</p>
+              <h2>Nobody is fungible. Not even a suspect.</h2>
+              <p class="agents-lead">First come the art and the fun. Next, The Case Files: a mystery at the party every week, where the Avatars are the suspects and the witnesses. Meet a few sample Avatars here.</p>
             </div>
             <div class="agent-who">
               <div class="ph-finder"><canvas id="agent-canvas" aria-label="The avatar you are talking to"></canvas><span class="ph-rec" aria-hidden="true"></span></div>
@@ -180,33 +180,42 @@
                 <h3 id="agent-name">—</h3>
                 <p id="agent-bio"></p>
                 <p class="agent-traits" id="agent-traits"></p>
-                <a id="agent-json" class="agent-json" target="_blank" rel="noopener noreferrer">Agent card (ERC-8004)</a>
+                <a id="agent-json" class="agent-json" target="_blank" rel="noopener noreferrer">Agent card (sample)</a>
               </div>
             </div>
-            <div class="agent-picker" id="agent-picker" role="radiogroup" aria-label="Choose an avatar"></div>
+            <div class="agent-picker" id="agent-picker" role="radiogroup" aria-label="Choose a sample Avatar"></div>
             <div class="subtabs" role="tablist" aria-label="What your agent can do">
               <button role="tab" type="button" class="sub" data-agent-sub="talk" aria-selected="true">Talk</button>
               <button role="tab" type="button" class="sub" data-agent-sub="run" aria-selected="false">Send on a run</button>
-              <button role="tab" type="button" class="sub" data-agent-sub="how" aria-selected="false">Why an agent</button>
+              <button role="tab" type="button" class="sub" data-agent-sub="how" aria-selected="false">Case Files</button>
             </div>
             <div class="subpane" data-agent-pane="talk">
               <div id="chat-log" class="chat-log" role="log" aria-live="polite"></div>
               <form id="chat-form" class="chat-form"><label class="sr-only" for="chat-input">Say something</label><input id="chat-input" maxlength="280" autocomplete="off" placeholder="gm. Who pulled the rug?"><button class="nfa-btn nfa-btn--cta" type="submit">Say</button></form>
-              <p class="fine" id="chat-note">A preview, for fun. What you type may go to a free AI service: do not share anything personal. Nothing here is advice.</p>
+              <p class="fine" id="chat-note">A preview, for fun: it answers with lines written from its traits. Nothing here is advice.</p>
             </div>
             <div class="subpane" data-agent-pane="run" hidden>
-              <p>Today's Daily, played by your avatar with the skill of its traits. Same people you face. Can you beat it?</p>
+              <p>Today's Daily, played by this Avatar on its own, with the skill its traits give it. The same people you face today. Can you beat it?</p>
               <button class="nfa-btn nfa-btn--cta" id="agent-run" type="button" data-confetti>Send it on today's run</button>
               <div id="agent-result" class="agent-result" aria-live="polite"></div>
             </div>
             <div class="subpane" data-agent-pane="how" hidden>
+              <p class="ag-k"><i class="ag-tag soon">Coming</i> The Case Files · not built yet</p>
               <ul class="agent-how">
-                <li><b>Identity</b><span>A registration file in the ERC-8004 format, the on-chain identity standard for agents. <em>The file is live. Registering is the owner's choice, once minted.</em></span></li>
-                <li><b>Wallet</b><span>Any ERC-721 can have its own ERC-6551 wallet, so the avatar can hold things of its own. <em>Once minted.</em></span></li>
-                <li><b>Voice</b><span>Its personality comes from its traits: role, expression, item, moment. Other agents can ask it things through an open endpoint. <em>Live: a free AI model when available, written lines otherwise.</em></span></li>
-                <li><b>Work</b><span>It plays the Daily on its own, with the skill its traits give it. <em>Live, right here.</em></span></li>
+                <li><b>A case every week</b><span>Something goes wrong at the party: a rug pulled, the last pastel de nata gone. Find who did it.</span></li>
+                <li><b>Traits are the evidence</b><span>A gold hoop or an iced coffee can convict you, or clear you. Every detail counts.</span></li>
+                <li><b>Witnesses you question</b><span>Ask the Avatars what they saw, right in this chat. Each answers from its traits and the scene, and some lie. No AI: the same answers for everyone, a puzzle anyone can check.</span></li>
+                <li><b>A fair case</b><span>The solution's fingerprint is published when a case opens and revealed when it closes, so it cannot change halfway.</span></li>
+                <li><b>Only those who opt in</b><span>An Avatar is a suspect or a witness only if its owner chooses to take part.</span></li>
+                <li><b>A file of its own</b><span>Suspect, honest witness, the one who did it: every case adds to the Avatar's file, its own story.</span></li>
               </ul>
-              <p class="fine">The owner of the NFT stays in charge. Nothing here is financial advice: these are pixels.</p>
+              <p class="ag-k"><i class="ag-tag live">Live</i> Today, with sample Avatars</p>
+              <ul class="agent-how">
+                <li><b>Voice</b><span>It answers in character, with lines written from its traits. Other agents can ask it too, through an open endpoint.</span></li>
+                <li><b>Work</b><span>It plays the free Daily by itself, in the tab next door.</span></li>
+                <li><b>Identity</b><span>An agent card in the ERC-8004 format. Registering it is the owner's choice, once minted.</span></li>
+              </ul>
+              <p class="fine">Plans, not promises: what is coming may change before it is built. The owner of the NFT stays in charge. Nothing here is financial advice.</p>
             </div>
           </div>
           <div class="ph-chin" aria-hidden="true"><span></span></div>
@@ -722,7 +731,7 @@
         $('agent-name').textContent = curPersona.name;
         $('agent-bio').textContent = curPersona.bio;
         $('agent-traits').textContent = [E.RARITIES[t.r], E.ACTION_TRAITS[t.act][t.r], t.p ? E.PROPS[t.p] : null].filter(Boolean).join(' · ');
-        $('agent-json').href = 'api/agent?a=' + t.a + '&e=' + t.e + '&p=' + t.p + '&r=' + t.r + '&l=' + t.l + '&s=' + t.s + '&id=' + t.id;
+        $('agent-json').href = 'api/agent?a=' + t.a + '&e=' + t.e + '&p=' + t.p + '&r=' + t.r + '&l=' + t.l + '&s=' + t.s + '&id=' + t.id + '&sample=1';      // made-up Avatars: the card claims no token
         [...$('agent-picker').children].forEach((b, n) => b.setAttribute('aria-checked', SAMPLES[n] === t ? 'true' : 'false'));
         $('chat-log').innerHTML = '';
         bubble('them', reply(curPersona, 'gm'));
@@ -746,7 +755,7 @@
         const t = cur;
         fetch($('agent-json').getAttribute('href'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: text }) })
           .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-          .then((j) => j.reply)
+          .then((j) => { if (j.source === 'ai') $('chat-note').textContent = 'A preview, for fun. Answers may come from a free AI service: do not share anything personal. Nothing here is advice.'; return j.reply; })
           .catch(() => reply(curPersona, text))
           .then((answer) => { if (cur === t) bubble('them', answer); });
       });

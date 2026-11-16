@@ -565,3 +565,14 @@ html.app .foot { padding-right: 130px; justify-content: flex-start; }
   #agents .ph-chin span { width: calc(var(--u) * 1.6); height: 26%; }
   #agents .ph-fingers, #agents .ph-thumb { display: none; }
 }
+/* Next, Case Files: what is coming and what is live, each said so */
+#agents .ag-k { display: flex; flex-wrap: wrap; align-items: center; gap: .3em .5em; padding-right: .3em; margin: .2em 0 .45em; font-size: .8em; font-weight: 900; letter-spacing: .04em; color: #dfe7ff; }
+#agents .agent-how + .ag-k { margin-top: .9em; }
+#agents .ag-tag { flex: none; font-style: normal; font-size: .9em; padding: .15em .55em; border-radius: 999px; color: #1b1d3a; }
+#agents .ag-tag.soon { background: #ffcf1f; }
+#agents .ag-tag.live { background: #5be38f; }
+/* on Case Files the screen is for the cases: the sample card and picker step aside (they come back on Talk and Run) */
+#agents .ph-screen:has([data-agent-sub="how"][aria-selected="true"]) .agent-who,
+#agents .ph-screen:has([data-agent-sub="how"][aria-selected="true"]) .agent-picker { display: none; }
+#agents .agent-how li { padding: .42em .65em; }
+#agents .agent-how li b { display: inline; margin-right: .35em; }

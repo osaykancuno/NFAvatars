@@ -20,12 +20,14 @@ export const personaOfToken = (t) => personaOf({
   role: t.l & 15, roleName: NAMES.role[t.l & 15], expression: NAMES.expression[t.e], prop: NAMES.prop[t.p], moment: NAMES.action[t.a], tier: NAMES.rarity[t.r],
 });
 
-export function registrationFile(t, site, contract, chainId = 1) {
-  const q = `a=${t.a}&e=${t.e}&p=${t.p}&r=${t.r}&l=${t.l}&s=${t.s}&id=${t.id}`, persona = personaOfToken(t);
+/* sample: a made-up Avatar (the site's Next tab shows six), not a token: no contract and no token id are claimed for it.
+   The ERC-8004 Identity Registry above is Ethereum mainnet's: on any other chain none is named. */
+export function registrationFile(t, site, contract, chainId = 1, sample = false) {
+  const q = `a=${t.a}&e=${t.e}&p=${t.p}&r=${t.r}&l=${t.l}&s=${t.s}&id=${t.id}${sample ? '&sample=1' : ''}`, persona = personaOfToken(t);
   return {
     type: 'https://eips.ethereum.org/EIPS/eip-8004#registration-v1',
-    name: 'Not Fungible Avatar #' + t.id,
-    description: `${persona.name}. ${persona.bio} ${persona.moment} One of the people of Not Fungible Avatars, with a voice that comes from its traits.`,
+    name: sample ? 'Not Fungible Avatar (sample)' : 'Not Fungible Avatar #' + t.id,
+    description: `${persona.name}. ${persona.bio} ${persona.moment} ${sample ? 'A sample of the people of Not Fungible Avatars, not a minted token' : 'One of the people of Not Fungible Avatars'}, with a voice that comes from its traits.`,
     image: `${site}/nft.gif?v=1&${q}`,
     services: [
       { name: 'web', endpoint: `${site}/#agents` },
@@ -36,9 +38,9 @@ export function registrationFile(t, site, contract, chainId = 1) {
     registrations: [],                    // filled once the owner registers it: { agentId, agentRegistry: "eip155:1:<identity registry>" }
     supportedTrust: [],
     token: {
-      standard: 'ERC-721', chainId, contract: contract || null, tokenId: t.id,
+      standard: 'ERC-721', chainId, contract: sample ? null : contract || null, tokenId: sample ? null : t.id,
       wallet: { standard: 'ERC-6551', registry: STANDARDS.accountRegistry },
-      identityRegistry: `eip155:${chainId}:${STANDARDS.identityRegistry}`,
+      identityRegistry: chainId === 1 ? `eip155:1:${STANDARDS.identityRegistry}` : null,
       attributes: attributes(t),
     },
   };
@@ -93,7 +95,8 @@ export default async (req) => {
   }
   if (req.method !== 'GET') return fail(405, 'GET or POST');
   const site = (process.env.NFA_SITE_URL || url.origin).replace(/\/+$/, '');
-  return new Response(JSON.stringify(registrationFile(t, site, process.env.NFA_CONTRACT || null)), { headers: { ...headers, 'cache-control': 'public, max-age=3600' } });
+  const chainId = Number(process.env.NFA_CHAIN_ID) || 1, sample = url.searchParams.get('sample') === '1';
+  return new Response(JSON.stringify(registrationFile(t, site, process.env.NFA_CONTRACT || null, chainId, sample)), { headers: { ...headers, 'cache-control': 'public, max-age=3600' } });
 };
 
 export const config = { path: '/api/agent', rateLimit: { windowLimit: 20, windowSize: 60, aggregateBy: ['ip', 'domain'] } };
