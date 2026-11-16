@@ -215,21 +215,34 @@ html.app { scroll-behavior: auto; }
 .bar-play { min-height: 40px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
 
 .panels { position: fixed; top: 64px; left: 0; right: 0; bottom: 26px; z-index: 10; overflow: hidden auto; overscroll-behavior: contain; padding: 14px 16px 10px; display: flex; flex-direction: column; }
-.panel { flex: none; width: min(1040px, 100%); margin: auto; }
+.panel { flex: none; width: min(1000px, 100%); margin: auto; padding: 0; }   /* not the 64px of the old long page */
 .panel > * { animation: enter .34s cubic-bezier(.2,1.2,.4,1); }   /* on the content, so the panel's own size stays exact for fitPanel */
 .panel:focus { outline: none; }
 .panel[hidden] { display: none; }
 @keyframes enter { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: none; } }
 .glass { background: rgba(12,8,28,.88); border: 3px solid var(--nfa-ink); border-radius: 22px; box-shadow: 0 8px 0 rgba(0,0,0,.45); padding: clamp(16px, 3vw, 28px); }
 .panel h2 { font-size: clamp(22px, min(3.6vw, 5.2vh), 40px); }
-.panel .section-lead { font-size: 16px; margin-bottom: 14px; }
+.panel .section-lead { font-size: 16px; margin: -4px 0 14px; }
+.panel .glass > h2 { margin-bottom: 14px; }
 .foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; height: 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 16px; overflow: hidden; white-space: nowrap; font-size: 11px; font-weight: 700; color: #cfd6f2; background: rgba(10,7,26,.8); }
 .foot > * { overflow: hidden; text-overflow: ellipsis; }
 html.app .nfa-music { bottom: 2px !important; right: 10px !important; padding: 1px 10px !important; min-height: 0 !important; font-size: 11px !important; box-shadow: none !important; border-width: 2px !important; }
 html.app .foot { padding-right: 130px; justify-content: flex-start; }
 .foot .credit { letter-spacing: .04em; }
 
-.hero-card { max-width: 640px; }
+.hero-card { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+.hero-side .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+.hero-side .doors { grid-template-columns: 1fr; gap: 8px; }
+.hero-side .doors button { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.hero-side .doors button::after { content: "→"; font-weight: 900; color: var(--nfa-tram); }
+.hero-side .doors span { margin: 0 auto 0 0; }
+@media (max-width: 900px) {
+  .hero-card { grid-template-columns: 1fr; gap: 0; }
+  .hero-side .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 16px; }
+  .hero-side .doors { display: none; }   /* the tabs are right there at the bottom */
+  .hero-side .doors button { display: block; }
+  .hero-side .doors button::after { content: none; }
+}
 .hero-card .lead { max-width: none; }
 .doors { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
 .doors button { appearance: none; cursor: pointer; text-align: left; color: #fff; font-family: var(--nfa-font); background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.18); border-radius: 14px; padding: 10px 12px; transition: transform .12s ease, background .12s ease; }
@@ -442,7 +455,7 @@ html.app .foot { padding-right: 130px; justify-content: flex-start; }
   .foot { display: none; }
   .faq-credit { display: block; }
   .panels { top: 44px; bottom: 0; padding: 6px 10px; }
-  .panel { width: min(1040px, 100%); }
+  .panel { width: min(1000px, 100%); }
   .panel .eyebrow { display: none; }
   .glass { padding: 10px 14px; border-radius: 16px; }
   .panel h2 { font-size: 20px; margin-bottom: 6px; }
@@ -523,7 +536,8 @@ html.app .foot { padding-right: 130px; justify-content: flex-start; }
 #agents .subtabs { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin: 0; padding: 3px; background: rgba(255,255,255,.07); border-radius: 10px; }
 #agents .sub { padding: .62em .3em; font-size: .86em; border-radius: 8px; border-width: 2px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #agents .sub[aria-selected="false"] { background: transparent; border-color: transparent; }
-#agents .subpane:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: thin; }
+#agents .subpane:not([hidden]) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden auto; scrollbar-width: thin; }
+#agents .nfa-btn:hover { transform: none; }
 #agents .subpane > p { margin: 0 0 .6em; font-size: .98em; }
 #agents .chat-log { flex: 1 1 auto; height: auto; min-height: 4.5em; padding: .5em; gap: .4em; border-radius: 10px; }
 #agents .chat-log p { font-size: .98em; padding: .45em .75em; }
@@ -576,3 +590,5 @@ html.app .foot { padding-right: 130px; justify-content: flex-start; }
 #agents .ph-screen:has([data-agent-sub="how"][aria-selected="true"]) .agent-picker { display: none; }
 #agents .agent-how li { padding: .42em .65em; }
 #agents .agent-how li b { display: inline; margin-right: .35em; }
+/* short screens: the roles show their name and pass; tap one for its line */
+@media (max-height: 820px) and (min-width: 901px) { .panel .tiles-grid.people .tile span { display: none; } }

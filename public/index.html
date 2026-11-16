@@ -27,7 +27,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=5">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="assets/brand.css?v=3">
-  <link rel="stylesheet" href="assets/site.css?v=17">
+  <link rel="stylesheet" href="assets/site.css?v=19">
 </head>
 <body>
   <canvas id="world" width="360" height="640" aria-hidden="true"></canvas>
@@ -52,6 +52,7 @@
     <!-- PARTY -->
     <section class="panel" id="home" role="tabpanel" aria-labelledby="tab-home" tabindex="-1">
       <div class="glass hero-card">
+        <div class="hero-main">
         <span class="chip">THE WALL ARCADE <span aria-hidden="true">•</span> A TRIBUTE TO NFC LISBON</span>
         <h1 class="nfa-headline" data-hop>NOT FUNGIBLE <span class="accent">AVATARS</span></h1>
         <p class="lead">Somebody pulled the rug at the party. You have their photo. They all look alike. <b>Nobody is fungible.</b></p>
@@ -60,6 +61,8 @@
           <a class="nfa-btn" data-link="arcade" data-confetti href="#">Mint on THE WALL ARCADE</a>
           <a class="nfa-btn nfa-btn--ghost" data-link="opensea" href="#">View on OpenSea</a>
         </div>
+        </div>
+        <div class="hero-side">
         <ul class="stats" aria-label="The collection in numbers">
           <li><b>10,000</b>people at most</li>
           <li><b>6</b>levels</li>
@@ -71,6 +74,7 @@
           <button type="button" data-goto="people"><b>People</b><span>Tap one and see</span></button>
           <button type="button" data-goto="mint"><b>Mint</b><span>1 run, 1 person</span></button>
         </div>
+        </div>
       </div>
       <div class="ticker" aria-hidden="true"><div id="ticker"></div></div>
     </section>
@@ -80,7 +84,7 @@
       <div class="glass">
         <p class="eyebrow">THE GAME</p>
         <h2>Six places. One face.</h2>
-        <p class="section-lead">Run in first person with one photo on your phone. Run <b>into</b> the person on it, around everybody else. Pick a place and walk through the door.</p>
+        <p class="section-lead">One photo on your phone. Run <b>into</b> that face, around everybody else.</p>
         <div class="subtabs" role="tablist" aria-label="About the game">
           <button role="tab" type="button" class="sub" data-game-sub="levels" aria-selected="true">The six places</button>
           <button role="tab" type="button" class="sub" data-game-sub="gags" aria-selected="false">Getting it wrong</button>
@@ -133,12 +137,8 @@
             <li><b data-k="owners">—</b><span>Owners</span></li>
             <li><b data-k="floor">—</b><span>Floor price</span></li>
             <li><b data-k="volume">—</b><span>Total volume</span></li>
-            <li><b data-k="daySales">—</b><span>Sales · 24 h</span></li>
-            <li><b data-k="dayVolume">—</b><span>Volume · 24 h</span></li>
-            <li><b data-k="weekVolume">—</b><span>Volume · 7 days</span></li>
-            <li><b data-k="sales">—</b><span>Sales · all time</span></li>
           </ul>
-          <p class="updated" id="updated">Live numbers from OpenSea appear here at launch.</p>
+          <p class="updated" id="updated">Live from OpenSea, from launch day.</p>
         </div>
         <div class="subpane" data-col-pane="minted" hidden>
           <div class="gallery" id="mints"></div>
@@ -170,7 +170,7 @@
             <div class="ph-head">
               <p class="eyebrow">WHERE THE PARTY GOES NEXT</p>
               <h2>Nobody is fungible. Not even a suspect.</h2>
-              <p class="agents-lead">First come the art and the fun. Next, The Case Files: a mystery at the party every week, where the Avatars are the suspects and the witnesses. In Talk, meet a few sample Avatars.</p>
+              <p class="agents-lead">The Case Files: a whodunit at the party every week. The Avatars are the suspects and the witnesses.</p>
             </div>
             <div class="agent-who">
               <div class="ph-finder"><canvas id="agent-canvas" aria-label="The avatar you are talking to"></canvas><span class="ph-rec" aria-hidden="true"></span></div>
@@ -178,7 +178,6 @@
                 <h3 id="agent-name">—</h3>
                 <p id="agent-bio"></p>
                 <p class="agent-traits" id="agent-traits"></p>
-                <a id="agent-json" class="agent-json" target="_blank" rel="noopener noreferrer">Agent card (sample)</a>
               </div>
             </div>
             <div class="agent-picker" id="agent-picker" role="radiogroup" aria-label="Choose a sample Avatar"></div>
@@ -189,24 +188,17 @@
             <div class="subpane" data-agent-pane="talk" hidden>
               <div id="chat-log" class="chat-log" role="log" aria-live="polite"></div>
               <form id="chat-form" class="chat-form"><label class="sr-only" for="chat-input">Say something</label><input id="chat-input" maxlength="280" autocomplete="off" placeholder="gm. Who pulled the rug?"><button class="nfa-btn nfa-btn--cta" type="submit">Say</button></form>
-              <p class="fine" id="chat-note">A preview, for fun: it answers with lines written from its traits. Nothing here is advice.</p>
+              <p class="fine" id="chat-note">Just for fun: it answers in character.</p>
             </div>
             <div class="subpane" data-agent-pane="how">
-              <p class="ag-k"><i class="ag-tag soon">Coming</i> The Case Files · not open yet</p>
+              <p class="ag-k"><i class="ag-tag soon">Coming</i> The Case Files</p>
               <ul class="agent-how">
                 <li><b>A case every week</b><span>Something goes wrong at the party: a rug pulled, the last pastel de nata gone. Find who did it.</span></li>
-                <li><b>Traits are the evidence</b><span>A gold hoop or an iced coffee can convict you, or clear you. Every detail counts.</span></li>
-                <li><b>Witnesses you question</b><span>Ask the Avatars what they saw, right in this chat. Each answers from its traits and the scene, and some lie. No AI: the same answers for everyone, a puzzle anyone can check.</span></li>
-                <li><b>A fair case</b><span>The solution's fingerprint is published when a case opens and revealed when it closes, so it cannot change halfway.</span></li>
-                <li><b>Only those who opt in</b><span>An Avatar is a suspect or a witness only if its owner chooses to take part.</span></li>
-                <li><b>A file of its own</b><span>Suspect, honest witness, the one who did it: every case adds to the Avatar's file, its own story.</span></li>
+                <li><b>Traits are the evidence</b><span>A gold hoop or an iced coffee can convict you, or clear you.</span></li>
+                <li><b>Witnesses lie</b><span>Question the Avatars right here. Each answers from its traits and what it saw. Not all of them tell the truth.</span></li>
+                <li><b>Your Avatar, your call</b><span>It joins a case only if you say so. Suspect, witness or culprit: every case goes in its file.</span></li>
               </ul>
-              <p class="ag-k"><i class="ag-tag live">Live</i> Today, with sample Avatars</p>
-              <ul class="agent-how">
-                <li><b>Voice</b><span>It answers in character, with lines written from its traits. Other agents can ask it too, through an open endpoint.</span></li>
-                <li><b>Identity</b><span>An agent card in the ERC-8004 format. Registering it is the owner's choice, once minted.</span></li>
-              </ul>
-              <p class="fine">Plans, not promises: what is coming may change before it is built. The owner of the NFT stays in charge. Nothing here is financial advice.</p>
+              <p class="fine">Not open yet, and the details may change.</p>
             </div>
           </div>
           <div class="ph-chin" aria-hidden="true"><span></span></div>
@@ -220,7 +212,7 @@
       <div class="glass">
         <p class="eyebrow">HOW TO MINT</p>
         <h2>1 credit = 1 run = 1 Not Fungible Avatar.</h2>
-        <p class="section-lead">No open mint: the contract refuses a wallet without a finished run. Every avatar is earned in a real run on THE WALL ARCADE, scored by SuperRare's server, and minted on Ethereum through SuperRare, fully on chain. 10,000 at most, 50 per wallet.</p>
+        <p class="section-lead">No open mint: every Avatar is earned in a real run on THE WALL ARCADE. 10,000 at most.</p>
         <div class="subtabs" role="tablist" aria-label="Minting">
           <button role="tab" type="button" class="sub" data-mint-sub="steps" aria-selected="true">Five steps</button>
           <button role="tab" type="button" class="sub" data-mint-sub="traits" aria-selected="false">How traits are earned</button>
@@ -253,13 +245,13 @@
         <div class="acc">
         <details name="faq"><summary>How much does it cost?</summary><p>The trial on this site is free and mints nothing. On THE WALL ARCADE one full run costs 1 SuperRare credit, and that run's person can be minted when it ends: 1 credit = 1 run = 1 Not Fungible Avatar. The mint has no price of its own: 1 wei, the smallest amount Ethereum has, plus network gas.</p></details>
         <details name="faq"><summary>Which chain? Where is the contract?</summary><p><span id="faq-chain">Ethereum, minted through SuperRare, and fully on chain: ownership, traits, picture and the live show all live in the contract, with no server and no IPFS behind them. The contract address appears here at launch.</span></p></details>
-        <details name="faq"><summary>How many Not Fungible Avatars will exist?</summary><p>10,000 at most, and never the same person twice. One per paid run: each run can mint only once, and one wallet can play at most 50 runs, so nobody fills the collection alone. The game tells you before it spends a credit if a run could not end in a mint. The plan for when all 10,000 are minted: the full game stays, free for everyone, on THE WALL ARCADE and on this site, with weekly leaderboards.</p></details>
+        <details name="faq"><summary>How many Not Fungible Avatars will exist?</summary><p>10,000 at most, and never the same person twice. One per paid run: each run can mint only once, and one wallet can play at most 50 runs, so nobody fills the collection alone. After the 10,000th, the game stays free for everyone, with weekly leaderboards.</p></details>
         <details name="faq"><summary>What do I get?</summary><p>An animated Not Fungible Avatar: the person you caught, living their moment on loop, fully on chain. And, if you choose, a place in The Case Files, the collection's second game (coming: see Next).</p></details>
-        <details name="faq"><summary>What is "Next"?</summary><p>The collection's second game, The Case Files: a mystery at the party every week, where the Avatars are the suspects and the witnesses, only if their owners choose to take part. It is designed and not open yet; plans, not promises. Today the Next tab lets you talk to a few sample Avatars. The first game stays the point: the run, the art and the fun.</p></details>
+        <details name="faq"><summary>What is "Next"?</summary><p>The Case Files, the second game: a whodunit at the party every week, where the Avatars are the suspects and the witnesses, if their owners want. Not open yet. Meanwhile, chat with a few sample Avatars in Next.</p></details>
         <details name="faq"><summary>How do I get a Legendary?</summary><p>Clear all six levels and catch the one who pulled the rug, on the rooftop, with your phone still full: all five bars. Every door gives a bar back. No luck, no allowlist, just your eyes.</p></details>
         <details name="faq"><summary>Is it fair?</summary><p>On THE WALL ARCADE every run is scored by SuperRare's server, not by your browser. Your tier comes from that verified score and the rest from the run's own id, which the platform makes: one mint per run, no trait above your tier, never the same person twice.</p></details>
         <details name="faq"><summary>Who are the characters?</summary><p>Original pixel people: artists, collectors, devs, founders, curators, streamers, degens, DJs, whales, bodyguards, baristas, gamers, meme lords, photographers, skaters and chefs. Every look, every background, independent of the role.</p></details>
-        <details name="faq"><summary>Who is it for?</summary><p>For everyone, wherever you are: artists and collectors, builders, curators, DJs and the friends you meet at brunch. What stays with you is never a floor price, it is the moments. The party in the game is a tribute to the NFC Lisbon community, where it was born: azulejos, Tram 28, the red bridge at golden hour and a pastel de nata in the wrong place at the wrong time. Made for THE WALL ARCADE at NFC Summit 2027.</p></details>
+        <details name="faq"><summary>Who is it for?</summary><p>For everyone: artists and collectors, builders, curators, DJs and the friends you meet at brunch. The party in the game is a tribute to the NFC Lisbon community, where it was born: azulejos, Tram 28, the red bridge at golden hour and a pastel de nata in the wrong place at the wrong time. Made for THE WALL ARCADE at NFC Summit 2027.</p></details>
         </div>
         <p class="fine faq-credit"><a class="credit" href="https://onthewall.nfcsummit.com" target="_blank" rel="noopener noreferrer">A REMIX THE WALL EXPERIMENT · NFC SUMMIT 2027 · LISBON</a> · By <a data-link="x" href="#">@osaykancuno</a></p>
       </div>
@@ -542,29 +534,45 @@
     const OLD = { how: 'mint', traits: 'mint', levels: 'game', moments: 'people', lisbon: 'faq', top: 'home' };   // links from before the tabs
     const tabButtons = [...document.querySelectorAll('[data-tab]')];
     let levelSel = 0;
-    /* One screen, like an app: a tab never scrolls. When its content is taller than the screen it shrinks as a whole, in proportion. */
-    function fitPanel() {
+    /* One screen, like an app: a tab never scrolls. When its content is taller than the screen it shrinks in proportion.
+       Only what is under the title shrinks (the open subtab, or the FAQ), so every card keeps the same width and the same header. */
+    function fitPanel() {      // measured with no scrollbar: its 15px would make the tiles smaller, the tab fit, and the scrollbar stay
+      const box = $('panels');
+      box.style.overflowY = 'hidden';
+      try { fitInner(); } finally { box.style.overflowY = ''; }
+    }
+    function fitInner() {
       const box = $('panels'), id = TABS.find((t) => !$(t).hidden), p = id && $(id);
       if (!p) return;
-      Object.assign(p.style, { zoom: '', transform: '', marginTop: '', marginBottom: '' });
+      [p, ...p.querySelectorAll('.glass > .subpane, .glass > .acc')].forEach((el) => Object.assign(el.style, { zoom: '', transform: '', marginTop: '', marginBottom: '' }));
       const cs = getComputedStyle(box), avail = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-      if (p.offsetHeight <= avail) return;
+      const over = () => p.getBoundingClientRect().height - avail;      // the panel's own box: the enter animation and hops are on its children and do not count
+      if (over() <= 0) return;
+      const inner = p.querySelector('.glass > .subpane:not([hidden]), .glass > .acc:not([hidden])');
+      const q = inner && inner.offsetHeight > 160 ? inner : p;
+      const apply = (z, s, h) => Object.assign(q.style, s < 1 ? { transformOrigin: '50% 0', transform: 'scale(' + s + ')', marginTop: '0', marginBottom: (h * s - h) / (z || 1) + 'px' } : { transform: '', marginTop: '', marginBottom: '' });
       // Two ways to shrink: zoom re-wraps text (it helps text, not grids of squares, which only get wider in their own pixels),
       // a scale shrinks everything in proportion. Try a few zooms, scale whatever is left, keep what leaves the text biggest.
       let best = { size: 0, z: 1, s: 1 };
       for (let z = 1; z >= 0.6; z = +(z - 0.1).toFixed(1)) {      // five layouts at most
-        p.style.zoom = z === 1 ? '' : String(z);
-        const h = p.getBoundingClientRect().height, s = Math.min(1, avail / h);
+        q.style.zoom = z === 1 ? '' : String(z);
+        const h = q.getBoundingClientRect().height, s = Math.min(1, Math.max(0.3, (h - Math.max(0, over() + 3)) / h));      // 3px for rounding
         if (z * s > best.size + 0.004) best = { size: z * s, z, s };
       }
-      p.style.zoom = best.z === 1 ? '' : String(best.z);
-      if (best.s < 1) {
-        const h = p.getBoundingClientRect().height;
-        Object.assign(p.style, { transformOrigin: '50% 0', transform: 'scale(' + best.s + ')', marginTop: '0', marginBottom: (h * best.s - h) / (best.z || 1) + 'px' });
-      }
+      q.style.zoom = best.z === 1 ? '' : String(best.z);
+      const h = q.getBoundingClientRect().height;
+      let s = best.s;
+      apply(best.z, s, h);
+      // collapsing margins and half pixels: correct on what is measured. After the enter animation (settled) the real scroll height counts too.
+      const left = () => Math.max(over() + 3, settled ? box.scrollHeight - box.clientHeight + 1 : 0);      // +1: a fraction of a pixel already shows a scrollbar
+      for (let i = 0; i < 4 && left() > 0; i++) { s -= (left() + 1) / h; apply(best.z, s, h); }
     }
-    let fitQueued = 0;
-    const refit = () => { clearTimeout(fitQueued); fitQueued = setTimeout(fitPanel, 30); };   // a timer, not rAF: it also runs in a background tab
+    let fitQueued = 0, settleQueued = 0, settled = false;
+    const refit = () => {      // timers, not rAF: they also run in a background tab
+      clearTimeout(fitQueued); clearTimeout(settleQueued); settled = false;
+      fitQueued = setTimeout(fitPanel, 30);
+      settleQueued = setTimeout(() => { settled = true; fitPanel(); }, 420);      // the enter animation lasts .34s
+    };
     window.addEventListener('resize', refit);
     document.addEventListener('toggle', refit, true);
     window.addEventListener('load', refit);
@@ -707,7 +715,7 @@
         { id: 5, act: 1, r: 0, e: 0, p: 1, l: L(6, 2, 5, 0, 1, 1), s: 1880 },
         { id: 6, act: 2, r: 2, e: 6, p: 7, l: L(7, 4, 2, 7, 0, 0), s: 21900 }
       ].map((t) => Object.assign(t, { a: t.act * 4 + t.r }));
-      let cur = null, curPersona = null;
+      let cur = null, curPersona = null, agentUrl = '';
       const data = () => ({ rarity: cur.r, act: cur.act, expression: E.EXPRESSIONS[cur.e], prop: E.PROPS[cur.p], look: cur.l, score: cur.s, dir: 'right' });
       scene($('agent-canvas'), (ctx, w, h, t) => { if (cur) A.drawMintedAvatar(ctx, w, h, data(), reduced ? A.HERO_T : t); });
       const bubble = (who, text) => {
@@ -721,7 +729,7 @@
         $('agent-name').textContent = curPersona.name;
         $('agent-bio').textContent = curPersona.bio;
         $('agent-traits').textContent = [E.RARITIES[t.r], E.ACTION_TRAITS[t.act][t.r], t.p ? E.PROPS[t.p] : null].filter(Boolean).join(' · ');
-        $('agent-json').href = 'api/agent?a=' + t.a + '&e=' + t.e + '&p=' + t.p + '&r=' + t.r + '&l=' + t.l + '&s=' + t.s + '&id=' + t.id + '&sample=1';      // made-up Avatars: the card claims no token
+        agentUrl = 'api/agent?a=' + t.a + '&e=' + t.e + '&p=' + t.p + '&r=' + t.r + '&l=' + t.l + '&s=' + t.s + '&id=' + t.id + '&sample=1';      // made-up Avatars: the card claims no token
         [...$('agent-picker').children].forEach((b, n) => b.setAttribute('aria-checked', SAMPLES[n] === t ? 'true' : 'false'));
         $('chat-log').innerHTML = '';
         bubble('them', reply(curPersona, 'gm'));
@@ -742,9 +750,9 @@
         if (!text) return;
         bubble('me', text); input.value = '';
         const t = cur;
-        fetch($('agent-json').getAttribute('href'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: text }) })
+        fetch(agentUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ message: text }) })
           .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-          .then((j) => { if (j.source === 'ai') $('chat-note').textContent = 'A preview, for fun. Answers may come from a free AI service: do not share anything personal. Nothing here is advice.'; return j.reply; })
+          .then((j) => { if (j.source === 'ai') $('chat-note').textContent = 'Just for fun. Answers may come from a free AI: do not share anything personal.'; return j.reply; })
           .catch(() => reply(curPersona, text))
           .then((answer) => { if (cur === t) bubble('them', answer); });
       });
