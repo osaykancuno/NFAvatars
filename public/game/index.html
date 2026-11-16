@@ -953,7 +953,7 @@
        * THE WALL ARCADE, with SuperRare credits, when a run ends: 1 credit = 1 full run = 1 NFT.
        * on: false brings back the credit + mint flow below (kept as the reference for the arcade).
        * ------------------------------------------------------------------ */
-      trial: { on: true, seconds: 60, arcadeUrl: 'https://thewallarcade.superrare.com' },
+      trial: { on: true, seconds: 30, level: 2, daily: false, arcadeUrl: 'https://thewallarcade.superrare.com' },
 
       /* ------------------------------------------------------------------
        * PLACEHOLDER — NFA CONTRACT (ERC-721, contracts/NotFungibleAvatars.sol)
@@ -3013,7 +3013,7 @@
           if (p.battery === 1 && !wasLow) { wasLow = true; text2dm(DM_LOW, true); }
           if (p.battery > 1) wasLow = false;
         } else {
-          card = { lv: p.lv, life: 0 };
+          card = { lv: p.lv, life: 0, first: true };   // the run's first card: nothing was recovered yet (the trial starts in a middle place)
           text2dm(DM_LEVEL[p.lv], true);
         }
         prev = { lv: p.lv, queue: p.queue.slice(), targetAt: p.targetAt, door: p.door, won: p.won, battery: p.battery, bull: p.bull };
@@ -3404,7 +3404,7 @@
           text(ctx, 'LEVEL ' + (card.lv + 1) + ' OF 6', W / 2, H * 0.3 + 24, 13, '#d9dcf0', 'center', 800);
           text(ctx, T.title, W / 2, H * 0.3 + 56, T.title.length > 16 ? 25 : 31, PLACES[card.lv].door, 'center', 900, 5);
           wrapped(ctx, T.hint, W / 2, H * 0.3 + 100, 14, '#ffffff', W - 44, 0);
-          if (card.lv > 0) text(ctx, 'RUG RECOVERED ' + Math.round(card.lv * 100 / 6) + '%', W / 2, H * 0.3 + 152, 14, '#5be38f', 'center', 900, 4);
+          if (card.lv > 0 && !card.first) text(ctx, 'RUG RECOVERED ' + Math.round(card.lv * 100 / 6) + '%', W / 2, H * 0.3 + 152, 14, '#5be38f', 'center', 900, 4);
           ctx.globalAlpha = 1;
         }
         // the last second of a run
@@ -3811,7 +3811,21 @@
       return { n: Math.max(1, day - DAY0 + 1), seed: E.hash32(day, 0xDA11) || 1 };
     }
     function startDaily() { const d = daily(); startRun(d.seed, false, null, d.n); }
-    function startTrial() { startRun(randomU32() || 1, false, null, 0); }
+    /* The trial starts in a middle place (CONFIG.trial.level, 0-based; never the rooftop, whose person is the culprit): 30 s that
+       show the game as it really is. The engine is untouched: the first wanted person of a run fits any of the middle places. */
+    const TRIAL_LV = TRIAL ? Math.max(0, Math.min(E.LEVELS.length - 2, CONFIG.trial.level | 0)) : 0;
+    function startTrial() { startRun(randomU32() || 1, false, null, 0); run.lv = TRIAL_LV; }
+    /* One square per place; the places the trial skipped are white. */
+    function gridOf(sc) {
+      if (!TRIAL_LV || (session && session.daily)) return E.shareGrid(sc);
+      let out = '';
+      for (let i = 0; i < E.LEVELS.length; i++) {
+        const k = i - TRIAL_LV;
+        out += k < 0 ? '⬜' : k > sc.cleared ? '⬛' : (k === sc.cleared && !sc.survived) ? '🟥' : sc.oops[i] === 0 ? '🟩' : '🟨';
+      }
+      return out;
+    }
+    const levelNow = () => (run ? run.lv : 0) + 1;
 
     /* The free trial's words: what it is, and where the real run (and the mint) is. */
     function applyTrialUI() {
@@ -3819,6 +3833,7 @@
       const sec = CONFIG.trial.seconds;
       $('credits-chip').style.display = 'none'; $('wallet-chip').style.display = 'none';   // the chips' CSS beats [hidden]
       $('btn-play').textContent = 'PLAY FREE · ' + sec + ' S';
+      if (!CONFIG.trial.daily) $('btn-practice').style.display = 'none';   // the Daily comes back when the mint is over and the game is free
       document.querySelector('#title-screen .tagline').textContent = 'Free trial · ' + sec + ' s · can you tell them apart?';
       document.querySelector('#title-screen .how li:last-child').innerHTML =
         'The <b>six levels</b>, the one who did it and the <b>mint</b> are on <b>THE WALL ARCADE</b>.';
@@ -3891,13 +3906,13 @@
       badge.textContent = tr.rarityName.toUpperCase(); badge.className = 'rarity-badge r' + tr.rarity;
       $('avatar-name').textContent = session.name;
       $('final-score').textContent = sc.total + (newBest ? ' ★' : '');
-      $('survival-line').textContent = sc.survived ? (tr.rarity === 3 ? 'You caught them, phone still full!' : 'You caught them! A full phone makes it Legendary.') : sc.battery <= 0 ? root.AERunner.causeOfDeath(sc) : TRIAL ? 'Free trial, level ' + (sc.cleared + 1) : 'Party over, level ' + (sc.cleared + 1);
+      $('survival-line').textContent = sc.survived ? (tr.rarity === 3 ? 'You caught them, phone still full!' : 'You caught them! A full phone makes it Legendary.') : sc.battery <= 0 ? root.AERunner.causeOfDeath(sc) : TRIAL ? 'Free trial · ' + E.LEVELS[run.lv].name + ', level ' + levelNow() + ' of 6' : 'Party over, level ' + (sc.cleared + 1);
       $('damage').innerHTML = root.AERunner.damageLines(sc).map((l) => '<li>' + esc(l) + '</li>').join('');
       const shameCanvas = $('shame-canvas');
       shameCanvas.width = 320; shameCanvas.height = 160;
       const shameCount = runner.drawShame(shameCanvas.getContext('2d'), 320, 40);
       $('shame-title').textContent = 'Wall of Shame ' + shameCount + '/16';
-      $('share-grid').textContent = E.shareGrid(sc);
+      $('share-grid').textContent = gridOf(sc);
       const tag = (t) => ' <span class="tag r' + t + '">' + E.RARITIES[t] + '</span>';
       $('t-role').textContent = session.role + ' · ' + session.badge + ' pass';
       $('t-action').innerHTML = esc(tr.action.value) + tag(tr.action.tier);
@@ -4003,7 +4018,7 @@
       const sc = session.score;
       const url = CONFIG.gameUrl || (root.location.protocol.startsWith('http') ? root.location.origin + root.location.pathname : '');
       const head = session.daily ? 'Not Fungible Avatars · Daily #' + session.daily : 'Not Fungible Avatars';
-      return head + '\n' + E.shareGrid(sc) + '\n' + (sc.survived ? 'I caught the one who pulled the rug. ' : (root.AERunner.causeOfDeath(sc) ? root.AERunner.causeOfDeath(sc) + '. ' : '') + 'Level ' + (sc.cleared + 1) + ' of 6. ') + 'Score ' + sc.total + '.\n' + worstBump(sc) + ' Wall of Shame ' + runner.shameCount() + '/16.' +
+      return head + '\n' + gridOf(sc) + '\n' + (sc.survived ? 'I caught the one who pulled the rug. ' : (root.AERunner.causeOfDeath(sc) ? root.AERunner.causeOfDeath(sc) + '. ' : '') + 'Level ' + (TRIAL && !session.daily ? levelNow() : sc.cleared + 1) + ' of 6. ') + 'Score ' + sc.total + '.\n' + worstBump(sc) + ' Wall of Shame ' + runner.shameCount() + '/16.' +
         '\nThey all look alike. Can you tell them apart? ' + CONFIG.creator + (url ? '\n' + url : '') + '\n#NotFungibleAvatars #NFCLisbon #TheWallArcade';
     }
 
@@ -4046,7 +4061,7 @@
     $('btn-save').addEventListener('click', savePNG);
     $('btn-report').addEventListener('click', async () => {
       const c = document.createElement('canvas'), sc = session.score;
-      root.AERunner.reportCard(c, sc, { daily: session.daily, grid: E.shareGrid(sc), shame: runner.shameCount() });
+      root.AERunner.reportCard(c, sc, { daily: session.daily, grid: gridOf(sc), shame: runner.shameCount() });
       const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
       const file = new File([blob], 'not-fungible-avatars-report.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
